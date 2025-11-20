@@ -12,7 +12,7 @@
         <div class="container">
             <h1>Save meals, save money, save the planet</h1>
             <p class="ee-hero-subtitle">
-                Discover surplus food from local restaurants at amazing prices
+                Discover surplus food from local restaurants at amazing prices.
             </p>
 
             <div class="ee-hero-stats">
@@ -55,39 +55,6 @@
                             <button class="ee-heart-btn">♡</button>
                         </div>
                         <div class="ee-product-body">
-                            <h3>Mr Wang's Pho Bowl</h3>
-                            <p class="ee-product-subtitle">
-                                Authentic Vietnamese pho with fresh herbs
-                            </p>
-
-                            <div class="ee-meta-row">
-                                <span>⭐ 4.8 (234)</span>
-                                <span>📍 5 km</span>
-                            </div>
-                            <div class="ee-meta-row ee-expiry">
-                                <span>⏰ Expires in 3h</span>
-                            </div>
-
-                            <div class="ee-price-row">
-                                <div>
-                                    <span class="ee-price-now">$4.99</span>
-                                    <span class="ee-price-old">$12.99</span>
-                                </div>
-                                <span class="ee-badge">2.5 kg CO₂ saved</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- CARD 2 -->
-                <div class="col-md-4 ee-product-wrapper">
-                    <div class="ee-product-card">
-                        <div class="ee-product-image"
-                             style="background-image:url('https://images.pexels.com/photos/4109995/pexels-photo-4109995.jpeg');">
-                            <span class="ee-discount-tag">61% OFF</span>
-                            <button class="ee-heart-btn">♡</button>
-                        </div>
-                        <div class="ee-product-body">
                             <h3>Seasonal Fruits Mix</h3>
                             <p class="ee-product-subtitle">
                                 Fresh seasonal fruits perfect for smoothies
@@ -112,34 +79,67 @@
                     </div>
                 </div>
 
-                <!-- CARD 3 -->
+                <!-- CARD 2 -->
                 <div class="col-md-4 ee-product-wrapper">
                     <div class="ee-product-card">
                         <div class="ee-product-image"
-                             style="background-image:url('https://images.pexels.com/photos/2434/bread-food-healthy-breakfast.jpg');">
-                            <span class="ee-discount-tag">54% OFF</span>
+                             style="background-image:url('https://images.pexels.com/photos/2098085/pexels-photo-2098085.jpeg');">
+                            <span class="ee-discount-tag">61% OFF</span>
                             <button class="ee-heart-btn">♡</button>
                         </div>
                         <div class="ee-product-body">
-                            <h3>Artisan Sourdough Bread</h3>
+                            <h3>Sushi Platter</h3>
                             <p class="ee-product-subtitle">
-                                Freshly baked this morning
+                                Assorted fresh sushi rolls
                             </p>
 
                             <div class="ee-meta-row">
-                                <span>⭐ 4.7 (189)</span>
+                                <span>⭐ 4.9 (421)</span>
                                 <span>📍 3 km</span>
                             </div>
                             <div class="ee-meta-row ee-expiry">
-                                <span>⏰ Expires in 8h</span>
+                                <span>⏰ Expires in 2h</span>
                             </div>
 
                             <div class="ee-price-row">
                                 <div>
-                                    <span class="ee-price-now">$2.99</span>
-                                    <span class="ee-price-old">$6.50</span>
+                                    <span class="ee-price-now">$8.99</span>
+                                    <span class="ee-price-old">$22.90</span>
                                 </div>
-                                <span class="ee-badge">1.2 kg CO₂ saved</span>
+                                <span class="ee-badge">3.5 kg CO₂ saved</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARD 3 -->
+                <div class="col-md-4 ee-product-wrapper">
+                    <div class="ee-product-card">
+                        <div class="ee-product-image"
+                             style="background-image:url('https://www.momswhothink.com/wp-content/uploads/2023/11/shutterstock-1079365169-huge-licensed-scaled.jpg');">
+                            <span class="ee-discount-tag">60% OFF</span>
+                            <button class="ee-heart-btn">♡</button>
+                        </div>
+                        <div class="ee-product-body">
+                            <h3>Mr Wang's Pho Bowl</h3>
+                            <p class="ee-product-subtitle">
+                                Authentic Vietnamese pho with fresh herbs
+                            </p>
+
+                            <div class="ee-meta-row">
+                                <span>⭐ 4.8 (234)</span>
+                                <span>📍 5 km</span>
+                            </div>
+                            <div class="ee-meta-row ee-expiry">
+                                <span>⏰ Expires in 3h</span>
+                            </div>
+
+                            <div class="ee-price-row">
+                                <div>
+                                    <span class="ee-price-now">$4.99</span>
+                                    <span class="ee-price-old">$12.99</span>
+                                </div>
+                                <span class="ee-badge">2.5 kg CO₂ saved</span>
                             </div>
                         </div>
                     </div>
