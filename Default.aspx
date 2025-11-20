@@ -2,12 +2,11 @@
     AutoEventWireup="true" CodeBehind="Default.aspx.cs" Inherits="Business_App_Dev._Default" %>
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
-    <!-- page-specific <head> stuff (if any) -->
 </asp:Content>
 
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
 
-    <!-- HERO SECTION -->
+  
     <section class="ee-hero">
         <div class="container">
             <h1>Save meals, save money, save the planet</h1>
@@ -32,21 +31,19 @@
         </div>
     </section>
 
-    <!-- PRODUCT LIST SECTION -->
+
     <section class="ee-products">
         <div class="container">
 
-            <!-- Filter Pills -->
+           
             <div class="ee-filter-row">
                 <button class="ee-pill ee-pill-active">⚙ AI Recommended</button>
                 <button class="ee-pill">📈 Daily Best Deals</button>
                 <button class="ee-pill">🧭 Explore Categories</button>
             </div>
 
-            <!-- Product Cards Row -->
             <div class="row">
 
-                <!-- CARD 1 -->
                 <div class="col-md-4 ee-product-wrapper">
                     <div class="ee-product-card">
                         <div class="ee-product-image"
@@ -79,7 +76,7 @@
                     </div>
                 </div>
 
-                <!-- CARD 2 -->
+                
                 <div class="col-md-4 ee-product-wrapper">
                     <div class="ee-product-card">
                         <div class="ee-product-image"
@@ -112,7 +109,7 @@
                     </div>
                 </div>
 
-                <!-- CARD 3 -->
+         
                 <div class="col-md-4 ee-product-wrapper">
                     <div class="ee-product-card">
                         <div class="ee-product-image"
@@ -145,8 +142,8 @@
                     </div>
                 </div>
 
-            </div> <!-- /row -->
-        </div> <!-- /container -->
+            </div> 
+        </div> 
     </section>
 
 </asp:Content>
