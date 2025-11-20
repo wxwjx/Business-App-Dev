@@ -1,69 +1,67 @@
 ﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="Site.master.cs" Inherits="Business_App_Dev.SiteMaster" %>
 
 <!DOCTYPE html>
-
 <html lang="en">
 <head runat="server">
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><%: Page.Title %> - My ASP.NET Application</title>
+    <title><%: Page.Title %> - EcoEats</title>
 
-    <asp:PlaceHolder runat="server">
-        <%: Scripts.Render("~/bundles/modernizr") %>
-    </asp:PlaceHolder>
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-    <webopt:bundlereference runat="server" path="~/Content/css" />
-    <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    <link href="~/Content/Site.css" rel="stylesheet" type="text/css" />
 
+    <asp:ContentPlaceHolder ID="HeadContent" runat="server" />
 </head>
-<body>
-    <form runat="server">
-        <asp:ScriptManager runat="server">
-            <Scripts>
-                <%--To learn more about bundling scripts in ScriptManager see https://go.microsoft.com/fwlink/?LinkID=301884 --%>
-                <%--Framework Scripts--%>
-                <asp:ScriptReference Name="MsAjaxBundle" />
-                <asp:ScriptReference Name="jquery" />
-                <asp:ScriptReference Name="WebForms.js" Assembly="System.Web" Path="~/Scripts/WebForms/WebForms.js" />
-                <asp:ScriptReference Name="WebUIValidation.js" Assembly="System.Web" Path="~/Scripts/WebForms/WebUIValidation.js" />
-                <asp:ScriptReference Name="MenuStandards.js" Assembly="System.Web" Path="~/Scripts/WebForms/MenuStandards.js" />
-                <asp:ScriptReference Name="GridView.js" Assembly="System.Web" Path="~/Scripts/WebForms/GridView.js" />
-                <asp:ScriptReference Name="DetailsView.js" Assembly="System.Web" Path="~/Scripts/WebForms/DetailsView.js" />
-                <asp:ScriptReference Name="TreeView.js" Assembly="System.Web" Path="~/Scripts/WebForms/TreeView.js" />
-                <asp:ScriptReference Name="WebParts.js" Assembly="System.Web" Path="~/Scripts/WebForms/WebParts.js" />
-                <asp:ScriptReference Name="Focus.js" Assembly="System.Web" Path="~/Scripts/WebForms/Focus.js" />
-                <asp:ScriptReference Name="WebFormsBundle" />
-                <%--Site Scripts--%>
-            </Scripts>
-        </asp:ScriptManager>
 
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-dark">
-            <div class="container">
-                <a class="navbar-brand" runat="server" href="~/">Application name</a>
-                <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" title="Toggle navigation" aria-controls="navbarSupportedContent"
-                    aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item"><a class="nav-link" runat="server" href="~/">Home</a></li>
-                        <li class="nav-item"><a class="nav-link" runat="server" href="~/About">About</a></li>
-                        <li class="nav-item"><a class="nav-link" runat="server" href="~/Contact">Contact</a></li>
-                    </ul>
+<body>
+    <form id="form1" runat="server">
+        <div class="ee-page">
+
+            <!-- HEADER -->
+            <header class="ee-header">
+                <div class="container ee-header-main">
+                    <div class="ee-logo">
+                        <div class="ee-logo-icon">🌱</div>
+                        <span class="ee-logo-text">EcoEats</span>
+                    </div>
+
+                    <div class="ee-search-wrapper">
+                        <input type="text" class="ee-search-input"
+                               placeholder="Search for meals, restaurants..." />
+                    </div>
+
+                    <div class="ee-header-icons">
+                        <button type="button" class="ee-icon-btn">💬</button>
+                        <button type="button" class="ee-icon-btn">📦</button>
+                        <button type="button" class="ee-icon-btn">🛒</button>
+                        <button type="button" class="ee-icon-btn">👤</button>
+                    </div>
                 </div>
-            </div>
-        </nav>
-        <div class="container body-content">
-            <asp:ContentPlaceHolder ID="MainContent" runat="server">
-            </asp:ContentPlaceHolder>
-            <hr />
-            <footer>
-                <p>&copy; <%: DateTime.Now.Year %> - My ASP.NET Application</p>
-            </footer>
+
+                <nav class="ee-nav">
+                    <div class="container ee-nav-links">
+                        <a href="Default.aspx" class="ee-nav-link ee-nav-active">Home</a>
+                        <a href="#" class="ee-nav-link">Orders</a>
+                        <a href="#" class="ee-nav-link">Profile</a>
+                        <a href="#" class="ee-nav-link">About Us</a>
+                        <a href="#" class="ee-nav-link">Help</a>
+                        <a href="#" class="ee-nav-link">Feedback</a>
+                        <a href="#" class="ee-nav-link">Rate Sellers</a>
+                    </div>
+                </nav>
+            </header>
+
+            <!-- MAIN CONTENT COMES FROM .aspx PAGES -->
+            <main class="ee-main">
+                <asp:ContentPlaceHolder ID="MainContent" runat="server" />
+            </main>
+
+            <!-- Floating Chat Button -->
+            <button type="button" class="ee-chat-fab">💬</button>
+
         </div>
     </form>
-    <asp:PlaceHolder runat="server">
-        <%: Scripts.Render("~/Scripts/bootstrap.js") %>
-    </asp:PlaceHolder>
+
+    <asp:ContentPlaceHolder ID="ScriptsContent" runat="server" />
 </body>
 </html>

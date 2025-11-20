@@ -1,6 +1,10 @@
 ﻿<%@ Page Title="Home" Language="C#" MasterPageFile="~/Site.Master"
     AutoEventWireup="true" CodeBehind="Default.aspx.cs" Inherits="Business_App_Dev._Default" %>
 
+<asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
+    <!-- page-specific <head> stuff (if any) -->
+</asp:Content>
+
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
 
     <!-- HERO SECTION -->

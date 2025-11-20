@@ -1,33 +1,43 @@
-﻿/* Global */
+﻿/* GLOBAL */
 body {
-    font-family: 'Poppins', Arial, sans-serif;
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
     background-color: #ffffff;
 }
 
-/* Layout wrapper so hero touches header nicely */
+.container {
+    width: 92%;
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+/* PAGE WRAPPER */
 .ee-page {
     min-height: 100vh;
     position: relative;
 }
 
 .ee-main {
-    padding-bottom: 80px; /* space above chat button */
+    padding-bottom: 80px;
 }
 
-/* HEADER */
+/* ===========================
+   HEADER
+=========================== */
 
 .ee-header {
     background: #ffffff;
     border-bottom: 1px solid #e6e6e6;
-    position: relative;
-    z-index: 10;
+    position: sticky;
+    top: 0;
+    z-index: 50;
 }
 
 .ee-header-main {
     display: flex;
     align-items: center;
-    padding: 14px 0 8px;
-    gap: 20px;
+    gap: 24px;
+    padding: 16px 0 10px;
 }
 
 .ee-logo {
@@ -37,23 +47,24 @@ body {
 }
 
 .ee-logo-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 999px;
-    background-color: #1b8b3d;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #1b8b3d;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #fff;
+    color: white;
     font-size: 20px;
 }
 
 .ee-logo-text {
-    font-size: 24px;
+    font-size: 26px;
     font-weight: 600;
     color: #1b8b3d;
 }
 
+/* SEARCH BAR */
 .ee-search-wrapper {
     flex: 1;
 }
@@ -62,141 +73,144 @@ body {
     width: 100%;
     border-radius: 999px;
     border: none;
-    background-color: #f3f3f3;
-    padding: 10px 18px;
+    background: #f3f3f3;
+    padding: 12px 20px;
     font-size: 14px;
     outline: none;
 }
 
-    .ee-search-input::placeholder {
-        color: #999999;
-    }
-
+/* ICON BUTTONS */
 .ee-header-icons {
     display: flex;
-    gap: 10px;
+    gap: 14px;
 }
 
 .ee-icon-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 999px;
-    border: none;
     background: transparent;
-    font-size: 18px;
+    border: none;
     cursor: pointer;
+    font-size: 20px;
 }
 
-/* NAV LINKS ROW */
-
+/* NAVBAR LINKS */
 .ee-nav {
-    padding-bottom: 8px;
+    margin-top: 6px;
 }
 
 .ee-nav-links {
     display: flex;
-    gap: 24px;
-    align-items: center;
+    gap: 28px;
 }
 
 .ee-nav-link {
-    font-size: 14px;
-    color: #267335;
     text-decoration: none;
-    padding-bottom: 4px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #267335;
+    padding-bottom: 6px;
 }
 
 .ee-nav-active {
+    border-bottom: 2px solid #1b8b3d;
     font-weight: 600;
-    border-bottom: 2px solid #267335;
 }
 
-/* HERO SECTION */
+/* ===========================
+   HERO SECTION
+=========================== */
 
 .ee-hero {
-    background: linear-gradient(90deg, #1b8b3d, #12a0b3);
-    color: #fff;
-    padding: 60px 0 50px;
-    border-radius: 0 0 24px 24px;
-    margin-bottom: 28px;
+    background: linear-gradient(90deg, #1b8b3d, #13a0b7);
+    color: white;
+    padding: 80px 0 70px;
+    border-radius: 0 0 28px 28px;
+    margin-bottom: 30px;
 }
 
     .ee-hero h1 {
-        font-size: 40px;
+        font-size: 42px;
         font-weight: 700;
-        margin-bottom: 8px;
+        letter-spacing: -0.5px;
+        text-align: center;
+        margin-bottom: 10px;
     }
 
 .ee-hero-subtitle {
     font-size: 18px;
+    text-align: center;
     opacity: 0.95;
-    margin-bottom: 32px;
+    margin-bottom: 40px;
 }
 
+/* HERO STATS */
 .ee-hero-stats {
     display: flex;
-    gap: 20px;
+    justify-content: center;
+    gap: 28px;
     flex-wrap: wrap;
 }
 
 .ee-stat-card {
-    background: rgba(0, 0, 0, 0.12);
+    background: rgba(255, 255, 255, 0.18);
+    padding: 22px 32px;
     border-radius: 18px;
-    padding: 18px 32px;
-    min-width: 180px;
     text-align: center;
+    min-width: 180px;
+    backdrop-filter: blur(4px);
 }
 
 .ee-stat-value {
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 700;
 }
 
 .ee-stat-label {
+    margin-top: 4px;
     font-size: 14px;
     opacity: 0.9;
 }
 
-/* PRODUCT SECTION */
+/* ===========================
+   PRODUCTS SECTION
+=========================== */
 
 .ee-products {
-    padding: 22px 0 60px;
-    background: #f1fff4;
+    padding: 20px 0 60px;
+    background: #f4fff7;
 }
 
+/* Filter Pills */
 .ee-filter-row {
     display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 22px;
+    gap: 14px;
+    margin-bottom: 26px;
 }
 
 .ee-pill {
+    padding: 8px 18px;
     border-radius: 999px;
     border: none;
-    padding: 6px 16px;
-    background: #e9f7ec;
-    font-size: 13px;
+    background: #e8f7eb;
     cursor: pointer;
+    font-size: 14px;
 }
 
 .ee-pill-active {
     background: #1b8b3d;
-    color: #fff;
+    color: white;
 }
 
+/* PRODUCT CARDS */
+
 .ee-product-wrapper {
-    margin-bottom: 25px;
+    margin-bottom: 26px;
 }
 
 .ee-product-card {
-    background: #fff;
+    background: white;
     border-radius: 22px;
     overflow: hidden;
-    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+    box-shadow: 0 10px 22px rgba(0,0,0,0.06);
 }
 
 .ee-product-image {
@@ -206,127 +220,109 @@ body {
     background-position: center;
 }
 
+/* DISCOUNT TAG */
 .ee-discount-tag {
     position: absolute;
     top: 14px;
     right: 14px;
     background: #ffb21c;
-    color: #000;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 5px 8px;
+    padding: 5px 10px;
     border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
 }
 
+/* HEART BUTTON */
 .ee-heart-btn {
     position: absolute;
     top: 14px;
     left: 14px;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255,255,255,0.9);
     border-radius: 999px;
     border: none;
-    padding: 4px 9px;
+    padding: 5px 10px;
     cursor: pointer;
-    font-size: 14px;
 }
 
+/* CARD BODY */
 .ee-product-body {
-    padding: 16px 18px 16px;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
+    padding: 18px 20px 18px;
 }
 
     .ee-product-body h3 {
-        margin: 0 0 4px;
         font-size: 18px;
-        font-weight: 600;
+        margin: 0 0 6px;
     }
 
 .ee-product-subtitle {
     font-size: 13px;
     color: #666;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }
 
 .ee-meta-row {
-    font-size: 13px;
-    color: #555;
     display: flex;
     justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 4px;
 }
 
 .ee-expiry {
-    color: #e44848;
-    margin-top: 2px;
+    color: #d94b4b;
 }
 
 .ee-price-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 12px;
+    margin-top: 16px;
 }
 
 .ee-price-now {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 700;
     color: #1b8b3d;
-    margin-right: 6px;
 }
 
 .ee-price-old {
     font-size: 13px;
-    text-decoration: line-through;
     color: #999;
+    text-decoration: line-through;
 }
 
 .ee-badge {
+    padding: 5px 10px;
     border-radius: 999px;
     border: 1px solid #1b8b3d;
-    padding: 4px 10px;
     font-size: 11px;
     color: #1b8b3d;
 }
 
-/* Floating chat bubble */
+/* FLOATING CHAT BUTTON */
 .ee-chat-fab {
     position: fixed;
     right: 24px;
     bottom: 24px;
     width: 54px;
     height: 54px;
-    border-radius: 999px;
+    background: #1b8b3d;
+    color: white;
+    border-radius: 50%;
     border: none;
-    background-color: #1b8b3d;
-    color: #fff;
     font-size: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     cursor: pointer;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
 }
 
-/* Responsive tweaks */
+/* RESPONSIVE */
 @media (max-width: 768px) {
     .ee-header-main {
         flex-wrap: wrap;
-        align-items: flex-start;
     }
 
-    .ee-logo-text {
-        font-size: 20px;
+    .ee-hero h1 {
+        font-size: 32px;
     }
-
-    .ee-hero {
-        border-radius: 0 0 18px 18px;
-        padding: 46px 0 38px;
-    }
-
-        .ee-hero h1 {
-            font-size: 30px;
-        }
 
     .ee-hero-stats {
         flex-direction: column;
