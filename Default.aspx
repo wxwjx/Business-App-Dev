@@ -1,44 +1,148 @@
-﻿<%@ Page Title="Home Page" Language="C#" MasterPageFile="~/Site.Master" AutoEventWireup="true" CodeBehind="Default.aspx.cs" Inherits="Business_App_Dev._Default" %>
+﻿<%@ Page Title="Home" Language="C#" MasterPageFile="~/Site.Master"
+    AutoEventWireup="true" CodeBehind="Default.aspx.cs" Inherits="Business_App_Dev._Default" %>
 
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
 
-    <main>
-        <section class="row" aria-labelledby="aspnetTitle">
-            <h1 id="aspnetTitle">ASP.NET</h1>
-            <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS, and JavaScript.</p>
-            <p><a href="http://www.asp.net" class="btn btn-primary btn-md">Learn more &raquo;</a></p>
-        </section>
+    <!-- HERO SECTION -->
+    <section class="ee-hero">
+        <div class="container">
+            <h1>Save meals, save money, save the planet</h1>
+            <p class="ee-hero-subtitle">
+                Discover surplus food from local restaurants at amazing prices
+            </p>
 
-        <div class="row">
-            <section class="col-md-4" aria-labelledby="gettingStartedTitle">
-                <h2 id="gettingStartedTitle">Getting started</h2>
-                <p>
-                    ASP.NET Web Forms lets you build dynamic websites using a familiar drag-and-drop, event-driven model.
-                A design surface and hundreds of controls and components let you rapidly build sophisticated, powerful UI-driven sites with data access.
-                </p>
-                <p>
-                    <a class="btn btn-default" href="https://go.microsoft.com/fwlink/?LinkId=301948">Learn more &raquo;</a>
-                </p>
-            </section>
-            <section class="col-md-4" aria-labelledby="librariesTitle">
-                <h2 id="librariesTitle">Get more libraries</h2>
-                <p>
-                    NuGet is a free Visual Studio extension that makes it easy to add, remove, and update libraries and tools in Visual Studio projects.
-                </p>
-                <p>
-                    <a class="btn btn-default" href="https://go.microsoft.com/fwlink/?LinkId=301949">Learn more &raquo;</a>
-                </p>
-            </section>
-            <section class="col-md-4" aria-labelledby="hostingTitle">
-                <h2 id="hostingTitle">Web Hosting</h2>
-                <p>
-                    You can easily find a web hosting company that offers the right mix of features and price for your applications.
-                </p>
-                <p>
-                    <a class="btn btn-default" href="https://go.microsoft.com/fwlink/?LinkId=301950">Learn more &raquo;</a>
-                </p>
-            </section>
+            <div class="ee-hero-stats">
+                <div class="ee-stat-card">
+                    <div class="ee-stat-value">210</div>
+                    <div class="ee-stat-label">Meals Saved</div>
+                </div>
+                <div class="ee-stat-card">
+                    <div class="ee-stat-value">$455</div>
+                    <div class="ee-stat-label">Money Saved</div>
+                </div>
+                <div class="ee-stat-card">
+                    <div class="ee-stat-value">525 kg</div>
+                    <div class="ee-stat-label">CO₂ Saved</div>
+                </div>
+            </div>
         </div>
-    </main>
+    </section>
+
+    <!-- PRODUCT LIST SECTION -->
+    <section class="ee-products">
+        <div class="container">
+
+            <!-- Filter Pills -->
+            <div class="ee-filter-row">
+                <button class="ee-pill ee-pill-active">⚙ AI Recommended</button>
+                <button class="ee-pill">📈 Daily Best Deals</button>
+                <button class="ee-pill">🧭 Explore Categories</button>
+            </div>
+
+            <!-- Product Cards Row -->
+            <div class="row">
+
+                <!-- CARD 1 -->
+                <div class="col-md-4 ee-product-wrapper">
+                    <div class="ee-product-card">
+                        <div class="ee-product-image"
+                             style="background-image:url('https://images.pexels.com/photos/1437267/pexels-photo-1437267.jpeg');">
+                            <span class="ee-discount-tag">60% OFF</span>
+                            <button class="ee-heart-btn">♡</button>
+                        </div>
+                        <div class="ee-product-body">
+                            <h3>Mr Wang's Pho Bowl</h3>
+                            <p class="ee-product-subtitle">
+                                Authentic Vietnamese pho with fresh herbs
+                            </p>
+
+                            <div class="ee-meta-row">
+                                <span>⭐ 4.8 (234)</span>
+                                <span>📍 5 km</span>
+                            </div>
+                            <div class="ee-meta-row ee-expiry">
+                                <span>⏰ Expires in 3h</span>
+                            </div>
+
+                            <div class="ee-price-row">
+                                <div>
+                                    <span class="ee-price-now">$4.99</span>
+                                    <span class="ee-price-old">$12.99</span>
+                                </div>
+                                <span class="ee-badge">2.5 kg CO₂ saved</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARD 2 -->
+                <div class="col-md-4 ee-product-wrapper">
+                    <div class="ee-product-card">
+                        <div class="ee-product-image"
+                             style="background-image:url('https://images.pexels.com/photos/4109995/pexels-photo-4109995.jpeg');">
+                            <span class="ee-discount-tag">61% OFF</span>
+                            <button class="ee-heart-btn">♡</button>
+                        </div>
+                        <div class="ee-product-body">
+                            <h3>Seasonal Fruits Mix</h3>
+                            <p class="ee-product-subtitle">
+                                Fresh seasonal fruits perfect for smoothies
+                            </p>
+
+                            <div class="ee-meta-row">
+                                <span>⭐ 4.9 (456)</span>
+                                <span>📍 2 km</span>
+                            </div>
+                            <div class="ee-meta-row ee-expiry">
+                                <span>⏰ Expires in 6h</span>
+                            </div>
+
+                            <div class="ee-price-row">
+                                <div>
+                                    <span class="ee-price-now">$3.50</span>
+                                    <span class="ee-price-old">$8.99</span>
+                                </div>
+                                <span class="ee-badge">1.8 kg CO₂ saved</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARD 3 -->
+                <div class="col-md-4 ee-product-wrapper">
+                    <div class="ee-product-card">
+                        <div class="ee-product-image"
+                             style="background-image:url('https://images.pexels.com/photos/2434/bread-food-healthy-breakfast.jpg');">
+                            <span class="ee-discount-tag">54% OFF</span>
+                            <button class="ee-heart-btn">♡</button>
+                        </div>
+                        <div class="ee-product-body">
+                            <h3>Artisan Sourdough Bread</h3>
+                            <p class="ee-product-subtitle">
+                                Freshly baked this morning
+                            </p>
+
+                            <div class="ee-meta-row">
+                                <span>⭐ 4.7 (189)</span>
+                                <span>📍 3 km</span>
+                            </div>
+                            <div class="ee-meta-row ee-expiry">
+                                <span>⏰ Expires in 8h</span>
+                            </div>
+
+                            <div class="ee-price-row">
+                                <div>
+                                    <span class="ee-price-now">$2.99</span>
+                                    <span class="ee-price-old">$6.50</span>
+                                </div>
+                                <span class="ee-badge">1.2 kg CO₂ saved</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div> <!-- /row -->
+        </div> <!-- /container -->
+    </section>
 
 </asp:Content>

@@ -1,21 +1,334 @@
-﻿/* Wrapping element */
-/* Set some basic padding to keep content from hitting the edges */
-.body-content {
-    margin-top: 15px;
-    padding-left: 15px;
-    padding-right: 15px;
+﻿/* Global */
+body {
+    font-family: 'Poppins', Arial, sans-serif;
+    background-color: #ffffff;
 }
 
-/* Set widths on the form inputs since otherwise they're 100% wide */
-input,
-select,
-textarea {
-    max-width: 280px;
+/* Layout wrapper so hero touches header nicely */
+.ee-page {
+    min-height: 100vh;
+    position: relative;
 }
 
-/* Responsive: Portrait tablets and up */
-@media screen and (min-width: 768px) {
-    .body-content {
-        padding: 0;
+.ee-main {
+    padding-bottom: 80px; /* space above chat button */
+}
+
+/* HEADER */
+
+.ee-header {
+    background: #ffffff;
+    border-bottom: 1px solid #e6e6e6;
+    position: relative;
+    z-index: 10;
+}
+
+.ee-header-main {
+    display: flex;
+    align-items: center;
+    padding: 14px 0 8px;
+    gap: 20px;
+}
+
+.ee-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ee-logo-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    background-color: #1b8b3d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 20px;
+}
+
+.ee-logo-text {
+    font-size: 24px;
+    font-weight: 600;
+    color: #1b8b3d;
+}
+
+.ee-search-wrapper {
+    flex: 1;
+}
+
+.ee-search-input {
+    width: 100%;
+    border-radius: 999px;
+    border: none;
+    background-color: #f3f3f3;
+    padding: 10px 18px;
+    font-size: 14px;
+    outline: none;
+}
+
+    .ee-search-input::placeholder {
+        color: #999999;
+    }
+
+.ee-header-icons {
+    display: flex;
+    gap: 10px;
+}
+
+.ee-icon-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+/* NAV LINKS ROW */
+
+.ee-nav {
+    padding-bottom: 8px;
+}
+
+.ee-nav-links {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+}
+
+.ee-nav-link {
+    font-size: 14px;
+    color: #267335;
+    text-decoration: none;
+    padding-bottom: 4px;
+}
+
+.ee-nav-active {
+    font-weight: 600;
+    border-bottom: 2px solid #267335;
+}
+
+/* HERO SECTION */
+
+.ee-hero {
+    background: linear-gradient(90deg, #1b8b3d, #12a0b3);
+    color: #fff;
+    padding: 60px 0 50px;
+    border-radius: 0 0 24px 24px;
+    margin-bottom: 28px;
+}
+
+    .ee-hero h1 {
+        font-size: 40px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+.ee-hero-subtitle {
+    font-size: 18px;
+    opacity: 0.95;
+    margin-bottom: 32px;
+}
+
+.ee-hero-stats {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.ee-stat-card {
+    background: rgba(0, 0, 0, 0.12);
+    border-radius: 18px;
+    padding: 18px 32px;
+    min-width: 180px;
+    text-align: center;
+}
+
+.ee-stat-value {
+    font-size: 26px;
+    font-weight: 700;
+}
+
+.ee-stat-label {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+/* PRODUCT SECTION */
+
+.ee-products {
+    padding: 22px 0 60px;
+    background: #f1fff4;
+}
+
+.ee-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 22px;
+}
+
+.ee-pill {
+    border-radius: 999px;
+    border: none;
+    padding: 6px 16px;
+    background: #e9f7ec;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.ee-pill-active {
+    background: #1b8b3d;
+    color: #fff;
+}
+
+.ee-product-wrapper {
+    margin-bottom: 25px;
+}
+
+.ee-product-card {
+    background: #fff;
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.ee-product-image {
+    position: relative;
+    padding-top: 65%;
+    background-size: cover;
+    background-position: center;
+}
+
+.ee-discount-tag {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: #ffb21c;
+    color: #000;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 8px;
+    border-radius: 999px;
+}
+
+.ee-heart-btn {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 999px;
+    border: none;
+    padding: 4px 9px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.ee-product-body {
+    padding: 16px 18px 16px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+    .ee-product-body h3 {
+        margin: 0 0 4px;
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+.ee-product-subtitle {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.ee-meta-row {
+    font-size: 13px;
+    color: #555;
+    display: flex;
+    justify-content: space-between;
+}
+
+.ee-expiry {
+    color: #e44848;
+    margin-top: 2px;
+}
+
+.ee-price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+}
+
+.ee-price-now {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1b8b3d;
+    margin-right: 6px;
+}
+
+.ee-price-old {
+    font-size: 13px;
+    text-decoration: line-through;
+    color: #999;
+}
+
+.ee-badge {
+    border-radius: 999px;
+    border: 1px solid #1b8b3d;
+    padding: 4px 10px;
+    font-size: 11px;
+    color: #1b8b3d;
+}
+
+/* Floating chat bubble */
+.ee-chat-fab {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    width: 54px;
+    height: 54px;
+    border-radius: 999px;
+    border: none;
+    background-color: #1b8b3d;
+    color: #fff;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+    .ee-header-main {
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .ee-logo-text {
+        font-size: 20px;
+    }
+
+    .ee-hero {
+        border-radius: 0 0 18px 18px;
+        padding: 46px 0 38px;
+    }
+
+        .ee-hero h1 {
+            font-size: 30px;
+        }
+
+    .ee-hero-stats {
+        flex-direction: column;
     }
 }
