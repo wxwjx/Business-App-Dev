@@ -30,5 +30,10 @@
         <div class="mt-3 small text-muted">
             Use <strong>seller@example.com</strong> / <strong>Password123</strong> for the demo.
         </div>
+
+        <div class="mt-3 text-center">
+            <span class="small">Don't have a seller account? </span>
+            <a class="small" href="SellerSignup.aspx">Create one</a>
+        </div>
     </div>
 </asp:Content>
