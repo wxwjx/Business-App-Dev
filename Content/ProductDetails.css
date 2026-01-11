@@ -5,7 +5,6 @@
     --green: #2f7d32;
     --danger: #e11d48;
     --shadow: 0 10px 30px rgba(2,40,32,.10);
-    --radius: 18px;
 }
 
 .pd-body {
@@ -212,12 +211,13 @@
     border-radius: 999px;
 }
 
-/* qty + button */
+/* qty + buttons */
 .pd-actions {
     margin-top: 14px;
     display: flex;
     gap: 14px;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .pd-qty {
@@ -251,8 +251,8 @@
     font-weight: 600;
 }
 
+/* Add to cart (green) */
 .pd-add {
-    flex: 1;
     height: 40px;
     border: none;
     border-radius: 12px;
@@ -260,9 +260,26 @@
     color: #fff;
     font-weight: 700;
     cursor: pointer;
+    padding: 0 18px;
 }
 
     .pd-add:hover {
+        filter: brightness(.95);
+    }
+
+/* Buy now (teal) */
+.pd-buy {
+    height: 40px;
+    border: none;
+    border-radius: 12px;
+    background: #0aa2b6;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0 18px;
+}
+
+    .pd-buy:hover {
         filter: brightness(.95);
     }
 

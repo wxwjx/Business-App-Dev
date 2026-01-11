@@ -6,9 +6,10 @@
     <title>Product Details</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- reuse your existing main CSS if you want -->
+    <!-- Base + Global UI -->
+    <link href="Content/site.css" rel="stylesheet" />
     <link href="Content/EcoEats.css" rel="stylesheet" />
-    <!-- add details CSS (create this file in Content) -->
+    <!-- Details page only -->
     <link href="Content/ProductDetails.css" rel="stylesheet" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -29,6 +30,7 @@
             <div class="pd-left">
                 <div class="pd-image-wrap">
                     <asp:Image ID="imgProduct" runat="server" CssClass="pd-image" AlternateText="Product image" />
+
                     <span class="pd-badge">
                         <asp:Label ID="lblDiscount" runat="server" />% OFF
                     </span>
@@ -94,7 +96,7 @@
                     </div>
                 </div>
 
-                <!-- Quantity + Add to Cart -->
+                <!-- Quantity + Add to Cart + Buy Now -->
                 <div class="pd-actions">
                     <div class="pd-qty">
                         <asp:Button ID="btnMinus" runat="server" Text="-" CssClass="pd-qty-btn" OnClick="btnMinus_Click" />
@@ -102,7 +104,15 @@
                         <asp:Button ID="btnPlus" runat="server" Text="+" CssClass="pd-qty-btn" OnClick="btnPlus_Click" />
                     </div>
 
-                    <asp:Button ID="btnAddToCart" runat="server" Text="Add to Cart" CssClass="pd-add" OnClick="btnAddToCart_Click" />
+                    <asp:Button ID="btnAddToCart" runat="server"
+                        Text="Add to Cart"
+                        CssClass="pd-add"
+                        OnClick="btnAddToCart_Click" />
+
+                    <asp:Button ID="btnBuyNow" runat="server"
+                        Text="Buy Now"
+                        CssClass="pd-buy"
+                        OnClick="btnBuyNow_Click" />
                 </div>
 
                 <!-- Why choose card -->

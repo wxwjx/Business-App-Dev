@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Configuration;
 using System.Data.SqlClient;
+using System.Collections.Generic;
+using System.Linq;
+
 
 namespace Business_App_Dev
 {
@@ -20,6 +23,7 @@ namespace Business_App_Dev
             if (!IsPostBack)
             {
                 txtQty.Text = "1";
+
                 if (CurrentProductId > 0)
                     LoadProduct(CurrentProductId);
             }
@@ -42,12 +46,11 @@ namespace Business_App_Dev
                     lblName.Text = reader["ProductName"].ToString();
                     lblSubtitle.Text = reader["Subtitle"] != DBNull.Value ? reader["Subtitle"].ToString() : "Fresh Market";
 
-                    // image
                     imgProduct.ImageUrl = reader["ImageUrl"] != DBNull.Value ? reader["ImageUrl"].ToString() : "";
 
-                    // numbers
                     decimal priceNow = reader["Price"] != DBNull.Value ? (decimal)reader["Price"] : 0;
                     decimal priceOld = reader["PriceOld"] != DBNull.Value ? (decimal)reader["PriceOld"] : 0;
+
                     double rating = reader["Rating"] != DBNull.Value ? Convert.ToDouble(reader["Rating"]) : 0;
                     int reviews = reader["Reviews"] != DBNull.Value ? Convert.ToInt32(reader["Reviews"]) : 0;
                     int distance = reader["DistanceKm"] != DBNull.Value ? Convert.ToInt32(reader["DistanceKm"]) : 0;
@@ -66,7 +69,7 @@ namespace Business_App_Dev
                     lblCO2.Text = co2.ToString("0.0");
                     lblDiscount.Text = discount.ToString();
 
-                    // description (if you don't have column, use subtitle)
+                    // If you don't have description column, reuse subtitle
                     lblDescription.Text = reader["Subtitle"] != DBNull.Value
                         ? reader["Subtitle"].ToString()
                         : "Fresh seasonal food at amazing prices.";
@@ -90,11 +93,64 @@ namespace Business_App_Dev
             txtQty.Text = qty.ToString();
         }
 
+        private const string CART_KEY = "CART";
+
+        private List<CartItem> GetCart()
+        {
+            var cart = Session[CART_KEY] as List<CartItem>;
+            if (cart == null)
+            {
+                cart = new List<CartItem>();
+                Session[CART_KEY] = cart;
+            }
+            return cart;
+        }
+
         protected void btnAddToCart_Click(object sender, EventArgs e)
         {
-            // Placeholder: you can connect this to your Cart/Session later
-            // For now: redirect to Order or Cart page
+            int qty;
+            if (!int.TryParse(txtQty.Text, out qty)) qty = 1;
+            qty = Math.Max(1, Math.Min(99, qty));
+
+            var cart = GetCart();
+            var existing = cart.FirstOrDefault(x => x.ProductID == CurrentProductId);
+
+            if (existing != null)
+            {
+                existing.Quantity = Math.Min(99, existing.Quantity + qty);
+            }
+            else
+            {
+                cart.Add(new CartItem
+                {
+                    ProductID = CurrentProductId,
+                    ProductName = lblName.Text,
+                    Subtitle = lblSubtitle.Text,
+                    ImageUrl = imgProduct.ImageUrl,
+                    PriceNow = decimal.TryParse(lblPriceNow.Text, out var pNow) ? pNow : 0,
+                    PriceOld = decimal.TryParse(lblPriceOld.Text, out var pOld) ? pOld : 0,
+                    CO2SavedPerMeal = double.TryParse(lblCO2.Text, out var co2) ? co2 : 0,
+                    Quantity = qty
+                });
+            }
+
+            Session[CART_KEY] = cart;
             Response.Redirect("Cart.aspx");
+        }
+
+
+        protected void btnBuyNow_Click(object sender, EventArgs e)
+        {
+            int qty;
+            if (!int.TryParse(txtQty.Text, out qty)) qty = 1;
+
+            // Save info for order/checkout flow
+            Session["BuyNowProductId"] = CurrentProductId;
+            Session["BuyNowQty"] = qty;
+
+            // Redirect to your next page
+            // Change to Checkout.aspx when you create it
+            Response.Redirect("Order.aspx");
         }
     }
 }
