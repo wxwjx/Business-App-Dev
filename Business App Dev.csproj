@@ -127,6 +127,7 @@
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Product.aspx" />
+    <Content Include="Content\ProductDetails.css" />
     <Content Include="ProductDetails.aspx" />
     <Content Include="Scripts\bootstrap.bundle.js" />
     <Content Include="Scripts\bootstrap.bundle.min.js" />
