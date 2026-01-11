@@ -32,6 +32,7 @@ namespace FoodSaver
                 && password == DemoPassword)
             {
                 Session["SellerAuthenticated"] = true;
+                Session["SellerEmail"] = email;
 
                 // Optionally persist a simple cookie when "Remember me" is checked (demo only)
                 if (chkRemember.Checked)

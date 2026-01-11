@@ -26,11 +26,12 @@
                     </div>
 
                     <div class="ee-nav-links">
-                        <a href="SellerDashboard.aspx" class="ee-nav-link">Dashboard</a>
-                        <a href="SellerInventory.aspx" class="ee-nav-link">Inventory</a>
-                        <a href="SellerOrders.aspx" class="ee-nav-link">Order Management</a>
-                        <a href="SellerReviews.aspx" class="ee-nav-link">Customer Review</a>
-                        <a href="SellerProfile.aspx" class="ee-nav-link">Store Profile</a>
+                        <a runat="server" href="SellerDashboard.aspx" class="ee-nav-link">Dashboard</a>
+                        <a runat="server" href="SellerInventory.aspx" class="ee-nav-link">Inventory</a>
+                        <a runat="server" href="SellerOrders.aspx" class="ee-nav-link">Order Management</a>
+                        <a runat="server" href="SellerReviews.aspx" class="ee-nav-link">Customer Review</a>
+                        <a runat="server" href="SellerProfile.aspx" class="ee-nav-link">Store Profile</a>
+
                     </div>
 
                 </div>
