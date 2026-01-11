@@ -28,7 +28,7 @@
         <asp:Button ID="btnLogin" runat="server" Text="Sign in" CssClass="btn btn-primary w-100" OnClick="btnLogin_Click" />
 
         <div class="mt-3 small text-muted">
-            Use <strong>seller@example.com</strong> / <strong>Password123</strong> for the demo.
+            Create an account via <strong>Seller Signup</strong>, then sign in here.
         </div>
 
         <div class="mt-3 text-center">

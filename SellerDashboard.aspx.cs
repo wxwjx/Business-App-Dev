@@ -11,6 +11,12 @@ namespace FoodSaver
     {
         protected void Page_Load(object sender, EventArgs e)
         {
+            if (Session["SellerAuthenticated"] as bool? != true)
+            {
+                Response.Redirect("~/SellerLogin.aspx");
+                return;
+            }
+
         }
     }
 }
