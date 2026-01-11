@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
@@ -12,94 +13,51 @@ namespace Business_App_Dev
         {
             if (!IsPostBack)
             {
-                int orderId = GetOrderId();
-                if (orderId <= 0)
+                string sessionId = Request.QueryString["session_id"];
+                if (string.IsNullOrWhiteSpace(sessionId))
                 {
-                    ShowError("Missing orderId. Open like: OrderSuccess.aspx?orderId=123");
+                    ShowError("Missing session_id from Stripe redirect.");
                     return;
                 }
 
-                lblOrderId.Text = orderId.ToString();
+                // Show a nice "Order ID" (since you don't have Orders table yet)
+                lblOrderId.Text = "ORD-" + ShortId(sessionId);
 
-                BindItemsAndTotal(orderId);
-                BindPickupAndMap(orderId);
+                // Load the purchase snapshot that you saved in Cart.aspx.cs
+                var items = Session["PENDING_ORDER_" + sessionId] as List<PurchasedItem>;
+                if (items == null || items.Count == 0)
+                {
+                    ShowError("Order data not found (Session expired). Try paying again, or implement Orders table to persist.");
+                    return;
+                }
+
+                pnlError.Visible = false;
+
+                rptItems.DataSource = items;
+                rptItems.DataBind();
+
+                // Total
+                decimal total = 0m;
+                if (Session["PENDING_ORDER_TOTAL_" + sessionId] is decimal t)
+                    total = t;
+                else
+                {
+                    foreach (var it in items) total += it.LineTotal;
+                }
+                lblTotal.Text = total.ToString("0.00");
+
+                // Pickup + Map (use first item’s ProductID to find Seller)
+                BindPickupAndMap(items[0].ProductID);
             }
-        }
-
-        private int GetOrderId()
-        {
-            // prefer querystring
-            string qs = Request.QueryString["orderId"];
-            if (int.TryParse(qs, out int oid)) return oid;
-
-            // fallback if you stored it after checkout
-            if (Session["LastOrderID"] != null && int.TryParse(Session["LastOrderID"].ToString(), out int sid))
-                return sid;
-
-            return 0;
         }
 
         private string ConnStr()
         {
-            // CHANGE "EcoEatsDb" to your real Web.config connection string name
+            // CHANGE name if yours is different
             return ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
         }
 
-        private void BindItemsAndTotal(int orderId)
-        {
-            try
-            {
-                using (SqlConnection con = new SqlConnection(ConnStr()))
-                using (SqlCommand cmd = new SqlCommand(@"
-                    SELECT 
-                        p.ProductName,
-                        s.ShopName,
-                        oi.Quantity AS Qty,
-                        (oi.Quantity * oi.UnitPrice) AS LineTotal
-                    FROM OrderItem oi
-                    INNER JOIN Products p ON oi.ProductID = p.ProductID
-                    INNER JOIN Seller s ON p.SellerID = s.SellerID
-                    WHERE oi.OrderID = @oid
-                    ORDER BY oi.OrderItemID ASC;
-
-                    SELECT 
-                        ISNULL(SUM(oi.Quantity * oi.UnitPrice), 0)
-                    FROM OrderItem oi
-                    WHERE oi.OrderID = @oid;
-                ", con))
-                {
-                    cmd.Parameters.Add("@oid", SqlDbType.Int).Value = orderId;
-
-                    con.Open();
-
-                    // 1) items
-                    using (SqlDataReader r = cmd.ExecuteReader())
-                    {
-                        DataTable dt = new DataTable();
-                        dt.Load(r);
-                        rptItems.DataSource = dt;
-                        rptItems.DataBind();
-
-                        // 2) total (next result set)
-                        if (r.NextResult() && r.Read())
-                        {
-                            decimal total = r.IsDBNull(0) ? 0m : r.GetDecimal(0);
-                            lblTotal.Text = total.ToString("0.00");
-                        }
-                        else
-                        {
-                            lblTotal.Text = "0.00";
-                        }
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                ShowError("Could not load order items. Check your OrderItem table columns (Quantity, UnitPrice) and OrderID.");
-            }
-        }
-
-        private void BindPickupAndMap(int orderId)
+        private void BindPickupAndMap(int productId)
         {
             try
             {
@@ -111,37 +69,34 @@ namespace Business_App_Dev
                         s.PickupWindow,
                         s.Latitude,
                         s.Longitude
-                    FROM [Order] o
-                    INNER JOIN OrderItem oi ON o.OrderID = oi.OrderID
-                    INNER JOIN Products p ON oi.ProductID = p.ProductID
+                    FROM Products p
                     INNER JOIN Seller s ON p.SellerID = s.SellerID
-                    WHERE o.OrderID = @oid
-                    ORDER BY oi.OrderItemID ASC;
+                    WHERE p.ProductID = @pid;
                 ", con))
                 {
-                    cmd.Parameters.Add("@oid", SqlDbType.Int).Value = orderId;
+                    cmd.Parameters.Add("@pid", SqlDbType.Int).Value = productId;
 
                     con.Open();
                     using (SqlDataReader r = cmd.ExecuteReader())
                     {
                         if (!r.Read())
                         {
-                            ShowError("Pickup details not found. Make sure Products.SellerID is filled and Seller exists.");
+                            ShowError("Seller/pickup info not found. Ensure Products.SellerID is filled and Seller table has data.");
                             return;
                         }
 
-                        string shopName = r["ShopName"]?.ToString() ?? "";
-                        string address = r["Address"]?.ToString() ?? "";
-                        string pickupWindow = r["PickupWindow"]?.ToString() ?? "(Not specified)";
+                        string shop = r["ShopName"]?.ToString() ?? "-";
+                        string addr = r["Address"]?.ToString() ?? "-";
+                        string window = r["PickupWindow"] == DBNull.Value ? "(Not specified)" : r["PickupWindow"].ToString();
 
-                        lblShopName.Text = shopName;
-                        lblAddress.Text = address;
-                        lblPickupWindow.Text = pickupWindow;
+                        lblShopName.Text = shop;
+                        lblAddress.Text = addr;
+                        lblPickupWindow.Text = window;
 
+                        // GOOGLE MAPS (NO API KEY) — iframe embed
                         string mapSrc;
-                        string directionsUrl;
+                        string dirUrl;
 
-                        // Use lat/lng if available, else fallback to address
                         if (r["Latitude"] != DBNull.Value && r["Longitude"] != DBNull.Value)
                         {
                             decimal lat = (decimal)r["Latitude"];
@@ -151,30 +106,38 @@ namespace Business_App_Dev
                             string lngStr = lng.ToString(CultureInfo.InvariantCulture);
 
                             mapSrc = $"https://www.google.com/maps?q={latStr},{lngStr}&output=embed";
-                            directionsUrl = $"https://www.google.com/maps/dir/?api=1&destination={latStr},{lngStr}";
+                            dirUrl = $"https://www.google.com/maps/dir/?api=1&destination={latStr},{lngStr}";
                         }
                         else
                         {
-                            string q = Uri.EscapeDataString(address);
+                            string q = Uri.EscapeDataString(addr);
                             mapSrc = $"https://www.google.com/maps?q={q}&output=embed";
-                            directionsUrl = $"https://www.google.com/maps/dir/?api=1&destination={q}";
+                            dirUrl = $"https://www.google.com/maps/dir/?api=1&destination={q}";
                         }
 
                         mapFrame.Attributes["src"] = mapSrc;
-                        lnkDirections.NavigateUrl = directionsUrl;
+                        lnkDirections.NavigateUrl = dirUrl;
                     }
                 }
             }
             catch (Exception)
             {
-                ShowError("Could not load pickup/map info. Check Seller columns (Address, Latitude, Longitude) and your JOINs.");
+                ShowError("Could not load map/pickup info. Check DB connection string + Seller/Product join.");
             }
         }
 
-        private void ShowError(string message)
+        private string ShortId(string sessionId)
+        {
+            // make it look like an order number
+            // cs_test_abc... -> use last 10 chars
+            if (sessionId.Length <= 10) return sessionId.ToUpperInvariant();
+            return sessionId.Substring(sessionId.Length - 10).ToUpperInvariant();
+        }
+
+        private void ShowError(string msg)
         {
             pnlError.Visible = true;
-            lblError.Text = message;
+            lblError.Text = msg;
         }
     }
 }
