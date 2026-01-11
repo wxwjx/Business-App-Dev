@@ -185,6 +185,7 @@
     <Content Include="SellerLogin.aspx" />
     <Content Include="SellerReviews.aspx" />
     <Content Include="SellerSignup.aspx" />
+    <Content Include="SellerWasteTracker.aspx" />
     <Content Include="Site.Master" />
     <Content Include="ViewSwitcher.ascx" />
     <Content Include="Web.config" />
@@ -253,6 +254,13 @@
     </Compile>
     <Compile Include="SellerSignup.aspx.designer.cs">
       <DependentUpon>SellerSignup.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SellerWasteTracker.aspx.cs">
+      <DependentUpon>SellerWasteTracker.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SellerWasteTracker.aspx.designer.cs">
+      <DependentUpon>SellerWasteTracker.aspx</DependentUpon>
     </Compile>
     <Compile Include="SellPage.Master.cs">
       <DependentUpon>SellPage.Master</DependentUpon>
