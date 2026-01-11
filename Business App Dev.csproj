@@ -183,6 +183,7 @@
     <Content Include="Scripts\WebForms\WebUIValidation.js" />
     <Content Include="SellerDashboard.aspx" />
     <Content Include="SellerLogin.aspx" />
+    <Content Include="SellerMessages.aspx" />
     <Content Include="SellerReviews.aspx" />
     <Content Include="SellerSignup.aspx" />
     <Content Include="SellerWasteTracker.aspx" />
@@ -240,6 +241,13 @@
     </Compile>
     <Compile Include="SellerLogin.aspx.designer.cs">
       <DependentUpon>SellerLogin.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SellerMessages.aspx.cs">
+      <DependentUpon>SellerMessages.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SellerMessages.aspx.designer.cs">
+      <DependentUpon>SellerMessages.aspx</DependentUpon>
     </Compile>
     <Compile Include="SellerReviews.aspx.cs">
       <DependentUpon>SellerReviews.aspx</DependentUpon>

@@ -31,6 +31,7 @@
                         <a runat="server" href="SellerInventory.aspx" class="ee-nav-link">Inventory</a>
                         <a runat="server" href="SellerOrders.aspx" class="ee-nav-link">Order Management</a>
                         <a runat="server" href="SellerReviews.aspx" class="ee-nav-link">Customer Review</a>
+                        <a runat="server" href="SellerMessages.aspx" class="ee-nav-link">Messages</a>
                         <a runat="server" href="SellerProfile.aspx" class="ee-nav-link">Store Profile</a>
                     </div>
 
