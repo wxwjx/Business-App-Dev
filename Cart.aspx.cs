@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
-using System.Web.UI.WebControls;
+using System.Reflection;
+using Stripe;
+using Stripe.Checkout;
 
 namespace Business_App_Dev
 {
@@ -12,47 +15,82 @@ namespace Business_App_Dev
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!IsPostBack)
-                BindCart();
+            {
+                BindAll();
+            }
         }
 
         private List<CartItem> GetCart()
         {
-            var cart = Session[CART_KEY] as List<CartItem>;
-            if (cart == null)
-            {
-                cart = new List<CartItem>();
-                Session[CART_KEY] = cart;
-            }
+            if (Session[CART_KEY] is List<CartItem> cart)
+                return cart;
+
+            cart = new List<CartItem>();
+            Session[CART_KEY] = cart;
             return cart;
         }
 
-        private void BindCart()
+        private void BindAll()
         {
             var cart = GetCart();
 
-            pnlEmpty.Visible = cart.Count == 0;
-            rptCart.Visible = cart.Count > 0;
+            // show/hide
+            lblEmpty.Visible = (cart.Count == 0);
+            rptCart.Visible = (cart.Count > 0);
 
+            // bind list
             rptCart.DataSource = cart;
             rptCart.DataBind();
 
-            int itemCount = cart.Sum(x => x.Quantity);
-            lblItemCount.Text = itemCount.ToString();
-
+            // totals
             decimal subtotal = cart.Sum(x => x.LineTotal);
             double co2 = cart.Sum(x => x.LineCO2);
 
             lblSubtotal.Text = subtotal.ToString("0.00");
-            lblTotal.Text = subtotal.ToString("0.00"); // delivery FREE
+            lblTotal.Text = subtotal.ToString("0.00");
             lblCO2.Text = co2.ToString("0.0");
+
+            // item count label (sum of quantities)
+            int itemCount = cart.Sum(x => x.Quantity);
+            lblItemCount.Text = itemCount.ToString();
+
+            // Disable payment button if empty
+            btnPay.Enabled = cart.Count > 0;
+
+            // UI text
+            btnPay.Text = "Payment";
+            lblPayMsg.Text = "";
         }
 
-        protected void rptCart_ItemCommand(object source, RepeaterCommandEventArgs e)
+        /// <summary>
+        /// Safe description getter for the Repeater.
+        /// Will not crash even if CartItem doesn't contain Description field.
+        /// Supports common property names: Description / ProductDescription / Desc
+        /// </summary>
+        public string GetDesc(object dataItem)
+        {
+            if (dataItem == null) return "";
+
+            string[] candidates = { "Description", "ProductDescription", "Desc" };
+
+            foreach (var name in candidates)
+            {
+                PropertyInfo prop = dataItem.GetType().GetProperty(name);
+                if (prop != null)
+                {
+                    object val = prop.GetValue(dataItem, null);
+                    return val?.ToString() ?? "";
+                }
+            }
+
+            return "";
+        }
+
+        protected void rptCart_ItemCommand(object source, System.Web.UI.WebControls.RepeaterCommandEventArgs e)
         {
             var cart = GetCart();
 
-            int productId;
-            if (!int.TryParse(e.CommandArgument.ToString(), out productId))
+            if (!int.TryParse(e.CommandArgument?.ToString(), out int productId))
                 return;
 
             var item = cart.FirstOrDefault(x => x.ProductID == productId);
@@ -60,41 +98,78 @@ namespace Business_App_Dev
 
             switch (e.CommandName)
             {
-                case "plus":
-                    item.Quantity = Math.Min(99, item.Quantity + 1);
+                case "INC":
+                    item.Quantity += 1;
                     break;
 
-                case "minus":
-                    item.Quantity = Math.Max(1, item.Quantity - 1);
+                case "DEC":
+                    item.Quantity -= 1;
+                    if (item.Quantity <= 0)
+                        cart.Remove(item);
                     break;
 
-                case "remove":
+                case "REMOVE":
                     cart.Remove(item);
                     break;
             }
 
             Session[CART_KEY] = cart;
-            BindCart();
+            BindAll();
         }
 
-        protected void btnApply_Click(object sender, EventArgs e)
+        protected void btnPay_Click(object sender, EventArgs e)
         {
-            string code = (txtCode.Text ?? "").Trim();
+            lblPayMsg.Text = "";
 
-            if (string.IsNullOrWhiteSpace(code))
+            var cart = GetCart();
+            if (cart.Count == 0)
             {
-                lblCodeMsg.Text = "Please enter a code.";
+                lblPayMsg.Text = "Your cart is empty.";
                 return;
             }
 
-            // Placeholder (demo)
-            lblCodeMsg.Text = "Invalid code (demo).";
+            RedirectToStripeCheckout(cart);
         }
 
-        protected void btnCheckout_Click(object sender, EventArgs e)
+        private void RedirectToStripeCheckout(List<CartItem> cart)
         {
-            // Change to Checkout.aspx when you create it
-            Response.Redirect("Order.aspx");
+            var key = ConfigurationManager.AppSettings["StripeSecretKey"];
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                lblPayMsg.Text = "Stripe is not configured (StripeSecretKey missing in Web.config).";
+                return;
+            }
+
+            StripeConfiguration.ApiKey = key.Trim();
+
+            var lineItems = cart.Select(item => new SessionLineItemOptions
+            {
+                Quantity = item.Quantity,
+                PriceData = new SessionLineItemPriceDataOptions
+                {
+                    Currency = "sgd",
+                    UnitAmount = (long)(item.PriceNow * 100m),
+                    ProductData = new SessionLineItemPriceDataProductDataOptions
+                    {
+                        Name = item.ProductName
+                    }
+                }
+            }).ToList();
+
+            string baseUrl = $"{Request.Url.Scheme}://{Request.Url.Authority}";
+
+            var options = new SessionCreateOptions
+            {
+                Mode = "payment",
+                LineItems = lineItems,
+                SuccessUrl = baseUrl + "/StripeSuccess.aspx",
+                CancelUrl = baseUrl + "/Cart.aspx"
+            };
+
+            var service = new SessionService();
+            var session = service.Create(options);
+
+            Response.Redirect(session.Url);
         }
     }
 }

@@ -1,23 +1,65 @@
-﻿:root {
+﻿/* =========================================================
+   EcoEats – Single CSS File (FINAL, fixed cards + badges)
+   ========================================================= */
+
+:root {
+    --green: #2f7d32;
+    --green-light: #e8f6f1;
+    --teal: #0aa2b6;
     --bg: #f4fbf8;
     --card: #ffffff;
     --text: #0f172a;
     --muted: #64748b;
     --border: #e6efe9;
-    --green: #2f7d32;
-    --green2: #0f6d5b;
-    --chip: #e8f6f1;
-    --shadow: 0 10px 30px rgba(2,40,32,.10);
-    --radius: 16px;
+    --danger: #ef4444;
+    --shadow: 0 10px 30px rgba(2, 40, 32, .10);
+    --radius: 18px;
 }
 
-/* container */
+/* =========================
+   RESET / BASE
+   ========================= */
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+}
+
+/* No underline / no purple links */
+a, a:visited, a:hover, a:active {
+    text-decoration: none;
+    color: inherit;
+}
+
+img {
+    max-width: 100%;
+    display: block;
+}
+
+button, input {
+    font-family: inherit;
+}
+
+/* =========================
+   CONTAINER
+   ========================= */
 .ee-container {
-    width: min(1100px, calc(100% - 40px));
+    width: min(1200px, calc(100% - 40px));
     margin: 0 auto;
 }
 
-/* ===== Top Bar ===== */
+/* =========================
+   HEADER / TOP BAR
+   ========================= */
 .ee-topbar {
     position: sticky;
     top: 0;
@@ -27,51 +69,39 @@
 }
 
 .ee-topbar-inner {
-    width: min(1200px, calc(100% - 40px));
-    margin: 0 auto;
     display: flex;
     align-items: center;
     gap: 18px;
     padding: 14px 0;
 }
 
-/* Brand (logo + EcoEats) */
+/* Logo */
 .ee-brand {
     display: flex;
     align-items: center;
-    gap: 12px;
-    min-width: 170px;
+    gap: 10px;
+    min-width: 160px;
 }
 
 .ee-logo {
-    width: 44px;
-    height: 44px;
+    width: 42px;
+    height: 42px;
     border-radius: 999px;
     background: var(--green);
     display: flex;
     align-items: center;
     justify-content: center;
-    flex: 0 0 auto;
 }
 
-/* Leaf icon inside */
-.ee-leaf {
-    width: 24px;
-    height: 24px;
-    fill: #d8f4df;
-    stroke: #d8f4df;
-    stroke-width: 1.6;
-}
-
-    .ee-leaf path:last-child {
-        fill: none;
-        stroke-linecap: round;
-        opacity: .95;
+    .ee-logo svg {
+        width: 22px;
+        height: 22px;
+        fill: #d8f4df;
     }
 
 .ee-brand-name {
-    font-weight: 700;
     font-size: 20px;
+    font-weight: 700;
     color: var(--green);
 }
 
@@ -83,189 +113,152 @@
     gap: 10px;
     background: #f3f6f6;
     border: 1px solid #edf2f1;
-    padding: 10px 12px;
+    padding: 10px 14px;
     border-radius: 999px;
 }
 
-.ee-search-ic {
-    color: #94a3b8;
-}
-
-.ee-search-input {
-    border: none;
-    outline: none;
-    background: transparent;
-    width: 100%;
-    font-size: 14px;
-}
+    .ee-search input {
+        border: none;
+        outline: none;
+        background: transparent;
+        width: 100%;
+        font-size: 14px;
+    }
 
 /* Nav */
 .ee-nav {
     display: flex;
     gap: 14px;
-    align-items: center;
     white-space: nowrap;
 }
 
-.ee-nav-link {
-    font-size: 13px;
-    color: #334155;
-    padding: 8px 10px;
-    border-radius: 999px;
-}
-
-    .ee-nav-link:hover {
-        background: #f1f5f9;
+    .ee-nav a {
+        font-size: 14px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        color: #334155;
+        font-weight: 500;
     }
 
-    .ee-nav-link.active {
-        background: var(--chip);
-        color: var(--green2);
-        font-weight: 600;
-    }
+        .ee-nav a:hover {
+            background: #f1f5f9;
+        }
 
-/* Right icons */
+        .ee-nav a.active {
+            background: var(--green-light);
+            color: var(--green);
+            font-weight: 600;
+        }
+
+/* Icons */
 .ee-actions {
     display: flex;
     gap: 8px;
-    align-items: center;
 }
 
 .ee-icon-btn {
     width: 36px;
     height: 36px;
-    display: grid;
-    place-items: center;
+    border-radius: 999px;
     border: 1px solid var(--border);
     background: #fff;
-    border-radius: 999px;
-    box-shadow: 0 2px 10px rgba(15,23,42,.04);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
 }
 
-/* ===== Hero / Banner ===== */
+/* =========================
+   HERO / BANNER
+   ========================= */
 .ee-hero {
-    /* green -> teal like your screenshot */
     background: linear-gradient(90deg, #2f7d32 0%, #2f8b58 45%, #0aa2b6 100%);
     color: #fff;
-    padding: 62px 0 46px;
+    padding: 70px 0 60px;
 }
 
-.ee-hero-title {
-    margin: 0;
-    font-size: 44px;
-    line-height: 1.05;
-    letter-spacing: -.02em;
-    font-weight: 800;
-}
+    .ee-hero h1 {
+        font-size: 46px;
+        font-weight: 800;
+        margin: 0;
+    }
 
-.ee-hero-subtitle {
-    margin: 12px 0 0;
-    opacity: .92;
-    font-size: 15px;
-}
+    .ee-hero p {
+        margin-top: 12px;
+        font-size: 16px;
+        opacity: .92;
+    }
 
-/* Hero stats */
 .ee-hero-stats {
-    margin-top: 22px;
+    margin-top: 24px;
     display: flex;
-    gap: 16px;
+    gap: 18px;
     flex-wrap: wrap;
 }
 
 .ee-stat {
-    background: rgba(255,255,255,.14);
-    border: 1px solid rgba(255,255,255,.16);
-    backdrop-filter: blur(10px);
-    border-radius: 14px;
-    padding: 12px 16px;
-    min-width: 150px;
+    background: rgba(255,255,255,.18);
+    border: 1px solid rgba(255,255,255,.25);
+    border-radius: 18px;
+    padding: 18px 28px;
 }
 
 .ee-stat-value {
+    font-size: 26px;
     font-weight: 800;
-    font-size: 18px;
 }
 
 .ee-stat-label {
-    font-size: 12px;
-    opacity: .85;
-    margin-top: 2px;
+    font-size: 13px;
+    opacity: .9;
 }
 
-/* ===== Chips ===== */
-.ee-chips-wrap {
-    margin-top: 18px;
-}
-
-.ee-chips {
+/* =========================
+   PILLS / FILTERS
+   ========================= */
+.ee-pills {
+    margin: 24px 0;
     display: flex;
-    gap: 10px;
+    gap: 12px;
     flex-wrap: wrap;
 }
 
-.ee-chip {
-    border: 1px solid var(--border);
+.ee-pill {
     background: #fff;
+    border: 1px solid var(--border);
+    padding: 10px 16px;
     border-radius: 999px;
-    padding: 10px 12px;
-    font-size: 13px;
+    font-size: 14px;
     cursor: pointer;
 }
 
-    .ee-chip.active {
-        background: var(--chip);
-        color: var(--green2);
-        border-color: #d8eee6;
+    .ee-pill.active {
+        background: var(--green-light);
+        color: var(--green);
         font-weight: 600;
     }
 
-/* ===== Products Grid ===== */
-.ee-grid-wrap {
-    padding: 16px 0 50px;
+/* =========================
+   GRID
+   ========================= */
+.ee-grid {
+    padding: 26px 0 60px;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 18px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 22px;
 }
 
-/* responsive */
-@media (max-width: 980px) {
-    .ee-nav {
-        display: none;
-    }
-
-    .ee-grid-wrap {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 640px) {
-    .ee-topbar-inner {
-        gap: 10px;
-    }
-
-    .ee-brand {
-        min-width: auto;
-    }
-
-    .ee-search {
-        display: none;
-    }
-
-    .ee-grid-wrap {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* ===== Card ===== */
+/* =========================
+   CARD (FIXED — no more “60% off at corner”)
+   ========================= */
 .ee-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    overflow: hidden; /* ✅ keeps badge inside */
+    box-shadow: 0 8px 24px rgba(2,40,32,.08);
+    transition: transform .15s ease, box-shadow .15s ease;
     display: flex;
     flex-direction: column;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-    box-shadow: 0 8px 25px rgba(2, 40, 32, .06);
-    transition: transform .15s ease, box-shadow .15s ease;
+    min-width: 0;
 }
 
     .ee-card:hover {
@@ -273,105 +266,131 @@
         box-shadow: var(--shadow);
     }
 
+/* Image block must be relative */
 .ee-card-img {
-    position: relative;
-    height: 160px;
+    position: relative; /* ✅ anchor badge/heart */
+    height: 200px;
     background-size: cover;
     background-position: center;
 }
 
-.ee-badge {
+/* badge top-right */
+.ee-discount {
     position: absolute;
-    top: 10px;
-    right: 10px;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
     background: #f59e0b;
     color: #111827;
+    font-size: 12px;
     font-weight: 800;
-    font-size: 11px;
-    padding: 6px 10px;
+    padding: 6px 12px;
     border-radius: 999px;
 }
 
+/* heart top-left */
 .ee-like {
     position: absolute;
-    top: 10px;
-    left: 10px;
-    width: 32px;
-    height: 32px;
+    top: 12px;
+    left: 12px;
+    z-index: 2;
+    width: 34px;
+    height: 34px;
     border-radius: 999px;
-    border: 1px solid rgba(255,255,255,.6);
-    background: rgba(0,0,0,.25);
-    color: #fff;
-    cursor: pointer;
     display: grid;
     place-items: center;
+    background: rgba(0,0,0,.28);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,.35);
 }
 
+/* Body */
 .ee-card-body {
-    padding: 12px 12px 14px;
+    padding: 16px 18px 18px;
+    min-width: 0;
 }
 
 .ee-title {
-    font-weight: 700;
-    font-size: 14px;
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1.2;
 }
+
+    .ee-title:hover {
+        color: var(--green);
+    }
 
 .ee-subtitle {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--muted);
-    margin-top: 4px;
+    margin-top: 6px;
 }
 
-/* meta row */
 .ee-meta {
-    margin-top: 10px;
     display: flex;
-    align-items: center;
-    gap: 6px;
+    gap: 10px;
+    font-size: 13px;
     color: #475569;
-    font-size: 12px;
-}
-
-.ee-meta-dot {
-    opacity: .5;
-}
-
-.ee-row {
     margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.ee-expiry {
+    color: var(--danger);
+    font-weight: 700;
+}
+
+/* Price */
+.ee-price-row {
+    margin-top: 14px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 }
 
 .ee-price-now {
-    font-weight: 800;
+    font-size: 18px;
+    font-weight: 900;
     color: #0f766e;
 }
 
 .ee-price-old {
     margin-left: 8px;
+    font-size: 13px;
     color: #94a3b8;
     text-decoration: line-through;
-    font-size: 12px;
 }
 
-.ee-pill {
-    border: 1px solid #d5efe7;
-    background: #f0fbf7;
-    color: #0f766e;
-    font-size: 11px;
+.ee-pill-small {
+    background: var(--green-light);
+    color: var(--green);
+    font-size: 12px;
+    font-weight: 700;
     padding: 6px 10px;
     border-radius: 999px;
     white-space: nowrap;
 }
 
-.ee-foot {
-    margin-top: 10px;
+/* =========================
+   RESPONSIVE
+   ========================= */
+@media (max-width: 980px) {
+    .ee-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ee-nav {
+        display: none;
+    }
 }
 
-.ee-expiry {
-    font-size: 12px;
-    color: #ef4444;
-    font-weight: 600;
+@media (max-width: 640px) {
+    .ee-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .ee-search {
+        display: none;
+    }
 }

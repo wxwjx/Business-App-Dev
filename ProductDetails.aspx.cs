@@ -1,14 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Data.SqlClient;
-using System.Collections.Generic;
 using System.Linq;
-
 
 namespace Business_App_Dev
 {
     public partial class ProductDetails : System.Web.UI.Page
     {
+        private const string CART_KEY = "CART";
+
         private int CurrentProductId
         {
             get
@@ -20,80 +21,47 @@ namespace Business_App_Dev
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            if (!IsPostBack)
+            if (!IsPostBack && CurrentProductId > 0)
             {
-                txtQty.Text = "1";
-
-                if (CurrentProductId > 0)
-                    LoadProduct(CurrentProductId);
+                LoadProduct(CurrentProductId);
             }
         }
 
-        private void LoadProduct(int productId)
+        private void LoadProduct(int id)
         {
-            string connStr = ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
+            string cs = ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
 
-            using (SqlConnection conn = new SqlConnection(connStr))
-            using (SqlCommand cmd = new SqlCommand("SELECT * FROM Products WHERE ProductID = @id", conn))
+            using (SqlConnection conn = new SqlConnection(cs))
+            using (SqlCommand cmd = new SqlCommand("SELECT * FROM Products WHERE ProductID=@id", conn))
             {
-                cmd.Parameters.AddWithValue("@id", productId);
+                cmd.Parameters.AddWithValue("@id", id);
                 conn.Open();
 
-                using (SqlDataReader reader = cmd.ExecuteReader())
+                using (SqlDataReader r = cmd.ExecuteReader())
                 {
-                    if (!reader.Read()) return;
+                    if (!r.Read()) return;
 
-                    lblName.Text = reader["ProductName"].ToString();
-                    lblSubtitle.Text = reader["Subtitle"] != DBNull.Value ? reader["Subtitle"].ToString() : "Fresh Market";
+                    lblName.Text = r["ProductName"].ToString();
+                    lblSubtitle.Text = r["Subtitle"].ToString();
+                    lblDescription.Text = r["Subtitle"].ToString();
+                    imgProduct.ImageUrl = r["ImageUrl"].ToString();
 
-                    imgProduct.ImageUrl = reader["ImageUrl"] != DBNull.Value ? reader["ImageUrl"].ToString() : "";
+                    decimal now = (decimal)r["Price"];
+                    decimal old = r["PriceOld"] != DBNull.Value ? (decimal)r["PriceOld"] : now;
 
-                    decimal priceNow = reader["Price"] != DBNull.Value ? (decimal)reader["Price"] : 0;
-                    decimal priceOld = reader["PriceOld"] != DBNull.Value ? (decimal)reader["PriceOld"] : 0;
+                    lblPriceNow.Text = now.ToString("0.00");
+                    lblPriceOld.Text = old.ToString("0.00");
+                    lblSave.Text = (old - now).ToString("0.00");
 
-                    double rating = reader["Rating"] != DBNull.Value ? Convert.ToDouble(reader["Rating"]) : 0;
-                    int reviews = reader["Reviews"] != DBNull.Value ? Convert.ToInt32(reader["Reviews"]) : 0;
-                    int distance = reader["DistanceKm"] != DBNull.Value ? Convert.ToInt32(reader["DistanceKm"]) : 0;
-                    int expiry = reader["ExpiryHours"] != DBNull.Value ? Convert.ToInt32(reader["ExpiryHours"]) : 0;
-                    double co2 = reader["CO2Saved"] != DBNull.Value ? Convert.ToDouble(reader["CO2Saved"]) : 0;
-                    int discount = reader["DiscountPercent"] != DBNull.Value ? Convert.ToInt32(reader["DiscountPercent"]) : 0;
-
-                    lblPriceNow.Text = priceNow.ToString("0.00");
-                    lblPriceOld.Text = priceOld.ToString("0.00");
-                    lblSave.Text = Math.Max(0, priceOld - priceNow).ToString("0.00");
-
-                    lblRating.Text = rating.ToString("0.0");
-                    lblReviews.Text = reviews.ToString();
-                    lblDistance.Text = distance.ToString();
-                    lblExpiry.Text = expiry.ToString();
-                    lblCO2.Text = co2.ToString("0.0");
-                    lblDiscount.Text = discount.ToString();
-
-                    // If you don't have description column, reuse subtitle
-                    lblDescription.Text = reader["Subtitle"] != DBNull.Value
-                        ? reader["Subtitle"].ToString()
-                        : "Fresh seasonal food at amazing prices.";
+                    lblRating.Text = r["Rating"].ToString();
+                    lblReviews.Text = r["Reviews"].ToString();
+                    lblDistance.Text = r["DistanceKm"].ToString();
+                    lblExpiry.Text = r["ExpiryHours"].ToString();
+                    lblCO2.Text = r["CO2Saved"].ToString();
+                    lblDiscount.Text = r["DiscountPercent"].ToString();
                 }
             }
         }
-
-        protected void btnMinus_Click(object sender, EventArgs e)
-        {
-            int qty;
-            if (!int.TryParse(txtQty.Text, out qty)) qty = 1;
-            qty = Math.Max(1, qty - 1);
-            txtQty.Text = qty.ToString();
-        }
-
-        protected void btnPlus_Click(object sender, EventArgs e)
-        {
-            int qty;
-            if (!int.TryParse(txtQty.Text, out qty)) qty = 1;
-            qty = Math.Min(99, qty + 1);
-            txtQty.Text = qty.ToString();
-        }
-
-        private const string CART_KEY = "CART";
 
         private List<CartItem> GetCart()
         {
@@ -106,18 +74,15 @@ namespace Business_App_Dev
             return cart;
         }
 
-        protected void btnAddToCart_Click(object sender, EventArgs e)
+        private void AddItemToCart()
         {
-            int qty;
-            if (!int.TryParse(txtQty.Text, out qty)) qty = 1;
-            qty = Math.Max(1, Math.Min(99, qty));
-
+            int qty = Math.Max(1, int.Parse(txtQty.Text));
             var cart = GetCart();
-            var existing = cart.FirstOrDefault(x => x.ProductID == CurrentProductId);
 
-            if (existing != null)
+            var item = cart.FirstOrDefault(x => x.ProductID == CurrentProductId);
+            if (item != null)
             {
-                existing.Quantity = Math.Min(99, existing.Quantity + qty);
+                item.Quantity += qty;
             }
             else
             {
@@ -127,30 +92,39 @@ namespace Business_App_Dev
                     ProductName = lblName.Text,
                     Subtitle = lblSubtitle.Text,
                     ImageUrl = imgProduct.ImageUrl,
-                    PriceNow = decimal.TryParse(lblPriceNow.Text, out var pNow) ? pNow : 0,
-                    PriceOld = decimal.TryParse(lblPriceOld.Text, out var pOld) ? pOld : 0,
-                    CO2SavedPerMeal = double.TryParse(lblCO2.Text, out var co2) ? co2 : 0,
+                    PriceNow = decimal.Parse(lblPriceNow.Text),
+                    PriceOld = decimal.Parse(lblPriceOld.Text),
+                    CO2SavedPerMeal = double.Parse(lblCO2.Text),
                     Quantity = qty
                 });
             }
 
             Session[CART_KEY] = cart;
-            Response.Redirect("Cart.aspx");
         }
 
+        protected void btnMinus_Click(object sender, EventArgs e)
+        {
+            int q = int.Parse(txtQty.Text);
+            txtQty.Text = Math.Max(1, q - 1).ToString();
+        }
 
+        protected void btnPlus_Click(object sender, EventArgs e)
+        {
+            int q = int.Parse(txtQty.Text);
+            txtQty.Text = Math.Min(99, q + 1).ToString();
+        }
+
+        // Add to Cart (toast only)
+        protected void btnAddToCart_Click(object sender, EventArgs e)
+        {
+            AddItemToCart();
+        }
+
+        // Buy Now (redirect)
         protected void btnBuyNow_Click(object sender, EventArgs e)
         {
-            int qty;
-            if (!int.TryParse(txtQty.Text, out qty)) qty = 1;
-
-            // Save info for order/checkout flow
-            Session["BuyNowProductId"] = CurrentProductId;
-            Session["BuyNowQty"] = qty;
-
-            // Redirect to your next page
-            // Change to Checkout.aspx when you create it
-            Response.Redirect("Order.aspx");
+            AddItemToCart();
+            Response.Redirect("Cart.aspx");
         }
     }
 }

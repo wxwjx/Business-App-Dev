@@ -33,13 +33,13 @@ namespace Business_App_Dev
         protected global::System.Web.UI.WebControls.Label lblItemCount;
 
         /// <summary>
-        /// pnlEmpty control.
+        /// lblEmpty control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Panel pnlEmpty;
+        protected global::System.Web.UI.WebControls.Label lblEmpty;
 
         /// <summary>
         /// rptCart control.
@@ -78,39 +78,39 @@ namespace Business_App_Dev
         protected global::System.Web.UI.WebControls.Label lblCO2;
 
         /// <summary>
-        /// txtCode control.
+        /// txtDiscount control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtCode;
+        protected global::System.Web.UI.WebControls.TextBox txtDiscount;
 
         /// <summary>
-        /// btnApply control.
+        /// btnApplyDiscount control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Button btnApply;
+        protected global::System.Web.UI.WebControls.Button btnApplyDiscount;
 
         /// <summary>
-        /// lblCodeMsg control.
+        /// lblPayMsg control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblCodeMsg;
+        protected global::System.Web.UI.WebControls.Label lblPayMsg;
 
         /// <summary>
-        /// btnCheckout control.
+        /// btnPay control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Button btnCheckout;
+        protected global::System.Web.UI.WebControls.Button btnPay;
     }
 }

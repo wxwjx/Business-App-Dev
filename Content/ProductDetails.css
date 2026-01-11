@@ -16,7 +16,7 @@
 
 .pd-container {
     width: min(1150px, calc(100% - 48px));
-    margin: 26px auto 60px;
+    margin: 22px auto 60px;
 }
 
 .pd-back {
@@ -33,10 +33,11 @@
     align-items: start;
 }
 
+/* ✅ IMPORTANT: badge anchor */
 .pd-image-wrap {
-    position: relative;
+    position: relative; /* anchors badge */
     border-radius: 22px;
-    overflow: hidden;
+    overflow: hidden; /* prevents badge/text from leaking */
     box-shadow: var(--shadow);
     background: #f8fafc;
 }
@@ -48,10 +49,12 @@
     display: block;
 }
 
+/* ✅ Badge stays top-right */
 .pd-badge {
     position: absolute;
     top: 16px;
     right: 16px;
+    z-index: 3;
     background: #f59e0b;
     color: #111827;
     font-weight: 800;
@@ -60,7 +63,10 @@
     border-radius: 999px;
 }
 
-/* Right side */
+.pd-right {
+    min-width: 0;
+}
+
 .pd-title {
     margin: 0;
     font-size: 34px;
@@ -73,7 +79,6 @@
     font-size: 14px;
 }
 
-/* Rating row */
 .pd-rating-row {
     margin-top: 14px;
     display: flex;
@@ -85,18 +90,16 @@
 .pd-stars {
     letter-spacing: 1px;
     color: #f59e0b;
-    font-size: 14px;
 }
 
 .pd-rating {
-    font-weight: 700;
+    font-weight: 800;
 }
 
 .pd-reviews {
     color: var(--muted);
 }
 
-/* info row */
 .pd-info-row {
     margin-top: 14px;
     display: flex;
@@ -114,16 +117,16 @@
 
     .pd-info.danger {
         color: var(--danger);
-        font-weight: 600;
+        font-weight: 700;
     }
 
-/* impact box */
+/* Impact box */
 .pd-impact {
     margin-top: 18px;
     border: 1px solid #b7e5cd;
     background: #f2fbf6;
     border-radius: 12px;
-    padding: 16px 16px;
+    padding: 16px;
     display: flex;
     gap: 12px;
     align-items: center;
@@ -147,18 +150,17 @@
 }
 
 .pd-impact-text {
-    font-weight: 600;
+    font-weight: 700;
     color: #14532d;
     font-size: 13px;
 }
 
-/* sections */
 .pd-section {
     margin-top: 18px;
 }
 
 .pd-section-title {
-    font-weight: 700;
+    font-weight: 800;
     font-size: 14px;
     margin-bottom: 8px;
 }
@@ -191,7 +193,7 @@
 
 .pd-price-now {
     font-size: 30px;
-    font-weight: 800;
+    font-weight: 900;
     color: var(--green);
 }
 
@@ -205,13 +207,13 @@
     border: 1px solid #fde68a;
     background: #fffbeb;
     color: #92400e;
-    font-weight: 700;
+    font-weight: 800;
     font-size: 12px;
     padding: 6px 10px;
     border-radius: 999px;
 }
 
-/* qty + buttons */
+/* actions */
 .pd-actions {
     margin-top: 14px;
     display: flex;
@@ -248,17 +250,16 @@
     border: none;
     text-align: center;
     outline: none;
-    font-weight: 600;
+    font-weight: 700;
 }
 
-/* Add to cart (green) */
 .pd-add {
     height: 40px;
     border: none;
     border-radius: 12px;
     background: var(--green);
     color: #fff;
-    font-weight: 700;
+    font-weight: 800;
     cursor: pointer;
     padding: 0 18px;
 }
@@ -267,14 +268,13 @@
         filter: brightness(.95);
     }
 
-/* Buy now (teal) */
 .pd-buy {
     height: 40px;
     border: none;
     border-radius: 12px;
     background: #0aa2b6;
     color: #fff;
-    font-weight: 700;
+    font-weight: 800;
     cursor: pointer;
     padding: 0 18px;
 }
@@ -283,7 +283,7 @@
         filter: brightness(.95);
     }
 
-/* Why card */
+/* why card */
 .pd-why {
     margin-top: 16px;
     background: #eef8f4;
@@ -292,7 +292,7 @@
 }
 
 .pd-why-title {
-    font-weight: 800;
+    font-weight: 900;
     margin-bottom: 8px;
 }
 
@@ -302,6 +302,60 @@
     color: #475569;
     font-size: 13px;
     line-height: 1.7;
+}
+
+/* =========================
+   Cute Toast (Top Right)
+   ========================= */
+.toast {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    width: 260px;
+    background: #ffffff;
+    color: #0f172a;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    box-shadow: 0 14px 40px rgba(0,0,0,.14);
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+    transition: all .25s ease;
+    z-index: 9999;
+}
+
+    .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+
+.toast-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: #e8f6f1;
+    display: grid;
+    place-items: center;
+    font-size: 18px;
+    color: #2f7d32;
+    flex: 0 0 auto;
+}
+
+.toast-title {
+    font-weight: 900;
+    font-size: 14px;
+    line-height: 1.1;
+}
+
+.toast-sub {
+    margin-top: 2px;
+    font-size: 12px;
+    color: #64748b;
 }
 
 @media (max-width: 980px) {
