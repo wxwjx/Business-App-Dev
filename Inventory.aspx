@@ -4,14 +4,14 @@
     Inherits="Business_App_Dev.Inventory" %>
 
 <asp:Content ContentPlaceHolderID="MainContent" runat="server">
-    <h2>
+    
         <table class="w-100">
             <tr>
                 <td class="auto-style1">Seller Inventory</td>
                 <td>&nbsp;</td>
             </tr>
         </table>
-    </h2>
+    
 
   <asp:GridView ID="gvProducts"
         runat="server"

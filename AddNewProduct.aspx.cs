@@ -66,9 +66,9 @@ namespace Business_App_Dev
             }
                   }
 
-        protected void btn_ProductView_Click(object sender, EventArgs e)
-        {
-            Response.Redirect("Inventory.aspx");
-        }
+        //protected void btn_ProductView_Click(object sender, EventArgs e)
+        //{
+        //    Response.Redirect("Inventory.aspx");
+        //}
     }
 }

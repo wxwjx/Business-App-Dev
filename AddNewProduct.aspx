@@ -39,6 +39,7 @@
             <td class="auto-style1">
                 <asp:TextBox ID="tb_ProductID" runat="server"></asp:TextBox>
                 <asp:RequiredFieldValidator ID="rfv_ProductID" runat="server" ControlToValidate="tb_ProductID" ErrorMessage="Please enter Product ID" ForeColor="Red"></asp:RequiredFieldValidator>
+                <br />
             </td>
         </tr>
         <tr>
@@ -46,6 +47,7 @@
             <td class="auto-style1">
                 <asp:TextBox ID="tb_ProductName" runat="server" Width="182px"></asp:TextBox>
                 <asp:RequiredFieldValidator ID="rfv_ProductName" runat="server" ControlToValidate="tb_ProductName" ErrorMessage="Please Enter Name of the product" ForeColor="Red" Display ="Static" ></asp:RequiredFieldValidator>
+                <br />
             </td>
         </tr>
         <tr>
@@ -54,6 +56,7 @@
                 <asp:TextBox ID="tb_Price" runat="server"></asp:TextBox>
                 <asp:RequiredFieldValidator ID="rfv_Price" runat="server" ControlToValidate="tb_Price" ErrorMessage="Please enter unit price for the product" Display="Static" ForeColor="Red" ></asp:RequiredFieldValidator>
                 &nbsp;<asp:CompareValidator ID="cv_Price" runat="server" ControlToValidate="tb_Price" ErrorMessage="Only Numeric value is allowed" ForeColor="Red" Operator="DataTypeCheck" Type="Double"></asp:CompareValidator>
+                <br />
             </td>
         </tr>
         <tr>
@@ -62,21 +65,21 @@
                 <asp:TextBox ID="tb_quantity" runat="server"></asp:TextBox>
                 <asp:RequiredFieldValidator ID="rfv_quantity" runat="server" ControlToValidate="tb_quantity" ErrorMessage="Please enter quantity " ForeColor="Red"></asp:RequiredFieldValidator>
                 <asp:CompareValidator ID="cv_Quantity" runat="server" ErrorMessage="Only numeric interger is allowed" ForeColor="Red" Operator="DataTypeCheck" Type="Integer" ControlToValidate="tb_quantity"></asp:CompareValidator>
+                <br />
             </td>
-            <td class="auto-style2"></td>
         </tr>
         <tr>
             <td class="auto-style5">Category</td>
             <td class="auto-style6">
                 <asp:TextBox ID="tb_category" runat="server"></asp:TextBox>
                 <asp:RequiredFieldValidator ID="rfv_category" runat="server" ControlToValidate="tb_category" ErrorMessage="Please enter category" ForeColor="Red"></asp:RequiredFieldValidator>
+                <br />
             </td>
         </tr>
         <tr>
             <td class="auto-style7">&nbsp;</td>
             <td class="auto-style1">
                 <asp:Button ID="btn_Insert" runat="server" OnClick="btn_Insert_Click" Text="Insert" />
-                <asp:Button ID="btn_ProductView" runat="server" OnClick="btn_ProductView_Click" Text="View Product List" CausesValidation="false"/>
             </td>
         </tr>
         <tr>
