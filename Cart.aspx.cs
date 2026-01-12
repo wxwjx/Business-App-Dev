@@ -15,9 +15,7 @@ namespace Business_App_Dev
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!IsPostBack)
-            {
                 BindAll();
-            }
         }
 
         private List<CartItem> GetCart()
@@ -34,15 +32,12 @@ namespace Business_App_Dev
         {
             var cart = GetCart();
 
-            // show/hide
             lblEmpty.Visible = (cart.Count == 0);
             rptCart.Visible = (cart.Count > 0);
 
-            // bind list
             rptCart.DataSource = cart;
             rptCart.DataBind();
 
-            // totals
             decimal subtotal = cart.Sum(x => x.LineTotal);
             double co2 = cart.Sum(x => x.LineCO2);
 
@@ -50,23 +45,14 @@ namespace Business_App_Dev
             lblTotal.Text = subtotal.ToString("0.00");
             lblCO2.Text = co2.ToString("0.0");
 
-            // item count label (sum of quantities)
             int itemCount = cart.Sum(x => x.Quantity);
             lblItemCount.Text = itemCount.ToString();
 
-            // Disable payment button if empty
             btnPay.Enabled = cart.Count > 0;
-
-            // UI text
             btnPay.Text = "Payment";
             lblPayMsg.Text = "";
         }
 
-        /// <summary>
-        /// Safe description getter for the Repeater.
-        /// Will not crash even if CartItem doesn't contain Description field.
-        /// Supports common property names: Description / ProductDescription / Desc
-        /// </summary>
         public string GetDesc(object dataItem)
         {
             if (dataItem == null) return "";
@@ -162,14 +148,41 @@ namespace Business_App_Dev
             {
                 Mode = "payment",
                 LineItems = lineItems,
-                SuccessUrl = baseUrl + "/StripeSuccess.aspx",
-                CancelUrl = baseUrl + "/Cart.aspx"
+
+                // ✅ send session id back so we can verify + load items
+                SuccessUrl = baseUrl + "/OrderSuccess.aspx?session_id={CHECKOUT_SESSION_ID}",
+                CancelUrl = baseUrl + "/Cart.aspx",
             };
 
             var service = new SessionService();
             var session = service.Create(options);
 
+            // ✅ Save snapshot so success page can show EXACTLY what was purchased
+            var snapshot = cart.Select(x => new PurchasedItem
+            {
+                ProductID = x.ProductID,
+                ProductName = x.ProductName,
+                UnitPrice = x.PriceNow,
+                Quantity = x.Quantity,
+                LineTotal = x.LineTotal
+            }).ToList();
+
+            Session["PENDING_ORDER_" + session.Id] = snapshot;
+
+            // Optional: store totals too
+            Session["PENDING_ORDER_TOTAL_" + session.Id] = snapshot.Sum(i => i.LineTotal);
+
             Response.Redirect(session.Url);
         }
+    }
+
+    [Serializable]
+    public class PurchasedItem
+    {
+        public int ProductID { get; set; }
+        public string ProductName { get; set; }
+        public decimal UnitPrice { get; set; }
+        public int Quantity { get; set; }
+        public decimal LineTotal { get; set; }
     }
 }
