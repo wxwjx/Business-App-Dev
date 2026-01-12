@@ -5,7 +5,7 @@ namespace Business_App_Dev
 {
     public partial class Inventory : System.Web.UI.Page
     {
-        static List<Product> products = new List<Product>();
+  
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!IsPostBack)
@@ -17,17 +17,17 @@ namespace Business_App_Dev
 
         void SeedData()
         {
-            if (products.Count == 0)
+            if (Product.Products.Count == 0)
             {
-                products.Add(new Product { ID = "P001", Name = "Chicken Rice", Price = 3.50m, Quantity = 10, Category = "Main" });
-                products.Add(new Product { ID = "P002", Name = "Veg Bento", Price = 4.00m, Quantity = 8, Category = "Vegetarian" });
-                products.Add(new Product { ID = "P003", Name = "Bread Loaf", Price = 1.50m, Quantity = 15, Category = "Bakery" });
+                Product.Products.Add(new Product { ID = "P001", Name = "Chicken Rice", Price = 3.50m, Quantity = 10, Category = "Main" });
+                Product.Products.Add(new Product { ID = "P002", Name = "Veg Bento", Price = 4.00m, Quantity = 8, Category = "Vegetarian" });
+                Product.Products.Add(new Product { ID = "P003", Name = "Bread Loaf", Price = 1.50m, Quantity = 15, Category = "Bakery" });
             }
         }
 
         void BindGrid()
         {
-            gvProducts.DataSource = products;
+            gvProducts.DataSource = Product.Products;
             gvProducts.DataBind();
         }
 
@@ -41,7 +41,7 @@ namespace Business_App_Dev
         protected void gvProducts_RowDeleting(object sender, System.Web.UI.WebControls.GridViewDeleteEventArgs e)
         {
             string id = gvProducts.DataKeys[e.RowIndex].Value.ToString();
-            products.RemoveAll(x => x.ID == id);
+            Product.Products.RemoveAll(x => x.ID == id);
             BindGrid();
         }
 
@@ -59,7 +59,7 @@ namespace Business_App_Dev
             string id = gvProducts.DataKeys[e.RowIndex].Value.ToString();
 
             // find the product in list
-            Product p = products.Find(x => x.ID == id);
+            Product p = Product.Products.Find(x => x.ID == id);
 
             // grab new values from TextBoxes in the row
             p.Name = ((System.Web.UI.WebControls.TextBox)gvProducts.Rows[e.RowIndex].Cells[1].Controls[0]).Text;
@@ -71,16 +71,14 @@ namespace Business_App_Dev
             BindGrid();
 
         }
+
+        protected void btn_addProduct_Click(object sender, EventArgs e)
+        {
+            Response.Redirect("AddNewProduct.aspx");
+        }
     }
 
-    public class Product
-{
-    public string ID { get; set; }
-    public string Name { get; set; }
-    public decimal Price { get; set; }
-    public int Quantity { get; set; }
-    public string Category { get; set; }
-}
+
 
     
 }
