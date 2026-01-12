@@ -1,9 +1,9 @@
-﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="Site.master.cs" Inherits="Business_App_Dev.SiteMaster" %>
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="SellerPage.master.cs" Inherits="Business_App_Dev.SellerPage" %>
 
 <!DOCTYPE html>
 <html lang="en">
 <head runat="server">
-    <title><%: Page.Title %> - EcoEats</title>
+       <title><%: Page.Title %> - EcoEats</title>
 
   
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -36,21 +36,18 @@
 
                     <div class="ee-header-icons">
                         <button type="button" class="ee-icon-btn">💬</button>
-                        <button type="button" class="ee-icon-btn">📦</button>
-                        <button type="button" class="ee-icon-btn">🛒</button>
+                        
                         <button type="button" class="ee-icon-btn">👤</button>
                     </div>
                 </div>
 
                 <nav class="ee-nav">
                     <div class="container ee-nav-links">
-                        <a href="Default.aspx" class="ee-nav-link ee-nav-active">Home</a>
-                        <a href="#" class="ee-nav-link">Orders</a>
-                        <a href="#" class="ee-nav-link">Profile</a>
-                        <a href="#" class="ee-nav-link">About Us</a>
-                        <a href="#" class="ee-nav-link">Help</a>
-                        <a href="#" class="ee-nav-link">Feedback</a>
-                        <a href="#" class="ee-nav-link">Rate Sellers</a>
+                        <a href="StoreDetails.aspx" class="ee-nav-link ee-nav-active">Store Details</a>
+                        <a href="Inventory.aspx" class="ee-nav-link">Inventory</a>
+                        <a href="OrderManagement.aspx" class="ee-nav-link">Order Management</a>
+                        <a href="ReviewFeedback.aspx" class="ee-nav-link">Review Feedback</a>
+                        <a href="Dashboard.aspx" class="ee-nav-link">Dashboard</a>
                     </div>
                 </nav>
             </header>

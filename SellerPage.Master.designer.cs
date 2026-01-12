@@ -7,11 +7,11 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace FoodSaver
+namespace Business_App_Dev
 {
 
 
-    public partial class SellPage
+    public partial class SellerPage
     {
 
         /// <summary>
