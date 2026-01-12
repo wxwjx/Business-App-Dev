@@ -38,17 +38,17 @@
             <nav class="ee-nav">
                 <a class="active" href="Product.aspx">Home</a>
                 <a href="Order.aspx">Orders</a>
-                <a href="#">Profile</a>
-                <a href="#">About Us</a>
+                <a href="Profile.aspx">Profile</a>
+                <a href="About.aspx">About Us</a>
                 <a href="#">Help</a>
-                <a href="#">Feedback</a>
+                <a href="Feedback.aspx">Feedback</a>
                 <a href="#">Rate Sellers</a>
             </nav>
 
             <div class="ee-actions">
                 <a class="ee-icon-btn" href="#" title="Notifications">🔔</a>
                 <a class="ee-icon-btn" href="Cart.aspx" title="Cart">🛒</a>
-                <a class="ee-icon-btn" href="#" title="Account">👤</a>
+                <a class="ee-icon-btn" href="Profile.aspx" title="Account">👤</a>
             </div>
 
         </div>
