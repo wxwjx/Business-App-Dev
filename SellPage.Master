@@ -28,7 +28,7 @@
                     <div class="ee-nav-links">
                         <a runat="server" href="SellerDashboard.aspx" class="ee-nav-link">Dashboard</a>
                         <a runat="server" href="SellerWasteTracker.aspx" class="ee-nav-link">Waste Tracker</a>
-                        <a runat="server" href="SellerInventory.aspx" class="ee-nav-link">Inventory</a>
+                        <a runat="server" href="Inventory.aspx" class="ee-nav-link">Inventory</a>
                         <a runat="server" href="SellerOrders.aspx" class="ee-nav-link">Order Management</a>
                         <a runat="server" href="SellerReviews.aspx" class="ee-nav-link">Customer Review</a>
                         <a runat="server" href="SellerMessages.aspx" class="ee-nav-link">Messages</a>

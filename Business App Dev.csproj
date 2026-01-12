@@ -264,6 +264,7 @@
     </Compile>
     <Compile Include="SellerLogin.aspx.cs">
       <DependentUpon>SellerLogin.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="SellerLogin.aspx.designer.cs">
       <DependentUpon>SellerLogin.aspx</DependentUpon>
@@ -277,9 +278,17 @@
     </Compile>
     <Compile Include="SellerSignup.aspx.cs">
       <DependentUpon>SellerSignup.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="SellerSignup.aspx.designer.cs">
       <DependentUpon>SellerSignup.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SellPage.Master.cs">
+      <DependentUpon>SellPage.Master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SellPage.Master.designer.cs">
+      <DependentUpon>SellPage.Master</DependentUpon>
     </Compile>
     <Compile Include="Site.Master.cs">
       <DependentUpon>Site.Master</DependentUpon>
@@ -318,6 +327,7 @@
     <Content Include="Scripts\jquery-3.7.0.slim.min.map" />
     <Content Include="Scripts\jquery-3.7.0.min.map" />
     <Content Include="SellerPage.Master" />
+    <Content Include="SellPage.Master" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

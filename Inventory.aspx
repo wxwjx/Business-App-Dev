@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" MasterPageFile="~/SellerPage.Master"
+﻿<%@ Page Language="C#" MasterPageFile="~/SellPage.Master"
     AutoEventWireup="true"
     CodeBehind="Inventory.aspx.cs"
     Inherits="Business_App_Dev.Inventory" %>
