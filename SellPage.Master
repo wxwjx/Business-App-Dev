@@ -19,13 +19,25 @@
         <div class="ee-page">
 
             <header class="ee-header">
-                <div class="container ee-header-main d-flex justify-content-between align-items-center">
-                    
+
+                <!-- Top bar (same as customer layout) -->
+                <div class="container ee-header-main">
                     <div class="ee-logo">
-                        <span class="ee-logo-text">EcoEats Seller Page</span>
+                        <div class="ee-logo-icon">🌱</div>
+                        <span class="ee-logo-text">EcoEats</span>
+                        <span class="ms-2 fw-semibold text-muted">Seller</span>
                     </div>
 
-                    <div class="ee-nav-links">
+                    <!-- Keep icons area for symmetry (optional) -->
+                    <div class="ee-header-icons">
+                        <a runat="server" href="SellerMessages.aspx" class="ee-icon-btn" title="Messages">💬</a>
+                        <a runat="server" href="SellerProfile.aspx" class="ee-icon-btn" title="Store Profile">👤</a>
+                    </div>
+                </div>
+
+                <!-- Second row nav (same class names as customer) -->
+                <nav class="ee-nav">
+                    <div class="container ee-nav-links">
                         <a runat="server" href="SellerDashboard.aspx" class="ee-nav-link">Dashboard</a>
                         <a runat="server" href="SellerWasteTracker.aspx" class="ee-nav-link">Waste Tracker</a>
                         <a runat="server" href="Inventory.aspx" class="ee-nav-link">Inventory</a>
@@ -34,11 +46,11 @@
                         <a runat="server" href="SellerMessages.aspx" class="ee-nav-link">Messages</a>
                         <a runat="server" href="SellerProfile.aspx" class="ee-nav-link">Store Profile</a>
                     </div>
+                </nav>
 
-                </div>
             </header>
 
-            <main class="ee-main container py-3">
+            <main class="ee-main">
                 <asp:ContentPlaceHolder ID="MainContent" runat="server" />
             </main>
 

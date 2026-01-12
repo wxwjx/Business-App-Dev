@@ -775,6 +775,7 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Cart.aspx.cs">
       <DependentUpon>Cart.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Cart.aspx.designer.cs">
       <DependentUpon>Cart.aspx</DependentUpon>
@@ -828,6 +829,7 @@
     </Compile>
     <Compile Include="OrderSuccess.aspx.cs">
       <DependentUpon>OrderSuccess.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="OrderSuccess.aspx.designer.cs">
       <DependentUpon>OrderSuccess.aspx</DependentUpon>
@@ -835,6 +837,7 @@
     <Compile Include="Product.cs" />
     <Compile Include="ProductDetails.aspx.cs">
       <DependentUpon>ProductDetails.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="ProductDetails.aspx.designer.cs">
       <DependentUpon>ProductDetails.aspx</DependentUpon>
@@ -857,12 +860,14 @@
     </Compile>
     <Compile Include="SellerMessages.aspx.cs">
       <DependentUpon>SellerMessages.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="SellerMessages.aspx.designer.cs">
       <DependentUpon>SellerMessages.aspx</DependentUpon>
     </Compile>
     <Compile Include="SellerReviews.aspx.cs">
       <DependentUpon>SellerReviews.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="SellerReviews.aspx.designer.cs">
       <DependentUpon>SellerReviews.aspx</DependentUpon>
@@ -876,6 +881,7 @@
     </Compile>
     <Compile Include="SellerWasteTracker.aspx.cs">
       <DependentUpon>SellerWasteTracker.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="SellerWasteTracker.aspx.designer.cs">
       <DependentUpon>SellerWasteTracker.aspx</DependentUpon>
