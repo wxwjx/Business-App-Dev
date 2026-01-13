@@ -47,16 +47,17 @@ body.ck-body {
     }
 
 /* ============================= */
-/* HEADER                        */
+/* TITLE ROW (CENTER ONLY)       */
 /* ============================= */
-.ck-header {
+.ck-header-title {
     display: flex;
     justify-content: center;
-    margin-bottom: 22px;
+    align-items: center;
+    margin-bottom: 14px;
 }
 
 .ck-h-title {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 10px;
     font-size: 44px;
@@ -67,13 +68,6 @@ body.ck-body {
 
 .ck-cart-ic {
     font-size: 40px;
-}
-
-.ck-items-count {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--muted);
-    margin-left: 6px;
 }
 
 /* ============================= */
@@ -105,6 +99,45 @@ body.ck-body {
     gap: 14px;
 }
 
+/* ✅ The bar ABOVE items list (Select all goes here) */
+.ck-leftbar {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 4px 2px 0;
+}
+
+/* Select all styling */
+.ck-selectall {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+}
+
+    /* Make ASP:CheckBox line up nicely */
+    .ck-selectall input,
+    .ck-selectall span input {
+        width: 18px;
+        height: 18px;
+    }
+
+/* Selected count (optional) */
+.ck-selected-count {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--muted);
+}
+
+.ck-hide {
+    display: none !important;
+}
+
+/* Empty state */
 .ck-empty {
     background: var(--card);
     border: 1px solid var(--border);
@@ -115,6 +148,7 @@ body.ck-body {
     font-weight: 600;
 }
 
+/* Item card */
 .ck-item-card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -122,10 +156,21 @@ body.ck-body {
     padding: 16px 16px;
     box-shadow: var(--shadow);
     display: grid;
-    grid-template-columns: 74px 1fr auto;
+    grid-template-columns: 36px 74px 1fr auto;
     gap: 14px;
     align-items: center;
 }
+
+.ck-item-select {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .ck-item-select input {
+        width: 18px;
+        height: 18px;
+    }
 
 .ck-item-img {
     width: 74px;
@@ -152,7 +197,6 @@ body.ck-body {
     margin-bottom: 10px;
 }
 
-    /* hide if empty so no awkward gap */
     .ck-item-desc:empty {
         display: none;
     }
@@ -176,7 +220,7 @@ body.ck-body {
     gap: 10px;
 }
 
-/* Qty pill like screenshot */
+/* Qty pill */
 .ck-qty-pill {
     display: inline-flex;
     align-items: center;
@@ -345,43 +389,6 @@ body.ck-body {
     font-weight: 900;
     color: var(--green-2);
 }
-
-/* Discount input + button */
-.ck-discount {
-    margin-top: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.ck-discount-input {
-    width: 100%;
-    border: 1px solid var(--border);
-    background: #f8fafc;
-    border-radius: 999px;
-    padding: 12px 14px;
-    outline: none;
-    font-size: 14px;
-}
-
-    .ck-discount-input:focus {
-        border-color: rgba(46,125,50,0.45);
-        background: #fff;
-    }
-
-.ck-apply-btn {
-    width: 100%;
-    border: 1px solid var(--border);
-    background: #ffffff;
-    border-radius: 999px;
-    padding: 12px 14px;
-    font-weight: 800;
-    cursor: pointer;
-}
-
-    .ck-apply-btn:hover {
-        background: #f8fafc;
-    }
 
 /* CTA */
 .ck-cta-wrap {

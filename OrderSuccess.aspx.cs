@@ -1,18 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
-using System.Data;
 using System.Data.SqlClient;
 using System.Globalization;
 using System.Linq;
 using System.Web.UI;
 using System.Web.UI.HtmlControls;
 using System.Web.UI.WebControls;
+using Stripe;
+using Stripe.Checkout;
 
 namespace Business_App_Dev
 {
     public partial class OrderSuccess : System.Web.UI.Page
     {
+        private const string CART_KEY = "CART";
+        private const string CART_SELECTED_KEY = "CART_SELECTED";
+        private const string CART_SELECTED_INIT_KEY = "CART_SELECTED_INIT";
+
         protected void Page_Load(object sender, EventArgs e)
         {
             if (IsPostBack) return;
@@ -21,6 +26,13 @@ namespace Business_App_Dev
             if (string.IsNullOrWhiteSpace(sessionId))
             {
                 ShowError("Missing session_id from Stripe redirect.");
+                return;
+            }
+
+            // ✅ Verify payment with Stripe first
+            if (!VerifyStripePaid(sessionId, out string failMsg))
+            {
+                ShowError(failMsg);
                 return;
             }
 
@@ -50,6 +62,9 @@ namespace Business_App_Dev
             if (FindControl("lblPayStatus") is Label lblPayStatus)
                 lblPayStatus.Text = "PAID";
 
+            // ✅ IMPORTANT: clear purchased items from cart AFTER payment confirmed
+            RemovePurchasedItemsFromCart(sessionId, items);
+
             // Build seller groups using ProductID -> Seller data from DB
             var groups = BuildSellerGroups(items);
 
@@ -62,6 +77,72 @@ namespace Business_App_Dev
             // Bind main repeater (each seller group contains its own items + pickup info)
             rptSellerGroups.DataSource = groups;
             rptSellerGroups.DataBind();
+
+            // ✅ Clean up pending snapshot so refresh won't remove again
+            Session.Remove("PENDING_ORDER_" + sessionId);
+            Session.Remove("PENDING_ORDER_TOTAL_" + sessionId);
+        }
+
+        /* =========================
+         * STRIPE VERIFY
+         * ========================= */
+        private bool VerifyStripePaid(string sessionId, out string error)
+        {
+            error = "";
+
+            var key = ConfigurationManager.AppSettings["StripeSecretKey"];
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                error = "Stripe is not configured (StripeSecretKey missing in Web.config).";
+                return false;
+            }
+
+            StripeConfiguration.ApiKey = key.Trim();
+
+            try
+            {
+                var service = new SessionService();
+                var s = service.Get(sessionId);
+
+                bool paid =
+                    string.Equals(s.PaymentStatus, "paid", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(s.Status, "complete", StringComparison.OrdinalIgnoreCase);
+
+                if (!paid)
+                {
+                    error = $"Payment not completed. Status: {s.PaymentStatus}";
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = "Failed to verify payment with Stripe: " + ex.Message;
+                return false;
+            }
+        }
+
+        /* =========================
+         * CLEAR CART (SELECTED ITEMS)
+         * ========================= */
+        private void RemovePurchasedItemsFromCart(string sessionId, List<PurchasedItem> purchasedItems)
+        {
+            // Get cart from session
+            var cart = Session[CART_KEY] as List<CartItem> ?? new List<CartItem>();
+
+            // Purchased product IDs
+            var purchasedIds = purchasedItems.Select(x => x.ProductID).ToHashSet();
+
+            // Remove purchased items from cart
+            cart.RemoveAll(ci => purchasedIds.Contains(ci.ProductID));
+
+            // Save back
+            Session[CART_KEY] = cart;
+
+            // Clear selection + init flag to avoid weird auto-select state
+            Session[CART_SELECTED_KEY] = new HashSet<int>();
+            Session[CART_SELECTED_INIT_KEY] = false;
         }
 
         private string ConnStr()
@@ -74,13 +155,9 @@ namespace Business_App_Dev
         // 2) Group items by SellerID and produce view model for repeater
         private List<SellerGroupVM> BuildSellerGroups(List<PurchasedItem> items)
         {
-            // Unique product IDs from the purchased list
             var productIds = items.Select(i => i.ProductID).Distinct().ToList();
-
-            // Map: ProductID -> SellerInfo
             var productSellerMap = LoadSellerInfoForProducts(productIds);
 
-            // If some products have no seller mapping, we'll skip them (or you can hard error)
             var usableItems = items.Where(i => productSellerMap.ContainsKey(i.ProductID)).ToList();
 
             var groups = usableItems
@@ -91,7 +168,6 @@ namespace Business_App_Dev
                 })
                 .Select(g =>
                 {
-                    // Seller for this group (take first)
                     var first = productSellerMap[g.First().ProductID];
 
                     return new SellerGroupVM
@@ -100,7 +176,7 @@ namespace Business_App_Dev
                         SellerName = first.ShopName ?? "-",
                         Address = first.Address ?? "-",
                         PickupWindow = string.IsNullOrWhiteSpace(first.PickupWindow) ? "(Not specified)" : first.PickupWindow,
-                        SellerStatus = "Preparing", // you can upgrade later with real status per seller
+                        SellerStatus = "Preparing",
                         Latitude = first.Latitude,
                         Longitude = first.Longitude,
                         Items = g.Select(x => new ItemVM
@@ -115,7 +191,6 @@ namespace Business_App_Dev
                 .OrderBy(x => x.SellerName)
                 .ToList();
 
-            // Subtotals
             foreach (var grp in groups)
                 grp.SellerSubtotal = grp.Items.Sum(i => i.LineTotal);
 
@@ -129,7 +204,6 @@ namespace Business_App_Dev
             if (productIds == null || productIds.Count == 0)
                 return map;
 
-            // Build IN (@p0,@p1,...) safely with parameters
             var paramNames = productIds.Select((id, idx) => "@p" + idx).ToList();
             string inClause = string.Join(",", paramNames);
 
@@ -170,7 +244,6 @@ WHERE p.ProductID IN ({inClause});
                             Longitude = r["Longitude"] == DBNull.Value ? (decimal?)null : Convert.ToDecimal(r["Longitude"])
                         };
 
-                        // ProductID -> SellerInfo
                         map[productId] = info;
                     }
                 }
@@ -179,7 +252,6 @@ WHERE p.ProductID IN ({inClause});
             return map;
         }
 
-        // This runs for each seller group row
         protected void rptSellerGroups_ItemDataBound(object sender, RepeaterItemEventArgs e)
         {
             if (e.Item.ItemType != ListItemType.Item &&
@@ -188,7 +260,6 @@ WHERE p.ProductID IN ({inClause});
 
             var group = (SellerGroupVM)e.Item.DataItem;
 
-            // Bind nested items repeater
             var rpt = (Repeater)e.Item.FindControl("rptItemsBySeller");
             if (rpt != null)
             {
@@ -196,12 +267,10 @@ WHERE p.ProductID IN ({inClause});
                 rpt.DataBind();
             }
 
-            // Directions link
             var lnk = (HyperLink)e.Item.FindControl("lnkDirectionsSeller");
             if (lnk != null)
                 lnk.NavigateUrl = BuildDirectionsUrl(group);
 
-            // Map iframe
             var iframe = (HtmlIframe)e.Item.FindControl("mapFrameSeller");
             if (iframe != null)
                 iframe.Attributes["src"] = BuildMapEmbedSrc(group);
@@ -209,7 +278,6 @@ WHERE p.ProductID IN ({inClause});
 
         private string BuildDirectionsUrl(SellerGroupVM group)
         {
-            // If lat/lng exists, use it. Else use address.
             if (group.Latitude.HasValue && group.Longitude.HasValue)
             {
                 string latStr = group.Latitude.Value.ToString(CultureInfo.InvariantCulture);
@@ -224,7 +292,6 @@ WHERE p.ProductID IN ({inClause});
 
         private string BuildMapEmbedSrc(SellerGroupVM group)
         {
-            // If lat/lng exists, use it. Else use address.
             if (group.Latitude.HasValue && group.Longitude.HasValue)
             {
                 string latStr = group.Latitude.Value.ToString(CultureInfo.InvariantCulture);
@@ -286,4 +353,7 @@ WHERE p.ProductID IN ({inClause});
             public decimal? Longitude { get; set; }
         }
     }
+
+    // PurchasedItem class is in Cart.aspx.cs already.
+    // CartItem class is your existing CartItem model.
 }
