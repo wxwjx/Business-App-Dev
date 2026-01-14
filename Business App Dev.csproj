@@ -216,6 +216,7 @@
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Inventory.aspx" />
+    <Content Include="Messages.aspx" />
     <Content Include="obj\Debug\Business App Dev.csproj.FileListAbsolute.txt" />
     <Content Include="obj\Debug\Business App Dev.dll" />
     <Content Include="obj\Debug\Business App Dev.pdb" />
@@ -808,6 +809,13 @@
     </Compile>
     <Compile Include="Inventory.aspx.designer.cs">
       <DependentUpon>Inventory.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Messages.aspx.cs">
+      <DependentUpon>Messages.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Messages.aspx.designer.cs">
+      <DependentUpon>Messages.aspx</DependentUpon>
     </Compile>
     <Compile Include="obj\Debug\.NETFramework,Version=v4.7.2.AssemblyAttributes.cs" />
     <Compile Include="Order.aspx.cs">

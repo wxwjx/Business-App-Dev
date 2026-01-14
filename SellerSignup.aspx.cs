@@ -23,37 +23,62 @@ namespace FoodSaver
             string cs = ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
 
             using (var conn = new SqlConnection(cs))
-            using (var cmd = new SqlCommand(@"
+            {
+                conn.Open();
+                using (var tx = conn.BeginTransaction())
+                {
+                    try
+                    {
+                        // 1) SellerApplications (AUTH)
+                        using (var cmdApp = new SqlCommand(@"
 INSERT INTO SellerApplications
 (BusinessName, Owner, Email, Category, Status, SubmitDate, PasswordHash, PasswordSalt)
 VALUES
-(@BusinessName, @Owner, @Email, @Category, @Status, GETDATE(), @Hash, @Salt);
-", conn))
-            {
-                cmd.Parameters.AddWithValue("@BusinessName", businessName);
-                cmd.Parameters.AddWithValue("@Owner", owner);
-                cmd.Parameters.AddWithValue("@Email", email);
-                cmd.Parameters.AddWithValue("@Category", category);
+(@BusinessName, @Owner, @Email, @Category, 'Approved', GETDATE(), @Hash, @Salt);
+", conn, tx))
+                        {
+                            cmdApp.Parameters.AddWithValue("@BusinessName", businessName);
+                            cmdApp.Parameters.AddWithValue("@Owner", owner);
+                            cmdApp.Parameters.AddWithValue("@Email", email);
+                            cmdApp.Parameters.AddWithValue("@Category", category);
+                            cmdApp.Parameters.AddWithValue("@Hash", hash);
+                            cmdApp.Parameters.AddWithValue("@Salt", salt);
 
-                // Short-term: skip approval => auto-approve
-                cmd.Parameters.AddWithValue("@Status", "Approved");
+                            cmdApp.ExecuteNonQuery();
+                        }
 
-                cmd.Parameters.AddWithValue("@Hash", hash);
-                cmd.Parameters.AddWithValue("@Salt", salt);
+                        // 2) Ensure Seller profile exists (needed because Conversations FK uses dbo.Seller)
+                        using (var cmdSeller = new SqlCommand(@"
+IF NOT EXISTS (SELECT 1 FROM Seller WHERE Email = @Email)
+BEGIN
+    INSERT INTO Seller (ShopName, Address, PostalCode, Latitude, Longitude, PickupWindow, CreatedAt, Email)
+    VALUES (@ShopName, 'Address not provided (temporary)', NULL, NULL, NULL, NULL, GETDATE(), @Email);
+END
+", conn, tx))
+                        {
+                            cmdSeller.Parameters.AddWithValue("@ShopName", businessName);
+                            cmdSeller.Parameters.AddWithValue("@Email", email);
+                            cmdSeller.ExecuteNonQuery();
+                        }
 
-                try
-                {
-                    conn.Open();
-                    cmd.ExecuteNonQuery();
-                    Response.Redirect("~/SellerLogin.aspx");
-                }
-                catch (SqlException ex)
-                {
-                    // If you added UNIQUE index on Email, this catches duplicates
-                    string msg = ex.Message.ToLower();
-                    ShowFail(msg.Contains("unique") || msg.Contains("duplicate")
-                        ? "This email is already registered."
-                        : "Signup failed. Please try again.");
+
+                        tx.Commit();
+                        Response.Redirect("~/SellerLogin.aspx");
+                    }
+                    catch (SqlException ex)
+                    {
+                        tx.Rollback();
+
+                        string msg = ex.Message.ToLower();
+                        ShowFail(msg.Contains("unique") || msg.Contains("duplicate")
+                            ? "This email is already registered."
+                            : "Signup failed. Please try again.");
+                    }
+                    catch
+                    {
+                        tx.Rollback();
+                        ShowFail("Signup failed. Please try again.");
+                    }
                 }
             }
         }

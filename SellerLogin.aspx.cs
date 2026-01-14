@@ -11,14 +11,12 @@ namespace FoodSaver
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-            // If already authenticated, go to dashboard
             if (Session["SellerAuthenticated"] as bool? == true)
             {
                 Response.Redirect("SellerDashboard.aspx");
                 return;
             }
 
-            // Optional: auto-fill email from cookie
             if (!IsPostBack && Request.Cookies["SellerRemember"] != null)
             {
                 txtEmail.Text = Request.Cookies["SellerRemember"].Value;
@@ -37,10 +35,10 @@ namespace FoodSaver
 
             using (var conn = new SqlConnection(cs))
             using (var cmd = new SqlCommand(@"
-                SELECT Id, BusinessName, Email, PasswordHash, PasswordSalt, Status
-                FROM SellerApplications
-                WHERE Email = @Email
-            ", conn))
+SELECT Id, BusinessName, Email, PasswordHash, PasswordSalt, Status
+FROM SellerApplications
+WHERE Email = @Email
+", conn))
             {
                 cmd.Parameters.AddWithValue("@Email", email);
 
@@ -53,7 +51,6 @@ namespace FoodSaver
                         return;
                     }
 
-                    // Short-term gate: only allow Approved (your signup will insert Approved)
                     string status = r["Status"]?.ToString() ?? "Pending";
                     if (!status.Equals("Approved", StringComparison.OrdinalIgnoreCase))
                     {
@@ -61,9 +58,7 @@ namespace FoodSaver
                         return;
                     }
 
-                    int sellerAppId = Convert.ToInt32(r["Id"]); // short-term "SellerId"
                     string storeName = r["BusinessName"]?.ToString() ?? "(Unknown Store)";
-
                     string dbHash = r["PasswordHash"]?.ToString() ?? "";
                     string dbSalt = r["PasswordSalt"]?.ToString() ?? "";
 
@@ -78,37 +73,64 @@ namespace FoodSaver
                         ShowFail("Invalid email or password.");
                         return;
                     }
-
-                    // Success sessions (keep same keys so the rest of your seller pages keep working)
-                    Session["SellerAuthenticated"] = true;
-                    Session["SellerId"] = sellerAppId;
-                    Session["SellerEmail"] = email;
-                    Session["SellerStoreName"] = storeName;
-
-                    // Remember-me cookie (optional)
-                    if (chkRemember.Checked)
-                    {
-                        var cookie = new HttpCookie("SellerRemember", email)
-                        {
-                            Expires = DateTime.Now.AddDays(30)
-                        };
-                        Response.Cookies.Add(cookie);
-                    }
-                    else
-                    {
-                        // Clear cookie if exists
-                        if (Request.Cookies["SellerRemember"] != null)
-                        {
-                            var cookie = new HttpCookie("SellerRemember")
-                            {
-                                Expires = DateTime.Now.AddDays(-1)
-                            };
-                            Response.Cookies.Add(cookie);
-                        }
-                    }
-
-                    Response.Redirect("~/SellerDashboard.aspx");
                 }
+            }
+
+            // IMPORTANT: now resolve SellerID (dbo.Seller) by email
+            int sellerId = GetSellerIdByEmail(cs, email);
+            if (sellerId <= 0)
+            {
+                ShowFail("Store profile not found. Please sign up again.");
+                return;
+            }
+
+            // Success sessions
+            Session["SellerAuthenticated"] = true;
+            Session["SellerId"] = sellerId;               // <-- Seller.SellerID (FK-compatible)
+            Session["SellerEmail"] = email;
+            Session["SellerStoreName"] = GetSellerShopName(cs, sellerId); // more accurate for display
+
+            // Remember-me cookie (optional)
+            if (chkRemember.Checked)
+            {
+                var cookie = new HttpCookie("SellerRemember", email)
+                {
+                    Expires = DateTime.Now.AddDays(30)
+                };
+                Response.Cookies.Add(cookie);
+            }
+            else
+            {
+                if (Request.Cookies["SellerRemember"] != null)
+                {
+                    var cookie = new HttpCookie("SellerRemember") { Expires = DateTime.Now.AddDays(-1) };
+                    Response.Cookies.Add(cookie);
+                }
+            }
+
+            Response.Redirect("~/SellerDashboard.aspx");
+        }
+
+        private int GetSellerIdByEmail(string cs, string email)
+        {
+            using (var conn = new SqlConnection(cs))
+            using (var cmd = new SqlCommand("SELECT SellerID FROM Seller WHERE Email=@Email", conn))
+            {
+                cmd.Parameters.AddWithValue("@Email", email);
+                conn.Open();
+                object o = cmd.ExecuteScalar();
+                return o == null ? -1 : Convert.ToInt32(o);
+            }
+        }
+
+        private string GetSellerShopName(string cs, int sellerId)
+        {
+            using (var conn = new SqlConnection(cs))
+            using (var cmd = new SqlCommand("SELECT ShopName FROM Seller WHERE SellerID=@Id", conn))
+            {
+                cmd.Parameters.AddWithValue("@Id", sellerId);
+                conn.Open();
+                return (cmd.ExecuteScalar() ?? "Seller").ToString();
             }
         }
 
