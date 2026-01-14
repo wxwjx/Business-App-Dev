@@ -119,6 +119,7 @@ node_modules/
 # =========================
 # SQL Server / LocalDB
 *.ldf
+*.mdf
 *.ndf
 App_Data/*.mdf
 App_Data/*.ldf
