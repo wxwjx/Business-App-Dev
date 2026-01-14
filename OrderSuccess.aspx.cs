@@ -22,65 +22,79 @@ namespace Business_App_Dev
         {
             if (IsPostBack) return;
 
-            string sessionId = Request.QueryString["session_id"];
-            if (string.IsNullOrWhiteSpace(sessionId))
+            try
             {
-                ShowError("Missing session_id from Stripe redirect.");
-                return;
-            }
+                // 1) Read session_id from Stripe redirect
+                string sessionId = Request.QueryString["session_id"];
+                if (string.IsNullOrWhiteSpace(sessionId))
+                {
+                    ShowError("Missing session_id from Stripe redirect.");
+                    return;
+                }
 
-            // ✅ Verify payment with Stripe first
-            if (!VerifyStripePaid(sessionId, out string failMsg))
-            {
-                ShowError(failMsg);
-                return;
-            }
+                // 2) Verify payment with Stripe
+                if (!VerifyStripePaid(sessionId, out string failMsg))
+                {
+                    ShowError(failMsg);
+                    return;
+                }
 
-            // "nice" order id display (since you don't have Orders table yet)
-            lblOrderId.Text = "ORD-" + ShortId(sessionId);
+                // 3) Display an Order ID (nice format) - until you implement Orders table
+                lblOrderId.Text = "ORD-" + ShortId(sessionId);
 
-            // Load snapshot from Session saved in Cart.aspx.cs
-            var items = Session["PENDING_ORDER_" + sessionId] as List<PurchasedItem>;
-            if (items == null || items.Count == 0)
-            {
-                ShowError("Order data not found (Session expired). Try paying again, or implement Orders table to persist.");
-                return;
-            }
+                // 4) Load snapshot from Session saved in Cart.aspx.cs
+                var items = Session["PENDING_ORDER_" + sessionId] as List<PurchasedItem>;
+                if (items == null || items.Count == 0)
+                {
+                    ShowError("Order data not found (Session expired). Try paying again, or implement Orders table to persist.");
+                    return;
+                }
 
-            pnlError.Visible = false;
+                pnlError.Visible = false;
 
-            // Total
-            decimal total = 0m;
-            if (Session["PENDING_ORDER_TOTAL_" + sessionId] is decimal t)
-                total = t;
-            else
-                total = items.Sum(x => x.LineTotal);
+                // 5) Total
+                decimal total;
+                if (Session["PENDING_ORDER_TOTAL_" + sessionId] is decimal t)
+                    total = t;
+                else
+                    total = items.Sum(x => x.LineTotal);
 
-            lblTotal.Text = total.ToString("0.00");
-
-            // OPTIONAL: if your .aspx has this label
-            if (FindControl("lblPayStatus") is Label lblPayStatus)
+                lblTotal.Text = total.ToString("0.00");
                 lblPayStatus.Text = "PAID";
 
-            // ✅ IMPORTANT: clear purchased items from cart AFTER payment confirmed
-            RemovePurchasedItemsFromCart(sessionId, items);
+                // 6) IMPORTANT: clear purchased items from cart AFTER payment confirmed
+                // Make it safe against refresh: only remove if snapshot still exists
+                RemovePurchasedItemsFromCart(items);
 
-            // Build seller groups using ProductID -> Seller data from DB
-            var groups = BuildSellerGroups(items);
+                // 7) Build seller groups using ProductID -> Seller data from DB
+                var groups = BuildSellerGroups(items);
 
-            if (groups.Count == 0)
-            {
-                ShowError("Could not determine pickup locations. Ensure Products.SellerID is filled and Seller table has data.");
-                return;
+                if (groups.Count == 0)
+                {
+                    ShowError("Could not determine pickup locations. Ensure Products.SellerID is filled and Seller table has data.");
+                    return;
+                }
+
+                // 8) Bind seller groups
+                rptSellerGroups.DataSource = groups;
+                rptSellerGroups.DataBind();
+
+                // 9) Clean up pending snapshot so refresh won't remove again
+                Session.Remove("PENDING_ORDER_" + sessionId);
+                Session.Remove("PENDING_ORDER_TOTAL_" + sessionId);
             }
-
-            // Bind main repeater (each seller group contains its own items + pickup info)
-            rptSellerGroups.DataSource = groups;
-            rptSellerGroups.DataBind();
-
-            // ✅ Clean up pending snapshot so refresh won't remove again
-            Session.Remove("PENDING_ORDER_" + sessionId);
-            Session.Remove("PENDING_ORDER_TOTAL_" + sessionId);
+            catch (StripeException)
+            {
+                ShowError("Payment verification failed due to a payment service error. Please try again.");
+            }
+            catch (SqlException)
+            {
+                ShowError("Database error while loading pickup locations. Please try again later.");
+            }
+            catch (Exception)
+            {
+                ShowError("Unexpected error occurred while loading your order. Please try again.");
+            }
         }
 
         /* =========================
@@ -116,18 +130,25 @@ namespace Business_App_Dev
 
                 return true;
             }
-            catch (Exception ex)
+            catch (StripeException)
             {
-                error = "Failed to verify payment with Stripe: " + ex.Message;
+                error = "Failed to verify payment with Stripe. Please try again.";
+                return false;
+            }
+            catch (Exception)
+            {
+                error = "Failed to verify payment due to an unexpected error.";
                 return false;
             }
         }
 
         /* =========================
-         * CLEAR CART (SELECTED ITEMS)
+         * CLEAR CART (PURCHASED ITEMS)
          * ========================= */
-        private void RemovePurchasedItemsFromCart(string sessionId, List<PurchasedItem> purchasedItems)
+        private void RemovePurchasedItemsFromCart(List<PurchasedItem> purchasedItems)
         {
+            if (purchasedItems == null || purchasedItems.Count == 0) return;
+
             // Get cart from session
             var cart = Session[CART_KEY] as List<CartItem> ?? new List<CartItem>();
 
@@ -204,10 +225,12 @@ namespace Business_App_Dev
             if (productIds == null || productIds.Count == 0)
                 return map;
 
-            var paramNames = productIds.Select((id, idx) => "@p" + idx).ToList();
-            string inClause = string.Join(",", paramNames);
+            try
+            {
+                var paramNames = productIds.Select((id, idx) => "@p" + idx).ToList();
+                string inClause = string.Join(",", paramNames);
 
-            string sql = $@"
+                string sql = $@"
 SELECT
     p.ProductID,
     s.SellerID,
@@ -221,32 +244,43 @@ INNER JOIN Seller s ON p.SellerID = s.SellerID
 WHERE p.ProductID IN ({inClause});
 ";
 
-            using (SqlConnection con = new SqlConnection(ConnStr()))
-            using (SqlCommand cmd = new SqlCommand(sql, con))
-            {
-                for (int i = 0; i < productIds.Count; i++)
-                    cmd.Parameters.AddWithValue(paramNames[i], productIds[i]);
-
-                con.Open();
-                using (SqlDataReader r = cmd.ExecuteReader())
+                using (SqlConnection con = new SqlConnection(ConnStr()))
+                using (SqlCommand cmd = new SqlCommand(sql, con))
                 {
-                    while (r.Read())
+                    for (int i = 0; i < productIds.Count; i++)
+                        cmd.Parameters.AddWithValue(paramNames[i], productIds[i]);
+
+                    con.Open();
+                    using (SqlDataReader r = cmd.ExecuteReader())
                     {
-                        int productId = Convert.ToInt32(r["ProductID"]);
-
-                        var info = new SellerInfo
+                        while (r.Read())
                         {
-                            SellerID = Convert.ToInt32(r["SellerID"]),
-                            ShopName = r["ShopName"]?.ToString(),
-                            Address = r["Address"]?.ToString(),
-                            PickupWindow = r["PickupWindow"] == DBNull.Value ? null : r["PickupWindow"].ToString(),
-                            Latitude = r["Latitude"] == DBNull.Value ? (decimal?)null : Convert.ToDecimal(r["Latitude"]),
-                            Longitude = r["Longitude"] == DBNull.Value ? (decimal?)null : Convert.ToDecimal(r["Longitude"])
-                        };
+                            int productId = Convert.ToInt32(r["ProductID"]);
 
-                        map[productId] = info;
+                            var info = new SellerInfo
+                            {
+                                SellerID = Convert.ToInt32(r["SellerID"]),
+                                ShopName = r["ShopName"]?.ToString(),
+                                Address = r["Address"]?.ToString(),
+                                PickupWindow = r["PickupWindow"] == DBNull.Value ? null : r["PickupWindow"].ToString(),
+                                Latitude = r["Latitude"] == DBNull.Value ? (decimal?)null : Convert.ToDecimal(r["Latitude"]),
+                                Longitude = r["Longitude"] == DBNull.Value ? (decimal?)null : Convert.ToDecimal(r["Longitude"])
+                            };
+
+                            map[productId] = info;
+                        }
                     }
                 }
+            }
+            catch (SqlException)
+            {
+                // bubble up a clear message to Page_Load handler
+                throw;
+            }
+            catch (Exception)
+            {
+                // bubble up
+                throw;
             }
 
             return map;

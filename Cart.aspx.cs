@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using System.Reflection;
+using System.Web.UI;
 using System.Web.UI.WebControls;
 using Stripe;
 using Stripe.Checkout;
@@ -18,23 +19,56 @@ namespace Business_App_Dev
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!IsPostBack)
-                BindAll();
+            {
+                try
+                {
+                    BindAll();
+                }
+                catch (Exception)
+                {
+                    // fail-safe: page shouldn't crash
+                    lblPayMsg.Text = "Unable to load your cart right now. Please refresh and try again.";
+                    btnPay.Enabled = false;
+                    rptCart.Visible = false;
+                    pnlSelectAll.Visible = false;
+                    lblEmpty.Visible = true;
+                }
+            }
         }
 
         private List<CartItem> GetCart()
         {
-            if (Session[CART_KEY] is List<CartItem> cart) return cart;
-            cart = new List<CartItem>();
-            Session[CART_KEY] = cart;
-            return cart;
+            try
+            {
+                if (Session[CART_KEY] is List<CartItem> cart) return cart;
+                cart = new List<CartItem>();
+                Session[CART_KEY] = cart;
+                return cart;
+            }
+            catch
+            {
+                // if Session has an unexpected state, reset cart
+                var cart = new List<CartItem>();
+                Session[CART_KEY] = cart;
+                return cart;
+            }
         }
 
         private HashSet<int> GetSelected()
         {
-            if (Session[CART_SELECTED_KEY] is HashSet<int> set) return set;
-            set = new HashSet<int>();
-            Session[CART_SELECTED_KEY] = set;
-            return set;
+            try
+            {
+                if (Session[CART_SELECTED_KEY] is HashSet<int> set) return set;
+                set = new HashSet<int>();
+                Session[CART_SELECTED_KEY] = set;
+                return set;
+            }
+            catch
+            {
+                var set = new HashSet<int>();
+                Session[CART_SELECTED_KEY] = set;
+                return set;
+            }
         }
 
         private bool IsSelectionInitialized()
@@ -79,7 +113,7 @@ namespace Business_App_Dev
             lblEmpty.Visible = !hasItems;
             rptCart.Visible = hasItems;
 
-            // ✅ hide select-all when cart empty
+            // hide select-all when cart empty
             pnlSelectAll.Visible = hasItems;
 
             if (!hasItems)
@@ -118,7 +152,7 @@ namespace Business_App_Dev
                 : "";
         }
 
-        // ✅ checkbox stays checked after postback
+        // checkbox stays checked after postback
         protected void rptCart_ItemDataBound(object sender, RepeaterItemEventArgs e)
         {
             if (e.Item.ItemType != ListItemType.Item &&
@@ -155,150 +189,199 @@ namespace Business_App_Dev
 
         protected void chkSelect_CheckedChanged(object sender, EventArgs e)
         {
-            var cb = sender as CheckBox;
-            var item = cb?.NamingContainer as RepeaterItem;
-            if (item == null) return;
+            try
+            {
+                var cb = sender as CheckBox;
+                var item = cb?.NamingContainer as RepeaterItem;
+                if (item == null) return;
 
-            var hf = item.FindControl("hfPid") as HiddenField;
-            if (hf == null) return;
+                var hf = item.FindControl("hfPid") as HiddenField;
+                if (hf == null) return;
 
-            if (!int.TryParse(hf.Value, out int productId)) return;
+                if (!int.TryParse(hf.Value, out int productId)) return;
 
-            var selected = GetSelected();
-            if (cb.Checked) selected.Add(productId);
-            else selected.Remove(productId);
+                var selected = GetSelected();
+                if (cb.Checked) selected.Add(productId);
+                else selected.Remove(productId);
 
-            Session[CART_SELECTED_KEY] = selected;
-            BindAll();
+                Session[CART_SELECTED_KEY] = selected;
+                BindAll();
+            }
+            catch (Exception)
+            {
+                lblPayMsg.Text = "Could not update selection. Please refresh and try again.";
+            }
         }
 
         protected void chkSelectAll_CheckedChanged(object sender, EventArgs e)
         {
-            var cart = GetCart();
-            var selected = GetSelected();
-
-            selected.Clear();
-            if (chkSelectAll.Checked)
+            try
             {
-                foreach (var it in cart)
-                    selected.Add(it.ProductID);
-            }
+                var cart = GetCart();
+                var selected = GetSelected();
 
-            Session[CART_SELECTED_KEY] = selected;
-            BindAll();
+                selected.Clear();
+                if (chkSelectAll.Checked)
+                {
+                    foreach (var it in cart)
+                        selected.Add(it.ProductID);
+                }
+
+                Session[CART_SELECTED_KEY] = selected;
+                BindAll();
+            }
+            catch (Exception)
+            {
+                lblPayMsg.Text = "Could not update selection. Please refresh and try again.";
+            }
         }
 
         protected void rptCart_ItemCommand(object source, RepeaterCommandEventArgs e)
         {
-            var cart = GetCart();
-            var selected = GetSelected();
-
-            if (!int.TryParse(e.CommandArgument?.ToString(), out int productId))
-                return;
-
-            var item = cart.FirstOrDefault(x => x.ProductID == productId);
-            if (item == null) return;
-
-            switch (e.CommandName)
+            try
             {
-                case "INC":
-                    item.Quantity += 1;
-                    selected.Add(productId); // keep selected
-                    break;
+                var cart = GetCart();
+                var selected = GetSelected();
 
-                case "DEC":
-                    item.Quantity -= 1;
-                    if (item.Quantity <= 0)
-                    {
+                if (!int.TryParse(e.CommandArgument?.ToString(), out int productId))
+                    return;
+
+                var item = cart.FirstOrDefault(x => x.ProductID == productId);
+                if (item == null) return;
+
+                switch (e.CommandName)
+                {
+                    case "INC":
+                        item.Quantity += 1;
+                        selected.Add(productId); // keep selected
+                        break;
+
+                    case "DEC":
+                        item.Quantity -= 1;
+                        if (item.Quantity <= 0)
+                        {
+                            cart.Remove(item);
+                            selected.Remove(productId);
+                        }
+                        break;
+
+                    case "REMOVE":
                         cart.Remove(item);
                         selected.Remove(productId);
-                    }
-                    break;
+                        break;
+                }
 
-                case "REMOVE":
-                    cart.Remove(item);
-                    selected.Remove(productId);
-                    break;
+                Session[CART_KEY] = cart;
+                Session[CART_SELECTED_KEY] = selected;
+                BindAll();
             }
-
-            Session[CART_KEY] = cart;
-            Session[CART_SELECTED_KEY] = selected;
-            BindAll();
+            catch (Exception)
+            {
+                lblPayMsg.Text = "Could not update cart. Please refresh and try again.";
+            }
         }
 
         protected void btnPay_Click(object sender, EventArgs e)
         {
-            var cart = GetCart();
-            if (cart.Count == 0)
+            try
             {
-                lblPayMsg.Text = "Your cart is empty.";
-                return;
+                lblPayMsg.Text = "";
+
+                var cart = GetCart();
+                if (cart == null || cart.Count == 0)
+                {
+                    lblPayMsg.Text = "Your cart is empty.";
+                    return;
+                }
+
+                var selected = GetSelected() ?? new HashSet<int>();
+                var selectedItems = cart.Where(x => selected.Contains(x.ProductID)).ToList();
+
+                if (selectedItems.Count == 0)
+                {
+                    lblPayMsg.Text = "Select at least 1 item to checkout.";
+                    return;
+                }
+
+                RedirectToStripeCheckout(selectedItems);
             }
-
-            var selected = GetSelected();
-            var selectedItems = cart.Where(x => selected.Contains(x.ProductID)).ToList();
-
-            if (selectedItems.Count == 0)
+            catch (Exception)
             {
-                lblPayMsg.Text = "Select at least 1 item to checkout.";
-                return;
+                lblPayMsg.Text = "Something went wrong starting payment. Please try again.";
             }
-
-            RedirectToStripeCheckout(selectedItems);
         }
 
         private void RedirectToStripeCheckout(List<CartItem> cartToPay)
         {
-            var key = ConfigurationManager.AppSettings["StripeSecretKey"];
-            if (string.IsNullOrWhiteSpace(key))
+            try
             {
-                lblPayMsg.Text = "Stripe is not configured (StripeSecretKey missing in Web.config).";
-                return;
-            }
-
-            StripeConfiguration.ApiKey = key.Trim();
-
-            var lineItems = cartToPay.Select(item => new SessionLineItemOptions
-            {
-                Quantity = item.Quantity,
-                PriceData = new SessionLineItemPriceDataOptions
+                if (cartToPay == null || cartToPay.Count == 0)
                 {
-                    Currency = "sgd",
-                    UnitAmount = (long)(item.PriceNow * 100m),
-                    ProductData = new SessionLineItemPriceDataProductDataOptions
-                    {
-                        Name = item.ProductName
-                    }
+                    lblPayMsg.Text = "No items selected.";
+                    return;
                 }
-            }).ToList();
 
-            string baseUrl = $"{Request.Url.Scheme}://{Request.Url.Authority}";
+                var key = ConfigurationManager.AppSettings["StripeSecretKey"];
+                if (string.IsNullOrWhiteSpace(key))
+                {
+                    lblPayMsg.Text = "Stripe is not configured (StripeSecretKey missing in Web.config).";
+                    return;
+                }
 
-            var options = new SessionCreateOptions
+                StripeConfiguration.ApiKey = key.Trim();
+
+                var lineItems = cartToPay.Select(item => new SessionLineItemOptions
+                {
+                    Quantity = item.Quantity,
+                    PriceData = new SessionLineItemPriceDataOptions
+                    {
+                        Currency = "sgd",
+                        UnitAmount = (long)(item.PriceNow * 100m),
+                        ProductData = new SessionLineItemPriceDataProductDataOptions
+                        {
+                            Name = item.ProductName
+                        }
+                    }
+                }).ToList();
+
+                string baseUrl = $"{Request.Url.Scheme}://{Request.Url.Authority}";
+
+                var options = new SessionCreateOptions
+                {
+                    Mode = "payment",
+                    LineItems = lineItems,
+                    SuccessUrl = baseUrl + "/OrderSuccess.aspx?session_id={CHECKOUT_SESSION_ID}",
+                    CancelUrl = baseUrl + "/Cart.aspx",
+                };
+
+                var service = new SessionService();
+                var session = service.Create(options);
+
+                // Snapshot only selected
+                var snapshot = cartToPay.Select(x => new PurchasedItem
+                {
+                    ProductID = x.ProductID,
+                    ProductName = x.ProductName,
+                    UnitPrice = x.PriceNow,
+                    Quantity = x.Quantity,
+                    LineTotal = x.LineTotal
+                }).ToList();
+
+                Session["PENDING_ORDER_" + session.Id] = snapshot;
+                Session["PENDING_ORDER_TOTAL_" + session.Id] = snapshot.Sum(i => i.LineTotal);
+
+                // avoid ThreadAbortException sometimes caused by Redirect()
+                Response.Redirect(session.Url, false);
+                Context.ApplicationInstance.CompleteRequest();
+            }
+            catch (StripeException)
             {
-                Mode = "payment",
-                LineItems = lineItems,
-                SuccessUrl = baseUrl + "/OrderSuccess.aspx?session_id={CHECKOUT_SESSION_ID}",
-                CancelUrl = baseUrl + "/Cart.aspx",
-            };
-
-            var service = new SessionService();
-            var session = service.Create(options);
-
-            // Snapshot only selected
-            var snapshot = cartToPay.Select(x => new PurchasedItem
+                lblPayMsg.Text = "Payment service is unavailable right now. Please try again later.";
+            }
+            catch (Exception)
             {
-                ProductID = x.ProductID,
-                ProductName = x.ProductName,
-                UnitPrice = x.PriceNow,
-                Quantity = x.Quantity,
-                LineTotal = x.LineTotal
-            }).ToList();
-
-            Session["PENDING_ORDER_" + session.Id] = snapshot;
-            Session["PENDING_ORDER_TOTAL_" + session.Id] = snapshot.Sum(i => i.LineTotal);
-
-            Response.Redirect(session.Url);
+                lblPayMsg.Text = "Could not start payment. Please try again.";
+            }
         }
     }
 
