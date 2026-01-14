@@ -124,6 +124,7 @@
   <ItemGroup>
     <Content Include=".gitignore" />
     <Content Include="About.aspx" />
+    <Content Include="AddNewProduct.aspx" />
     <Content Include="App_Data\EcoEats.mdf" />
     <Content Include="App_Data\EcoEats_log.ldf">
       <DependentUpon>EcoEats.mdf</DependentUpon>
@@ -152,6 +153,7 @@
     <Content Include="Feedback.aspx" />
     <Content Include="Global.asax" />
     <Content Include="Content\orders.css" />
+    <Content Include="Inventory.aspx" />
     <Content Include="Login.aspx" />
     <Content Include="OrderHistory.aspx" />
     <Content Include="OrderSuccess.aspx" />
@@ -222,6 +224,13 @@
     <Content Include="Site.Mobile.Master" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AddNewProduct.aspx.cs">
+      <DependentUpon>AddNewProduct.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="AddNewProduct.aspx.designer.cs">
+      <DependentUpon>AddNewProduct.aspx</DependentUpon>
+    </Compile>
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="About.aspx.cs">
       <DependentUpon>About.aspx</DependentUpon>
@@ -255,6 +264,13 @@
     </Compile>
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
+    </Compile>
+    <Compile Include="Inventory.aspx.cs">
+      <DependentUpon>Inventory.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Inventory.aspx.designer.cs">
+      <DependentUpon>Inventory.aspx</DependentUpon>
     </Compile>
     <Compile Include="Login.aspx.cs">
       <DependentUpon>Login.aspx</DependentUpon>
@@ -300,6 +316,13 @@
       <DependentUpon>Profile.aspx</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SellPage.Master.cs">
+      <DependentUpon>SellPage.Master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SellPage.Master.designer.cs">
+      <DependentUpon>SellPage.Master</DependentUpon>
+    </Compile>
     <Compile Include="SignUp.aspx.cs">
       <DependentUpon>SignUp.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -334,6 +357,7 @@
     <None Include="packages.config" />
     <Content Include="Scripts\jquery-3.7.0.slim.min.map" />
     <Content Include="Scripts\jquery-3.7.0.min.map" />
+    <Content Include="SellPage.Master" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

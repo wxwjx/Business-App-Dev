@@ -65,7 +65,7 @@
 
                             <!-- image -->
                             <div class="ck-item-img"
-                                 style='background-image:url("<%# Eval("ImageUrl") %>");'>
+                                style='<%# "background-image:url(" + Eval("ImageUrl") + ");" %>'
                             </div>
 
                             <!-- middle -->

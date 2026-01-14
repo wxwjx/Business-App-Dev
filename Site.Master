@@ -1,4 +1,6 @@
-﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="Site.master.cs" Inherits="Business_App_Dev.SiteMaster" %>
+﻿<%@ Master Language="C#" AutoEventWireup="true"
+    CodeBehind="SellPage.master.cs"
+    Inherits="Business_App_Dev.SellPage" %>
 
 <!DOCTYPE html>
 <html lang="en">

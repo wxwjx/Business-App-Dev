@@ -76,8 +76,15 @@
         </div>
     </section>
 
-    <!-- FILTER PILLS -->
+    <!-- CONTENT -->
     <div class="ee-container">
+
+        <!-- optional error box (hidden by default) -->
+        <asp:Panel ID="pnlError" runat="server" Visible="false" CssClass="ee-error">
+            <asp:Label ID="lblError" runat="server" />
+        </asp:Panel>
+
+        <!-- FILTER PILLS -->
         <div class="ee-pills">
             <button type="button" class="ee-pill active">✨ AI Recommended</button>
             <button type="button" class="ee-pill">🔥 Daily Best Deals</button>
@@ -91,8 +98,9 @@
 
                     <a class="ee-card" href='<%# "ProductDetails.aspx?id=" + Eval("ProductID") %>'>
 
+                        <%-- ✅ FIXED: background-image binding (no broken quotes) --%>
                         <div class="ee-card-img"
-                             style='background-image:url("<%# ResolveUrl(Eval("ImageUrl").ToString()) %>");'>
+                             style='<%# "background-image:url(" + ResolveUrl(Eval("ImageUrl") == null ? "" : Eval("ImageUrl").ToString()) + ");" %>'>
 
                             <span class="ee-discount"><%# Eval("DiscountPercent") %>% OFF</span>
                             <span class="ee-like">♥</span>
@@ -112,7 +120,9 @@
 
                             <div class="ee-price-row">
                                 <div>
-                                    <span class="ee-price-now">$<%# Eval("PriceNow", "{0:0.00}") %></span><span class="ee-price-old">$<%# Eval("PriceOld", "{0:0.00}") %></span></div>
+                                    <span class="ee-price-now">$<%# Eval("PriceNow", "{0:0.00}") %></span>
+                                    <span class="ee-price-old">$<%# Eval("PriceOld", "{0:0.00}") %></span>
+                                </div>
 
                                 <span class="ee-pill-small"><%# Eval("CO2Saved", "{0:0.0}") %> kg CO₂ saved</span>
                             </div>

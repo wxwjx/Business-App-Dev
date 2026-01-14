@@ -15,18 +15,16 @@ namespace Business_App_Dev
                 {
                     LoadProducts();
                 }
-                catch (SqlException)
+                catch (SqlException ex)
                 {
-                    // DB issue (connection, table name, etc.)
-                    // Optional: show a label/panel if you have one
-                    // lblError.Text = "Database error loading products.";
-                    // pnlError.Visible = true;
+                    // show error panel (optional)
+                    pnlError.Visible = true;
+                    lblError.Text = "Database error loading products: " + ex.Message;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    // Unexpected
-                    // lblError.Text = "Unexpected error loading products.";
-                    // pnlError.Visible = true;
+                    pnlError.Visible = true;
+                    lblError.Text = "Unexpected error loading products: " + ex.Message;
                 }
             }
         }
@@ -38,7 +36,6 @@ namespace Business_App_Dev
 
             using (SqlConnection conn = new SqlConnection(connStr))
             {
-                // Better than SELECT * (more stable if schema changes)
                 string query = @"
 SELECT
     ProductID, ProductName, Subtitle, ImageUrl,
@@ -51,7 +48,6 @@ FROM Products;
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
                     conn.Open();
-
                     using (SqlDataReader reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
@@ -63,7 +59,7 @@ FROM Products;
                                 Subtitle = reader["Subtitle"] != DBNull.Value ? reader["Subtitle"].ToString() : "",
                                 ImageUrl = reader["ImageUrl"] != DBNull.Value ? reader["ImageUrl"].ToString() : "",
 
-                                // DB column is Price, map to PriceNow
+                                // DB column Price -> ProductModel.PriceNow
                                 PriceNow = reader["Price"] != DBNull.Value ? Convert.ToDecimal(reader["Price"]) : 0m,
                                 PriceOld = reader["PriceOld"] != DBNull.Value ? Convert.ToDecimal(reader["PriceOld"]) : 0m,
 
@@ -72,6 +68,7 @@ FROM Products;
                                 DistanceKm = reader["DistanceKm"] != DBNull.Value ? Convert.ToInt32(reader["DistanceKm"]) : 0,
                                 ExpiryHours = reader["ExpiryHours"] != DBNull.Value ? Convert.ToInt32(reader["ExpiryHours"]) : 0,
                                 CO2Saved = reader["CO2Saved"] != DBNull.Value ? Convert.ToDouble(reader["CO2Saved"]) : 0,
+
                                 DiscountPercent = reader["DiscountPercent"] != DBNull.Value ? Convert.ToInt32(reader["DiscountPercent"]) : 0,
                                 Quantity = reader["Quantity"] != DBNull.Value ? Convert.ToInt32(reader["Quantity"]) : 0,
                                 Category = reader["Category"] != DBNull.Value ? reader["Category"].ToString() : "",
