@@ -36,8 +36,8 @@ namespace Business_App_Dev
 
         protected void gvProducts_RowUpdating(object sender, GridViewUpdateEventArgs e)
         {
-            try
-            {
+            //try
+            //{
                 int productId = Convert.ToInt32(gvProducts.DataKeys[e.RowIndex].Value);
 
                 GridViewRow row = gvProducts.Rows[e.RowIndex];
@@ -114,11 +114,11 @@ namespace Business_App_Dev
                 {
                     Alert("Product update failed");
                 }
-            }
-            catch (Exception ex)
-            {
-                Alert("Error: " + ex.Message);
-            }
+            //}
+            //catch (Exception ex)
+            //{
+            //    Alert("Error: " + ex.Message);
+            //}
         }
 
         protected void gvProducts_RowDeleting(object sender, GridViewDeleteEventArgs e)

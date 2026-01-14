@@ -211,15 +211,16 @@
     <Content Include="Content\Site.css" />
     <Content Include="Dashboard.aspx" />
     <Content Include="Default.aspx" />
+    <Content Include="EditStoreDetails.aspx" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
+    <Content Include="Image\icons8-edit-100.png" />
     <Content Include="Inventory.aspx" />
     <Content Include="Messages.aspx" />
     <Content Include="obj\Debug\Business App Dev.csproj.FileListAbsolute.txt" />
     <Content Include="obj\Debug\Business App Dev.dll" />
     <Content Include="obj\Debug\Business App Dev.pdb" />
     <Content Include="Order.aspx" />
-    <Content Include="OrderManagement.aspx" />
     <Content Include="OrderSuccess.aspx" />
     <Content Include="packages\Antlr.3.5.0.2\lib\Antlr3.Runtime.dll" />
     <Content Include="packages\Antlr.3.5.0.2\lib\Antlr3.Runtime.pdb" />
@@ -798,6 +799,13 @@
     <Compile Include="Default.aspx.designer.cs">
       <DependentUpon>Default.aspx</DependentUpon>
     </Compile>
+    <Compile Include="EditStoreDetails.aspx.cs">
+      <DependentUpon>EditStoreDetails.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="EditStoreDetails.aspx.designer.cs">
+      <DependentUpon>EditStoreDetails.aspx</DependentUpon>
+    </Compile>
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -822,13 +830,6 @@
     </Compile>
     <Compile Include="Order.aspx.designer.cs">
       <DependentUpon>Order.aspx</DependentUpon>
-    </Compile>
-    <Compile Include="OrderManagement.aspx.cs">
-      <DependentUpon>OrderManagement.aspx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="OrderManagement.aspx.designer.cs">
-      <DependentUpon>OrderManagement.aspx</DependentUpon>
     </Compile>
     <Compile Include="OrderSuccess.aspx.cs">
       <DependentUpon>OrderSuccess.aspx</DependentUpon>
