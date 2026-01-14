@@ -1,19 +1,61 @@
 ﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="SellPage.master.cs" Inherits="Business_App_Dev.SellPage" %>
 
 <!DOCTYPE html>
-
-<html>
+<html lang="en">
 <head runat="server">
-    <title></title>
-    <asp:ContentPlaceHolder ID="head" runat="server">
-    </asp:ContentPlaceHolder>
+    <meta charset="utf-8" />
+    <title><%: Page.Title %> - EcoEats Seller</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <link href="<%= ResolveUrl("~/Content/EcoEats.css") %>" rel="stylesheet" type="text/css" />
+
+    <asp:ContentPlaceHolder ID="head" runat="server" />
 </head>
+
 <body>
-    <form id="form1" runat="server">
-        <div>
-            <asp:ContentPlaceHolder ID="ContentPlaceHolder1" runat="server">
-            </asp:ContentPlaceHolder>
-        </div>
-    </form>
+<form id="form1" runat="server">
+    <div class="ee-page">
+
+        <!-- HEADER / NAV -->
+        <header class="ee-header">
+            <div class="container ee-header-main d-flex justify-content-between align-items-center py-3">
+
+                <div class="ee-logo d-flex align-items-center gap-2">
+                    <span class="ee-logo-text fw-bold">EcoEats Seller</span>
+                </div>
+
+                <nav class="ee-nav-links d-flex flex-wrap gap-3">
+                    <a runat="server" href="SellerDashboard.aspx" class="ee-nav-link">Dashboard</a>
+                    <a runat="server" href="SellerWasteTracker.aspx" class="ee-nav-link">Waste Tracker</a>
+                    <a runat="server" href="Inventory.aspx" class="ee-nav-link">Inventory</a>
+                    <a runat="server" href="SellerOrders.aspx" class="ee-nav-link">Order Management</a>
+                    <a runat="server" href="SellerReviews.aspx" class="ee-nav-link">Customer Review</a>
+                    <a runat="server" href="SellerMessages.aspx" class="ee-nav-link">Messages</a>
+                    <a runat="server" href="SellerProfile.aspx" class="ee-nav-link">Store Profile</a>
+                </nav>
+
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT -->
+        <main class="ee-main container py-3">
+            <!-- ✅ KEEP your existing ContentPlaceHolder1 so Inventory/AddNewProduct still work -->
+            <asp:ContentPlaceHolder ID="ContentPlaceHolder1" runat="server" />
+        </main>
+
+        <!-- Floating chat button (optional) -->
+        <button type="button" class="ee-chat-fab">💬</button>
+
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- ✅ Optional scripts placeholder (won't break existing pages) -->
+    <asp:ContentPlaceHolder ID="ScriptsContent" runat="server" />
+
+</form>
 </body>
 </html>
