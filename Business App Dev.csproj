@@ -126,9 +126,7 @@
     <Content Include="About.aspx" />
     <Content Include="AddNewProduct.aspx" />
     <Content Include="App_Data\EcoEats.mdf" />
-    <Content Include="App_Data\EcoEats_log.ldf">
-      <DependentUpon>EcoEats.mdf</DependentUpon>
-    </Content>
+    <Content Include="App_Data\EcoEats_log.ldf" />
     <Content Include="Cart.aspx" />
     <Content Include="Content\Cart.css" />
     <Content Include="Contact.aspx" />

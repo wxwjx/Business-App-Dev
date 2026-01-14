@@ -22,7 +22,7 @@ namespace Business_App_Dev
 
                 string name = (tb_ProductName.Text ?? "").Trim();
                 string subtitle = (tb_Subtitle.Text ?? "").Trim();
-                string imageUrl = (tb_ImageUrl.Text ?? "").Trim();
+                //string imageUrl = (tb_ImageUrl.Text ?? "").Trim();
                 string category = (tb_category.Text ?? "").Trim();
 
                 if (string.IsNullOrWhiteSpace(name))
@@ -66,7 +66,7 @@ namespace Business_App_Dev
 
                     ProductName = name,
                     Subtitle = subtitle,
-                    ImageUrl = imageUrl,
+                    //ImageUrl = imageUrl,
 
                     PriceNow = priceNow,
                     PriceOld = priceOld,
