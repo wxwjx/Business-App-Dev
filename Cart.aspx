@@ -3,8 +3,17 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
-    <title>Cart</title>
-    <link href="Content/cart.css" rel="stylesheet" />
+    <title>Shopping Cart | EcoEats</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Site + Cart CSS -->
+    <link href="<%= ResolveUrl("~/Content/EcoEats.css") %>" rel="stylesheet" />
+    <link href="<%= ResolveUrl("~/Content/Cart.css") %>" rel="stylesheet" />
+
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 </head>
 
 <body class="ck-body ck-has-items">
@@ -19,7 +28,7 @@
             <div class="ck-h-title">
                 <span class="ck-cart-ic">🛒</span>
                 Shopping Cart
-                <span class="ck-muted" style="margin-left:10px;">
+                <span class="ck-muted ck-title-count">
                     (<asp:Label ID="lblItemCount" runat="server" Text="0" /> items)
                 </span>
             </div>
@@ -35,7 +44,7 @@
                     Your cart is empty.
                 </asp:Panel>
 
-                <!-- ✅ Select all row (hidden automatically when cart is empty) -->
+                <!-- Select all row -->
                 <asp:Panel ID="pnlSelectAll" runat="server" CssClass="ck-leftbar" Visible="false">
                     <label class="ck-selectall">
                         <asp:CheckBox ID="chkSelectAll"
@@ -44,6 +53,9 @@
                             OnCheckedChanged="chkSelectAll_CheckedChanged" />
                         <span>Select all</span>
                     </label>
+
+                    <!-- Optional: if you want, set this text from code-behind -->
+                    <asp:Label ID="lblSelectedCount" runat="server" CssClass="ck-selected-count" Text="" />
                 </asp:Panel>
 
                 <!-- Items list -->
@@ -65,7 +77,7 @@
 
                             <!-- image -->
                             <div class="ck-item-img"
-                                style='<%# "background-image:url(" + Eval("ImageUrl") + ");" %>'
+                                 style='background-image:url("<%# Eval("ImageUrl") %>");'>
                             </div>
 
                             <!-- middle -->
