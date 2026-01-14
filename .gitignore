@@ -118,7 +118,6 @@ node_modules/
 # DATABASE FILES (IMPORTANT 🔥)
 # =========================
 # SQL Server / LocalDB
-*.mdf
 *.ldf
 *.ndf
 App_Data/*.mdf
