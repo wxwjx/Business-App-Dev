@@ -1,0 +1,188 @@
+﻿/* Page backdrop */
+.login-page {
+    min-height: calc(100vh - 120px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 40px 16px;
+    background: #eef7f3;
+}
+
+/* Brand area */
+.brand {
+    text-align: center;
+}
+
+.brand-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 999px;
+    background: #2e7d32;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 24px rgba(0,0,0,.12);
+    margin-bottom: 10px;
+}
+
+    .brand-icon svg {
+        width: 34px;
+        height: 34px;
+        fill: #fff;
+    }
+
+.brand-name {
+    font-size: 44px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    color: #2e7d32;
+    line-height: 1.05;
+}
+
+.brand-tagline {
+    margin-top: 6px;
+    font-size: 14px;
+    color: #6b7b75;
+}
+
+/* Card */
+.card {
+    width: 520px;
+    max-width: 94vw;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 18px 45px rgba(0,0,0,.18);
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 18px 22px;
+    background: linear-gradient(90deg, #2e7d32, #0aa6a9);
+    color: #fff;
+}
+
+.header-title {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.header-sub {
+    font-size: 14px;
+    opacity: .95;
+}
+
+.card-body {
+    padding: 22px;
+}
+
+/* Fields */
+.field {
+    margin-bottom: 16px;
+}
+
+.label {
+    font-size: 14px;
+    color: #243a34;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+/* Role pill RadioButtonList */
+.role-pills {
+    display: flex;
+    gap: 10px;
+    background: #eef0f2;
+    padding: 6px;
+    border-radius: 999px;
+    width: fit-content;
+}
+
+    .role-pills input[type="radio"] {
+        display: none;
+    }
+
+    .role-pills label {
+        display: inline-block;
+        padding: 10px 22px;
+        border-radius: 999px;
+        cursor: pointer;
+        font-weight: 700;
+        color: #243a34;
+        user-select: none;
+    }
+
+    /* ASP.NET renders label after input, so we rely on :checked + label */
+    .role-pills input[type="radio"]:checked + label {
+        background: #ffffff;
+        box-shadow: 0 6px 18px rgba(0,0,0,.12);
+    }
+
+/* Inputs with icons */
+.input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f3f5f6;
+    border-radius: 999px;
+    padding: 10px 14px;
+}
+
+.icon svg {
+    width: 18px;
+    height: 18px;
+    fill: #7c8b86;
+}
+
+.textbox {
+    border: none !important;
+    outline: none !important;
+    background: transparent !important;
+    width: 100%;
+    font-size: 14px;
+}
+
+    .textbox::placeholder {
+        color: #9aa7a2;
+    }
+
+/* Error + button */
+.error {
+    display: block;
+    margin: 8px 0 12px;
+    color: #b00020;
+    font-weight: 600;
+}
+
+.btn {
+    width: 100%;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 16px;
+    font-size: 15px;
+    font-weight: 800;
+    color: #fff;
+    background: #2e7d32;
+    cursor: pointer;
+}
+
+    .btn:hover {
+        filter: brightness(0.95);
+    }
+/* Password eye icon */
+.password-wrap {
+    position: relative;
+}
+
+.eye-icon {
+    cursor: pointer;
+    font-size: 16px;
+    margin-left: 8px;
+    user-select: none;
+    color: #7c8b86;
+}
+
+    .eye-icon:hover {
+        color: #2e7d32;
+    }

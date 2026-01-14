@@ -1,0 +1,306 @@
+﻿/* ======= ONLY EcoEatsAdmin page content styles ======= */
+
+.eco-cardbox {
+    background: #fff;
+    border: 1px solid #dfe7df;
+    border-radius: 18px;
+    padding: 22px;
+}
+
+.eco-cardbox-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* Table */
+.eco-table-wrap {
+    overflow-x: auto;
+}
+
+.eco-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+    .eco-table th {
+        text-align: left;
+        color: #222;
+        font-weight: 700;
+        padding: 14px 12px;
+        border-bottom: 1px solid #e5efe6;
+        font-size: 14px;
+    }
+
+    .eco-table td {
+        padding: 14px 12px;
+        border-bottom: 1px solid #f0f6f0;
+        font-size: 14px;
+        vertical-align: middle;
+    }
+
+.eco-actions {
+    width: 220px;
+}
+
+.eco-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: #f3f5f4;
+    border: 1px solid #e2e7e3;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+/* Buttons */
+.eco-btn {
+    border: 1px solid #dfe7df;
+    background: #fff;
+    padding: 10px 14px;
+    border-radius: 999px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.eco-approve {
+    background: #2e7d32;
+    color: #fff;
+    border-color: #2e7d32;
+    margin-right: 10px;
+}
+
+.eco-reject {
+    color: #d11a2a;
+    border-color: #f0c7cc;
+    background: #fff;
+}
+
+.eco-takeover {
+    background: #2e7d32;
+    border-color: #2e7d32;
+    color: #fff;
+}
+
+.eco-msgicon {
+    margin-right: 6px;
+}
+
+/* Placeholder */
+.eco-placeholderbox {
+    background: #fff;
+    border: 1px solid #dfe7df;
+    border-radius: 18px;
+    padding: 28px;
+}
+
+.eco-placeholder-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.eco-placeholder-sub {
+    color: #6c7a6f;
+}
+
+/* Chat list */
+.eco-chat-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border: 1px solid #e7eee8;
+    border-radius: 18px;
+    padding: 18px;
+    margin-top: 16px;
+}
+
+.eco-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    background: #2e7d32;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+}
+
+.eco-chat-info {
+    flex: 1;
+}
+
+.eco-chat-name {
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.eco-chat-sub {
+    color: #6c7a6f;
+    margin-top: 2px;
+}
+
+.eco-chat-time {
+    color: #6c7a6f;
+    margin-top: 6px;
+    font-size: 13px;
+}
+
+.eco-chat-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Chat status pills ONLY */
+.eco-chat-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 13px;
+}
+
+    .eco-chat-pill.urgent {
+        background: #d11a2a;
+        color: #fff;
+    }
+
+    .eco-chat-pill.pending {
+        background: #f59e0b;
+        color: #111;
+    }
+
+/* ===== Feedback panel ===== */
+.eco-feedback-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.eco-export-btn {
+    border: 1px solid #e2e2e2;
+    background: #fff;
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    color: #111;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+    .eco-export-btn:hover {
+        background: #f7f7f7;
+    }
+
+.eco-feedback-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.eco-feedback-item {
+    background: #fff;
+    border: 1px solid #e6e6e6;
+    border-radius: 16px;
+    padding: 16px 18px;
+}
+
+.eco-feedback-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.eco-feedback-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.eco-feedback-name {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.eco-feedback-stars .star {
+    font-size: 18px;
+    color: #d6d6d6;
+    margin-right: 1px;
+}
+
+    .eco-feedback-stars .star.filled {
+        color: #f5a623;
+    }
+
+.eco-feedback-date {
+    margin-top: 6px;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.eco-feedback-text {
+    margin-top: 10px;
+    font-size: 15px;
+    line-height: 1.5;
+    color: #111;
+}
+
+/* Feedback type pills ONLY */
+.eco-feedback-pill {
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 13px;
+    display: inline-block;
+}
+
+    .eco-feedback-pill.positive {
+        background: #1f7a2e;
+        color: #fff;
+    }
+
+    .eco-feedback-pill.suggestion {
+        background: #f5a623;
+        color: #111;
+    }
+
+    .eco-feedback-pill.negative {
+        background: #d92d20;
+        color: #fff;
+    }
+
+/* Reply box */
+.eco-reply-box {
+    margin-top: 14px;
+    padding: 14px;
+    border: 1px solid #e7eee8;
+    border-radius: 14px;
+    background: #f9fbf9;
+}
+
+.eco-reply-input {
+    width: 90%;
+    resize: vertical;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #dfe7df;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.eco-reply-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}

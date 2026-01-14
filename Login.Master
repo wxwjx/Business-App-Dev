@@ -1,0 +1,38 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true"
+    CodeBehind="Login.Master.cs"
+    Inherits="Business_App_Dev.LoginMaster" %>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head runat="server">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>
+        <asp:ContentPlaceHolder ID="TitleContent" runat="server" />
+    </title>
+
+    <!-- Global site styles -->
+    <link href="<%= ResolveUrl("~/Content/LoginSite.css") %>" rel="stylesheet" />
+
+    <!-- Page-specific styles/scripts -->
+    <asp:ContentPlaceHolder ID="HeadContent" runat="server" />
+</head>
+
+<body>
+    <form id="form1" runat="server">
+
+
+        <main class="page">
+            <asp:ContentPlaceHolder ID="MainContent" runat="server" />
+        </main>
+
+        <footer class="footer">
+            <div class="footer-inner">
+                © <%: DateTime.Now.Year %> EcoEats
+            </div>
+        </footer>
+
+    </form>
+</body>
+</html>
