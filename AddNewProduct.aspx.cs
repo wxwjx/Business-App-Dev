@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 using System.Web.UI;
-using System.Web.UI.WebControls;
 
 namespace Business_App_Dev
 {
@@ -11,64 +7,119 @@ namespace Business_App_Dev
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-
         }
 
         protected void btn_Insert_Click(object sender, EventArgs e)
         {
-            
-                 try
+            try
             {
-                
-                if (string.IsNullOrWhiteSpace(tb_ProductID.Text) ||
-                    string.IsNullOrWhiteSpace(tb_ProductName.Text) ||
-                    string.IsNullOrWhiteSpace(tb_Price.Text) ||
-                    string.IsNullOrWhiteSpace(tb_quantity.Text) ||
-                    string.IsNullOrWhiteSpace(tb_category.Text))
+                // Let ASP.NET validators run first
+                if (!Page.IsValid) return;
+
+                // ✅ TEMP: fake seller until login is ready
+                // (Make sure SellerID 1 exists in dbo.Seller — your screenshot shows it does)
+                int fakeSellerId = 1;
+
+                string name = (tb_ProductName.Text ?? "").Trim();
+                string subtitle = (tb_Subtitle.Text ?? "").Trim();
+                //string imageUrl = (tb_ImageUrl.Text ?? "").Trim();
+                string category = (tb_category.Text ?? "").Trim();
+
+                if (string.IsNullOrWhiteSpace(name))
                 {
-                    // Show a simple alert
-                    ClientScript.RegisterStartupScript(this.GetType(), "alert", "alert('Please fill in all fields.');", true);
+                    Alert("Product name is required.");
                     return;
                 }
-                decimal price;
-                int quantity;
 
-                if (!decimal.TryParse(tb_Price.Text, out price))
+                if (!decimal.TryParse((tb_Price.Text ?? "").Trim(), out decimal priceNow))
                 {
-                    ClientScript.RegisterStartupScript(this.GetType(), "alert", "alert('Price must be a valid number.');", true);
+                    Alert("Price must be a valid number.");
                     return;
                 }
 
-                if (!int.TryParse(tb_quantity.Text, out quantity))
+                // optional fields
+                decimal.TryParse((tb_OldPrice.Text ?? "").Trim(), out decimal priceOld);
+                int.TryParse((tb_DiscountPercent.Text ?? "").Trim(), out int discountPercent);
+
+                if (!int.TryParse((tb_Expiry.Text ?? "").Trim(), out int expiryHours))
                 {
-                    ClientScript.RegisterStartupScript(this.GetType(), "alert", "alert('Quantity must be a valid integer.');", true);
+                    Alert("Expiry hours must be a valid integer.");
                     return;
                 }
-                Product.Products.Add(new Product
+
+                if (!int.TryParse((tb_quantity.Text ?? "").Trim(), out int quantity))
                 {
+                    Alert("Quantity must be a valid integer.");
+                    return;
+                }
 
-                    ID = tb_ProductID.Text,
-                   Name = tb_ProductName.Text,
-                   Price = Convert.ToDecimal(tb_Price.Text),
-                   Quantity = Convert.ToInt32(tb_quantity.Text),
-                   Category = tb_category.Text,
+                if (expiryHours < 0 || quantity < 0 || discountPercent < 0 || priceNow < 0 || priceOld < 0)
+                {
+                    Alert("Values cannot be negative.");
+                    return;
+                }
 
-                });
+                // ✅ Create ProductModel (no Product.cs)
+                var p = new ProductModel
+                {
+                    SellerID = fakeSellerId,   // ✅ IMPORTANT: prevents NULL SellerID insert error
 
+                    ProductName = name,
+                    Subtitle = subtitle,
+                    //ImageUrl = imageUrl,
 
+                    PriceNow = priceNow,
+                    PriceOld = priceOld,
 
-            Response.Redirect("Inventory.aspx");
-        }
+                    DiscountPercent = discountPercent,
+                    ExpiryHours = expiryHours,
+                    Quantity = quantity,
+                    Category = category,
+
+                    // Defaults for fields not collected on this page
+                    Rating = 0,
+                    Reviews = 0,
+                    DistanceKm = 0,
+                    CO2Saved = 0,
+                    CreatedAt = DateTime.Now
+                };
+
+                int rows = ProductModel.AddProduct(p);
+
+                if (rows > 0)
+                {
+                    Response.Redirect("Inventory.aspx");
+                }
+                else
+                {
+                    Alert("Failed to add product.");
+                }
+            }
             catch (Exception ex)
             {
-                // Log or display error
-                ClientScript.RegisterStartupScript(this.GetType(), "alert", $"alert('An error occurred: {ex.Message}');", true);
+                Alert("An error occurred: " + ex.Message);
             }
-                  }
+        }
 
-        //protected void btn_ProductView_Click(object sender, EventArgs e)
-        //{
-        //    Response.Redirect("Inventory.aspx");
-        //}
+        protected void btn_Cancel_Click(object sender, EventArgs e)
+        {
+            Response.Redirect("Inventory.aspx");
+        }
+
+        private void Alert(string msg)
+        {
+            msg = (msg ?? "")
+                .Replace("\\", "\\\\")
+                .Replace("'", "\\'")
+                .Replace("\r", "")
+                .Replace("\n", "");
+
+            ClientScript.RegisterStartupScript(
+                GetType(),
+                Guid.NewGuid().ToString(),
+                $"alert('{msg}');",
+                true
+            );
+        }
     }
 }

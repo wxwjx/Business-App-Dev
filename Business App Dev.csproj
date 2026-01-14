@@ -123,9 +123,7 @@
     <Content Include="About.aspx" />
     <Content Include="AddNewProduct.aspx" />
     <Content Include="App_Data\EcoEats.mdf" />
-    <Content Include="App_Data\EcoEats_log.ldf">
-      <DependentUpon>EcoEats.mdf</DependentUpon>
-    </Content>
+    <Content Include="App_Data\EcoEats_log.ldf" />
     <Content Include="bin\Antlr3.Runtime.dll" />
     <Content Include="bin\Antlr3.Runtime.pdb" />
     <Content Include="bin\Business App Dev.dll" />
