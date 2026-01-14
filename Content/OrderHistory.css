@@ -1,145 +1,30 @@
-﻿/* OrderHistory page only.
-   Uses your :root vars from EcoEats.css (green, border, shadow, muted, etc.)
-*/
-
-.oh-page {
-    padding: 22px 18px 48px;
+﻿/* Make hero shorter than Product page hero */
+.oh-hero {
+    padding: 26px 0 18px;
 }
 
-/* Topbar nav (right side) */
-.oh-nav {
-    display: flex;
-    gap: 12px;
-    align-items: center;
+.oh-content {
+    padding-bottom: 48px;
 }
 
-.oh-navlink {
-    text-decoration: none;
-    color: var(--muted);
-    font-weight: 700;
-    padding: 10px 12px;
-    border-radius: 12px;
-}
-
-    .oh-navlink:hover {
-        background: rgba(15, 23, 42, 0.04);
-        color: var(--text);
-    }
-
-    .oh-navlink.is-active {
-        background: rgba(46, 125, 50, 0.10);
-        color: var(--green);
-    }
-
-/* Header block */
-.oh-head {
-    margin-bottom: 14px;
-}
-
-.oh-back {
-    display: inline-block;
-    margin-bottom: 10px;
-    color: var(--muted);
-    text-decoration: none;
-    font-weight: 700;
-}
-
-    .oh-back:hover {
-        color: var(--text);
-    }
-
-.oh-titleRow {
-    display: flex;
-    justify-content: space-between;
-    gap: 14px;
-    flex-wrap: wrap;
-    align-items: flex-end;
-}
-
-.oh-title {
-    margin: 0;
-    font-size: 26px;
-    letter-spacing: -0.02em;
-}
-
-.oh-subtitle {
-    color: var(--muted);
-    margin-top: 4px;
-    font-size: 14px;
-}
-
-/* Right chip */
-.oh-chip {
-    border: 1px solid var(--border);
-    background: var(--card);
-    padding: 10px 12px;
-    border-radius: 14px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    box-shadow: 0 8px 18px rgba(15,23,42,0.05);
-}
-
-.oh-chip-label {
-    color: var(--muted);
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.oh-chip-value {
-    font-weight: 900;
-    letter-spacing: .02em;
-}
-
-/* Alerts */
-.oh-alert {
-    margin-top: 14px;
-    padding: 14px;
-    border-radius: 14px;
-    border: 1px solid;
-}
-
-.oh-alert-error {
-    background: #fef2f2;
-    border-color: #fecaca;
-    color: #991b1b;
-}
-
-.oh-alert-empty {
-    background: #fff7ed;
-    border-color: #fed7aa;
-    color: #9a3412;
-}
-
-.oh-empty-title {
-    font-weight: 900;
-    margin-bottom: 4px;
-}
-
-.oh-empty-text {
-    color: rgba(154, 52, 18, 0.85);
-    margin-bottom: 10px;
-}
-
-/* Cards */
+/* Order card */
 .oh-card {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 14px;
+    border-radius: 16px;
+    padding: 16px;
     margin-top: 14px;
     box-shadow: var(--shadow);
 }
 
-.oh-cardTop {
+.oh-row {
     display: flex;
     justify-content: space-between;
-    gap: 14px;
+    gap: 16px;
     flex-wrap: wrap;
-    align-items: flex-start;
 }
 
-.oh-orderno {
+.oh-order-id {
     font-weight: 900;
     font-size: 16px;
 }
@@ -150,6 +35,17 @@
     margin-top: 2px;
 }
 
+.oh-status {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    background: rgba(46, 125, 50, 0.12);
+    color: var(--green);
+}
+
 .oh-right {
     text-align: right;
 }
@@ -157,42 +53,26 @@
 .oh-total {
     font-weight: 900;
     font-size: 18px;
-    margin-top: 8px;
 }
 
-.oh-pill {
+.oh-btn {
     display: inline-block;
-    padding: 6px 10px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 900;
+    margin-top: 10px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: var(--green);
+    color: #fff;
+    font-weight: 800;
+    font-size: 13px;
+    text-decoration: none;
 }
 
-    .oh-pill.is-paid {
-        background: rgba(46, 125, 50, 0.12);
-        color: var(--green);
+    .oh-btn:hover {
+        opacity: 0.92;
     }
-
-    .oh-pill.is-other {
-        background: rgba(15, 23, 42, 0.08);
-        color: var(--text);
-    }
-
-.oh-divider {
-    height: 1px;
-    background: var(--border);
-    margin: 12px 0;
-}
-
-.oh-cardBottom {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    align-items: center;
-    flex-wrap: wrap;
-}
 
 .oh-ref {
+    margin-top: 10px;
     color: var(--muted);
     font-size: 12px;
 }
@@ -202,29 +82,34 @@
         font-weight: 700;
     }
 
-/* Buttons */
-.oh-primary, .oh-secondary {
-    display: inline-block;
-    text-decoration: none;
+/* Empty state */
+.oh-empty {
+    margin-top: 14px;
+    padding: 16px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: #fff;
+    box-shadow: var(--shadow);
+    text-align: center;
+}
+
+.oh-empty-title {
     font-weight: 900;
+    font-size: 16px;
+}
+
+.oh-empty-text {
+    color: var(--muted);
+    margin-top: 6px;
+    margin-bottom: 12px;
+}
+
+.oh-empty-btn {
+    display: inline-block;
+    padding: 10px 14px;
     border-radius: 12px;
-    padding: 10px 12px;
+    background: rgba(46, 125, 50, 0.12);
+    color: var(--green);
+    font-weight: 900;
+    text-decoration: none;
 }
-
-.oh-primary {
-    background: var(--green);
-    color: #fff;
-}
-
-    .oh-primary:hover {
-        opacity: .92;
-    }
-
-.oh-secondary {
-    background: rgba(15, 23, 42, 0.06);
-    color: var(--text);
-}
-
-    .oh-secondary:hover {
-        background: rgba(15, 23, 42, 0.10);
-    }
