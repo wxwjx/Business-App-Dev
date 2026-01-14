@@ -37,8 +37,8 @@ namespace FoodSaver
 
             using (var conn = new SqlConnection(cs))
             using (var cmd = new SqlCommand(@"
-                SELECT SellerId, StoreName, Email, PasswordHash, PasswordSalt, IsActive
-                FROM Sellers
+                SELECT Id, BusinessName, Email, PasswordHash, PasswordSalt, Status
+                FROM SellerApplications
                 WHERE Email = @Email
             ", conn))
             {
@@ -53,17 +53,25 @@ namespace FoodSaver
                         return;
                     }
 
-                    bool isActive = Convert.ToBoolean(r["IsActive"]);
-                    if (!isActive)
+                    // Short-term gate: only allow Approved (your signup will insert Approved)
+                    string status = r["Status"]?.ToString() ?? "Pending";
+                    if (!status.Equals("Approved", StringComparison.OrdinalIgnoreCase))
                     {
-                        ShowFail("Account is inactive.");
+                        ShowFail("Your seller account is not approved yet.");
                         return;
                     }
 
-                    int sellerId = Convert.ToInt32(r["SellerId"]);
-                    string storeName = r["StoreName"].ToString();
-                    string dbHash = r["PasswordHash"].ToString();
-                    string dbSalt = r["PasswordSalt"].ToString();
+                    int sellerAppId = Convert.ToInt32(r["Id"]); // short-term "SellerId"
+                    string storeName = r["BusinessName"]?.ToString() ?? "(Unknown Store)";
+
+                    string dbHash = r["PasswordHash"]?.ToString() ?? "";
+                    string dbSalt = r["PasswordSalt"]?.ToString() ?? "";
+
+                    if (string.IsNullOrWhiteSpace(dbHash) || string.IsNullOrWhiteSpace(dbSalt))
+                    {
+                        ShowFail("Account is missing password setup. Please sign up again.");
+                        return;
+                    }
 
                     if (!VerifyPassword(password, dbSalt, dbHash))
                     {
@@ -71,9 +79,9 @@ namespace FoodSaver
                         return;
                     }
 
-                    // Success sessions
+                    // Success sessions (keep same keys so the rest of your seller pages keep working)
                     Session["SellerAuthenticated"] = true;
-                    Session["SellerId"] = sellerId;
+                    Session["SellerId"] = sellerAppId;
                     Session["SellerEmail"] = email;
                     Session["SellerStoreName"] = storeName;
 
@@ -91,7 +99,10 @@ namespace FoodSaver
                         // Clear cookie if exists
                         if (Request.Cookies["SellerRemember"] != null)
                         {
-                            var cookie = new HttpCookie("SellerRemember") { Expires = DateTime.Now.AddDays(-1) };
+                            var cookie = new HttpCookie("SellerRemember")
+                            {
+                                Expires = DateTime.Now.AddDays(-1)
+                            };
                             Response.Cookies.Add(cookie);
                         }
                     }
@@ -103,7 +114,6 @@ namespace FoodSaver
 
         private void ShowFail(string msg)
         {
-            // Use your existing ValidationSummary to display a clean message
             vsSummary.HeaderText = "Sign-in failed";
             vsSummary.Controls.Clear();
             vsSummary.Controls.Add(new System.Web.UI.LiteralControl(msg));
@@ -121,3 +131,5 @@ namespace FoodSaver
         }
     }
 }
+
+

@@ -8,18 +8,32 @@
         <asp:ValidationSummary ID="vsSummarySignup" runat="server" CssClass="text-danger mb-2"
             HeaderText="Please fix the following:" />
 
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label for="txtStoreName" class="form-label">Store name</label>
-                <asp:TextBox ID="txtStoreName" runat="server" CssClass="form-control" />
-                <asp:RequiredFieldValidator ID="rfvStoreName" runat="server" ControlToValidate="txtStoreName"
-                    ErrorMessage="Store name is required." CssClass="text-danger" Display="Dynamic" />
-            </div>
+        <div class="mb-3">
+            <label for="txtStoreName" class="form-label">Business / Shop name</label>
+            <asp:TextBox ID="txtStoreName" runat="server" CssClass="form-control" />
+            <asp:RequiredFieldValidator ID="rfvStoreName" runat="server" ControlToValidate="txtStoreName"
+                ErrorMessage="Business name is required." CssClass="text-danger" Display="Dynamic" />
+        </div>
 
-            <div class="col-md-6 mb-3">
-                <label for="txtPhone" class="form-label">Phone (optional)</label>
-                <asp:TextBox ID="txtPhone" runat="server" CssClass="form-control" Placeholder="e.g. 9123 4567" />
-            </div>
+        <div class="mb-3">
+            <label for="txtOwner" class="form-label">Owner name</label>
+            <asp:TextBox ID="txtOwner" runat="server" CssClass="form-control" />
+            <asp:RequiredFieldValidator ID="rfvOwner" runat="server" ControlToValidate="txtOwner"
+                ErrorMessage="Owner name is required." CssClass="text-danger" Display="Dynamic" />
+        </div>
+
+        <div class="mb-3">
+            <label for="ddlCategory" class="form-label">Category</label>
+            <asp:DropDownList ID="ddlCategory" runat="server" CssClass="form-select">
+                <asp:ListItem Text="Select category" Value="" />
+                <asp:ListItem Text="Bakery" Value="Bakery" />
+                <asp:ListItem Text="Restaurant" Value="Restaurant" />
+                <asp:ListItem Text="Cafe" Value="Cafe" />
+                <asp:ListItem Text="Grocer" Value="Grocer" />
+                <asp:ListItem Text="Other" Value="Other" />
+            </asp:DropDownList>
+            <asp:RequiredFieldValidator ID="rfvCategory" runat="server" ControlToValidate="ddlCategory"
+                InitialValue="" ErrorMessage="Category is required." CssClass="text-danger" Display="Dynamic" />
         </div>
 
         <div class="mb-3">
@@ -47,20 +61,6 @@
                 <asp:CompareValidator ID="cvPasswords" runat="server" ControlToCompare="txtPassword"
                     ControlToValidate="txtConfirmPassword" ErrorMessage="Passwords do not match."
                     CssClass="text-danger" Display="Dynamic" />
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-8 mb-3">
-                <label for="txtAddress" class="form-label">Store address</label>
-                <asp:TextBox ID="txtAddress" runat="server" CssClass="form-control" />
-                <asp:RequiredFieldValidator ID="rfvAddress" runat="server" ControlToValidate="txtAddress"
-                    ErrorMessage="Store address is required." CssClass="text-danger" Display="Dynamic" />
-            </div>
-
-            <div class="col-md-4 mb-3">
-                <label for="txtPostal" class="form-label">Postal code (optional)</label>
-                <asp:TextBox ID="txtPostal" runat="server" CssClass="form-control" />
             </div>
         </div>
 
