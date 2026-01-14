@@ -221,6 +221,7 @@
     <Content Include="obj\Debug\Business App Dev.dll" />
     <Content Include="obj\Debug\Business App Dev.pdb" />
     <Content Include="Order.aspx" />
+    <Content Include="OrderManagementSeller.aspx" />
     <Content Include="OrderSuccess.aspx" />
     <Content Include="packages\Antlr.3.5.0.2\lib\Antlr3.Runtime.dll" />
     <Content Include="packages\Antlr.3.5.0.2\lib\Antlr3.Runtime.pdb" />
@@ -830,6 +831,13 @@
     </Compile>
     <Compile Include="Order.aspx.designer.cs">
       <DependentUpon>Order.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="OrderManagementSeller.aspx.cs">
+      <DependentUpon>OrderManagementSeller.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="OrderManagementSeller.aspx.designer.cs">
+      <DependentUpon>OrderManagementSeller.aspx</DependentUpon>
     </Compile>
     <Compile Include="OrderSuccess.aspx.cs">
       <DependentUpon>OrderSuccess.aspx</DependentUpon>

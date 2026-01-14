@@ -43,7 +43,7 @@
                         <a runat="server" href="SellerDashboard.aspx" class="ee-nav-link">Dashboard</a>
                         <a runat="server" href="SellerWasteTracker.aspx" class="ee-nav-link">Waste Tracker</a>
                         <a runat="server" href="Inventory.aspx" class="ee-nav-link">Inventory</a>
-                        <a runat="server" href="SellerOrders.aspx" class="ee-nav-link">Order Management</a>
+                        <a runat="server" href="OrderManagementSeller.aspx" class="ee-nav-link">Order Management</a>
                         <a runat="server" href="ViewFeedback.aspx" class="ee-nav-link">View Feedback</a>
                         <a runat="server" href="StoreDetails.aspx" class="ee-nav-link">Store Profile</a>
                     </div>
