@@ -1,0 +1,209 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="Admin.Master.cs" Inherits="Business_App_Dev.Admin" %>
+
+<!DOCTYPE html>
+<html>
+<head runat="server">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title><asp:ContentPlaceHolder ID="TitleContent" runat="server" /></title>
+
+    <!-- COMMON admin layout css (KPI + tabs + container) -->
+    <link href="<%= ResolveUrl("~/Content/AdminCommon.css") %>" rel="stylesheet" />
+
+    <!-- PAGE-SPECIFIC css goes here (EcoEatsAdmin.css etc.) -->
+    <asp:ContentPlaceHolder ID="HeadContent" runat="server" />
+</head>
+
+<body class="admin-body">
+<form id="form1" runat="server">
+    
+    <!-- ✅ STEP 1: required for server-side scripts -->
+    <asp:ScriptManager ID="sm1" runat="server" />
+
+
+    <!-- Top brand bar -->
+    <header class="admin-topbar">
+        <div class="admin-brand">
+            <div class="admin-shield">
+                <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 2l7 4v6c0 5-3.5 9.4-7 10-3.5-.6-7-5-7-10V6l7-4z"
+                          fill="none" stroke="currentColor" stroke-width="2"></path>
+                </svg>
+            </div>
+
+            <div class="admin-title">
+                <div class="admin-title-main">EcoEats Admin</div>
+                <div class="admin-title-sub">System Dashboard</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Page background -->
+    <main class="admin-shell">
+        <div class="admin-container">
+            <asp:UpdatePanel ID="upKpi" runat="server" UpdateMode="Conditional">
+                <ContentTemplate>
+
+                    <!-- KPI Cards (COMMON) -->
+                    <section class="kpi-row">
+
+                        <!-- Total Users -->
+                        <div class="kpi-card">
+                            <div class="kpi-left">
+                                <div class="kpi-label">Total Users</div>
+                                <div class="kpi-value">
+                                    <asp:Literal ID="litTotalUsers" runat="server" Text="0" />
+                                </div>
+                                <div class="kpi-delta live"> Live</div>
+                            </div>
+                            <div class="kpi-icon kpi-icon-green">
+                                <!-- keep your icon -->
+                                <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" fill="none" stroke="currentColor" stroke-width="2"/>
+                                    <circle cx="9" cy="7" r="4" fill="none" stroke="currentColor" stroke-width="2"/>
+                                    <path d="M22 21v-2a4 4 0 0 0-3-3.87" fill="none" stroke="currentColor" stroke-width="2"/>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75" fill="none" stroke="currentColor" stroke-width="2"/>
+                                </svg>
+                            </div>
+                        </div>
+
+                    <!-- Total Sellers -->
+                        <div class="kpi-card">
+                            <div class="kpi-left">
+                                <div class="kpi-label">Total Sellers</div>
+                                <div class="kpi-value"><asp:Literal ID="litTotalSellers" runat="server" Text="0" /></div>
+                                <div class="kpi-delta registered"> Registered</div>
+                            </div>
+                            <div class="kpi-icon kpi-icon-orange">
+                                <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M3 9l1-5h16l1 5" fill="none" stroke="currentColor" stroke-width="2"/>
+                                    <path d="M5 9v11h14V9" fill="none" stroke="currentColor" stroke-width="2"/>
+                                    <path d="M9 20v-6h6v6" fill="none" stroke="currentColor" stroke-width="2"/>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <!-- Avg Rating (with total reviews) -->
+                        <div class="kpi-card">
+                            <div class="kpi-left">
+                                <div class="kpi-label">Avg Rating</div>
+                                <div class="kpi-value">
+                                    <asp:Literal ID="litAvgRating" runat="server" Text="0.0" />
+                                </div>
+                                <div class="kpi-delta kpi-star">
+                                    <span class="kpi-star">★</span>
+                                    <asp:Literal ID="litReviewCount" runat="server" Text="0" /> reviews
+                                </div>
+                            </div>
+                            <div class="kpi-icon kpi-icon-yellow">
+                                <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M12 17.3l-5.1 3 1.4-5.8-4.5-3.9 6-.5 2.2-5.5 2.2 5.5 6 .5-4.5 3.9 1.4 5.8z"
+                                          fill="none" stroke="currentColor" stroke-width="2"/>
+                                </svg>
+                            </div>
+                        </div>
+                            <!-- Total Chat Escalations -->
+                        <div class="kpi-card">
+                            <div class="kpi-left">
+                                <div class="kpi-label">Chat Escalations</div>
+                                <div class="kpi-value"><asp:Literal ID="litChatEscalations" runat="server" Text="0" /></div>
+                                <div class="kpi-delta escalated"> Total escalated</div>
+                            </div>
+                            <div class="kpi-icon kpi-icon-cyan">
+                                <!-- simple chat icon -->
+                                <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"
+                                          fill="none" stroke="currentColor" stroke-width="2"/>
+                                </svg>
+                            </div>
+                        </div>
+
+                    </section>
+                </ContentTemplate>
+                <Triggers>
+                     <asp:AsyncPostBackTrigger ControlID="kpiTimer" EventName="Tick" />
+                </Triggers>
+            </asp:UpdatePanel>
+
+
+
+
+            <!-- Tabs (COMMON) -->
+            <asp:HiddenField ID="hfActiveTab" runat="server" Value="approvals" />
+            <nav class="admin-tabs">
+                <!-- If you want these to be links to different pages, change to <a> -->
+                <button type="button" class="admin-tab active" data-tab="approvals">Seller Approvals</button>
+                <button type="button" class="admin-tab" data-tab="feedback">Feedback Analytics</button>
+                <button type="button" class="admin-tab" data-tab="chat">Chat Escalations</button>
+            </nav>
+
+            <!-- Logout Button -->
+            <asp:Button
+                ID="btnLogout"
+                runat="server"
+                Text="Logout"
+                CssClass="admin-logout-btn"
+                OnClick="btnLogout_Click"
+                OnClientClick="return confirmLogout();" />
+
+
+            <!-- PAGE CONTENT (changes per page) -->
+            <asp:ContentPlaceHolder ID="MainContent" runat="server" />
+        </div>
+
+
+
+
+    </main>
+
+    <div id="toast" class="eco-toast"></div>
+
+    <asp:ContentPlaceHolder ID="ScriptsContent" runat="server" />
+
+    
+    <!-- ✅ STEP 3: script after toast -->
+    <script>
+        (function () {
+            const tabs = document.querySelectorAll(".admin-tab");
+            const panels = document.querySelectorAll(".admin-panel");
+            const hf = document.getElementById("<%= hfActiveTab.ClientID %>");
+
+            function activate(name) {
+                tabs.forEach(t => t.classList.toggle("active", t.dataset.tab === name));
+                panels.forEach(p => p.classList.toggle("active", p.dataset.tab === name));
+                if (hf) hf.value = name;
+            }
+
+            tabs.forEach(t => t.addEventListener("click", (e) => {
+                e.preventDefault(); // ✅ STEP 5 stop jump
+                activate(t.dataset.tab);
+            }));
+
+            // restore active tab after postback
+            const initial = (hf && hf.value) ? hf.value : "approvals";
+            activate(initial);
+        })();
+
+        function showToast(message, type = "success") {
+            const toast = document.getElementById("toast");
+            if (!toast) return;
+
+            toast.textContent = message;
+            toast.className = "eco-toast show " + type;
+
+            setTimeout(() => {
+                toast.className = "eco-toast";
+            }, 800);
+        }
+        function confirmLogout() {
+            return confirm("Are you sure you want to log out?");
+        }
+    </script>
+    <asp:Timer ID="kpiTimer" runat="server" Interval="5000"
+    OnTick="kpiTimer_Tick" />
+
+
+</form>
+</body>
+</html>

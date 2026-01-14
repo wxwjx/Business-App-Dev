@@ -48,6 +48,9 @@
       <HintPath>packages\Microsoft.Bcl.AsyncInterfaces.1.1.0\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Otp.NET, Version=1.4.1.0, Culture=neutral, PublicKeyToken=38a48df817e173a6, processorArchitecture=MSIL">
+      <HintPath>packages\Otp.NET.1.4.1\lib\net461\Otp.NET.dll</HintPath>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="QRCoder, Version=1.7.0.0, Culture=neutral, PublicKeyToken=c4ed5b9ae8358a28, processorArchitecture=MSIL">
@@ -125,6 +128,8 @@
     <Content Include=".gitignore" />
     <Content Include="About.aspx" />
     <Content Include="AddNewProduct.aspx" />
+    <Content Include="AdminLogin.aspx" />
+    <Content Include="Content\AdminCommon.css" />
     <Content Include="App_Data\EcoEats.mdf" />
     <Content Include="App_Data\EcoEats_log.ldf" />
     <Content Include="Cart.aspx" />
@@ -147,13 +152,20 @@
     <Content Include="Content\bootstrap.rtl.css" />
     <Content Include="Content\bootstrap.rtl.min.css" />
     <Content Include="Content\EcoEats.css" />
+    <Content Include="Content\EcoEatsLogin.css" />
+    <Content Include="Content\EcoEatsAdmin.css" />
+    <Content Include="EcoEatsAdmin.aspx" />
+    <Content Include="Enable2FA.aspx" />
     <Content Include="favicon.ico" />
     <Content Include="Feedback.aspx" />
     <Content Include="Global.asax" />
     <Content Include="Content\orders.css" />
     <Content Include="Inventory.aspx" />
     <Content Include="Login.aspx" />
+    <Content Include="Content\LoginSite.css" />
+    <Content Include="Messages.aspx" />
     <Content Include="OrderHistory.aspx" />
+    <Content Include="Content\OrderHistory.css" />
     <Content Include="OrderSuccess.aspx" />
     <Content Include="Product.aspx" />
     <Content Include="ProductDetails.aspx" />
@@ -187,6 +199,8 @@
     <Content Include="Content\bootstrap-grid.rtl.css.map" />
     <Content Include="Content\bootstrap-grid.min.css.map" />
     <Content Include="Content\bootstrap-grid.css.map" />
+    <Content Include="Login.Master" />
+    <Content Include="Admin.Master" />
     <None Include="Scripts\jquery-3.7.0.intellisense.js" />
     <Content Include="Scripts\jquery-3.7.0.js" />
     <Content Include="Scripts\jquery-3.7.0.min.js" />
@@ -214,8 +228,14 @@
     <Content Include="Scripts\WebForms\WebForms.js" />
     <Content Include="Scripts\WebForms\WebParts.js" />
     <Content Include="Scripts\WebForms\WebUIValidation.js" />
+    <Content Include="SellerDashboard.aspx" />
+    <Content Include="SellerLogin.aspx" />
+    <Content Include="SellerSignup.aspx" />
+    <Content Include="SellerWasteTracker.aspx" />
     <Content Include="SignUp.aspx" />
     <Content Include="Site.Master" />
+    <Content Include="Content\Verify2FA.css" />
+    <Content Include="Verify2FA.aspx" />
     <Content Include="ViewSwitcher.ascx" />
     <Content Include="Web.config" />
     <Content Include="Bundle.config" />
@@ -228,6 +248,20 @@
     </Compile>
     <Compile Include="AddNewProduct.aspx.designer.cs">
       <DependentUpon>AddNewProduct.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Admin.Master.cs">
+      <DependentUpon>Admin.Master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Admin.Master.designer.cs">
+      <DependentUpon>Admin.Master</DependentUpon>
+    </Compile>
+    <Compile Include="AdminLogin.aspx.cs">
+      <DependentUpon>AdminLogin.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="AdminLogin.aspx.designer.cs">
+      <DependentUpon>AdminLogin.aspx</DependentUpon>
     </Compile>
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="About.aspx.cs">
@@ -253,6 +287,20 @@
     <Compile Include="Contact.aspx.designer.cs">
       <DependentUpon>Contact.aspx</DependentUpon>
     </Compile>
+    <Compile Include="EcoEatsAdmin.aspx.cs">
+      <DependentUpon>EcoEatsAdmin.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="EcoEatsAdmin.aspx.designer.cs">
+      <DependentUpon>EcoEatsAdmin.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Enable2FA.aspx.cs">
+      <DependentUpon>Enable2FA.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Enable2FA.aspx.designer.cs">
+      <DependentUpon>Enable2FA.aspx</DependentUpon>
+    </Compile>
     <Compile Include="Feedback.aspx.cs">
       <DependentUpon>Feedback.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -276,6 +324,20 @@
     </Compile>
     <Compile Include="Login.aspx.designer.cs">
       <DependentUpon>Login.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Login.Master.cs">
+      <DependentUpon>Login.Master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Login.Master.designer.cs">
+      <DependentUpon>Login.Master</DependentUpon>
+    </Compile>
+    <Compile Include="Messages.aspx.cs">
+      <DependentUpon>Messages.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Messages.aspx.designer.cs">
+      <DependentUpon>Messages.aspx</DependentUpon>
     </Compile>
     <Compile Include="OrderHistory.aspx.cs">
       <DependentUpon>OrderHistory.aspx</DependentUpon>
@@ -314,6 +376,34 @@
       <DependentUpon>Profile.aspx</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SellerDashboard.aspx.cs">
+      <DependentUpon>SellerDashboard.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SellerDashboard.aspx.designer.cs">
+      <DependentUpon>SellerDashboard.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SellerLogin.aspx.cs">
+      <DependentUpon>SellerLogin.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SellerLogin.aspx.designer.cs">
+      <DependentUpon>SellerLogin.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SellerSignup.aspx.cs">
+      <DependentUpon>SellerSignup.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SellerSignup.aspx.designer.cs">
+      <DependentUpon>SellerSignup.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SellerWasteTracker.aspx.cs">
+      <DependentUpon>SellerWasteTracker.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SellerWasteTracker.aspx.designer.cs">
+      <DependentUpon>SellerWasteTracker.aspx</DependentUpon>
+    </Compile>
     <Compile Include="SellPage.Master.cs">
       <DependentUpon>SellPage.Master</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -341,6 +431,13 @@
     </Compile>
     <Compile Include="Site.Mobile.Master.designer.cs">
       <DependentUpon>Site.Mobile.Master</DependentUpon>
+    </Compile>
+    <Compile Include="Verify2FA.aspx.cs">
+      <DependentUpon>Verify2FA.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Verify2FA.aspx.designer.cs">
+      <DependentUpon>Verify2FA.aspx</DependentUpon>
     </Compile>
     <Compile Include="ViewSwitcher.ascx.cs">
       <DependentUpon>ViewSwitcher.ascx</DependentUpon>

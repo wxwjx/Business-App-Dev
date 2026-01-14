@@ -52,7 +52,7 @@
                 <a href="Inventory.aspx">Inventory</a>
                 <a href="SellerOrders.aspx">Orders</a>
                 <a href="SellerReviews.aspx">Reviews</a>
-                <a href="SellerMessages.aspx">Messages</a>
+                <a href="Messages.aspx">Messages</a>
                 <a href="SellerProfile.aspx">Store Profile</a>
             </nav>
 

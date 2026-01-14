@@ -37,7 +37,7 @@
 
             <nav class="ee-nav">
                 <a class="active" href="Product.aspx">Home</a>
-                <a href="Order.aspx">Orders</a>
+                <a href="OrderHistory.aspx">Orders</a>
                 <a href="About.aspx">About Us</a>
                 <a href="#">Help</a>
                 <a href="Feedback.aspx">Feedback</a>

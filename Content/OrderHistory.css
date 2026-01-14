@@ -1,0 +1,115 @@
+﻿/* Make hero shorter than Product page hero */
+.oh-hero {
+    padding: 26px 0 18px;
+}
+
+.oh-content {
+    padding-bottom: 48px;
+}
+
+/* Order card */
+.oh-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-top: 14px;
+    box-shadow: var(--shadow);
+}
+
+.oh-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.oh-order-id {
+    font-weight: 900;
+    font-size: 16px;
+}
+
+.oh-date {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 2px;
+}
+
+.oh-status {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    background: rgba(46, 125, 50, 0.12);
+    color: var(--green);
+}
+
+.oh-right {
+    text-align: right;
+}
+
+.oh-total {
+    font-weight: 900;
+    font-size: 18px;
+}
+
+.oh-btn {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: var(--green);
+    color: #fff;
+    font-weight: 800;
+    font-size: 13px;
+    text-decoration: none;
+}
+
+    .oh-btn:hover {
+        opacity: 0.92;
+    }
+
+.oh-ref {
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+    .oh-ref span {
+        color: var(--text);
+        font-weight: 700;
+    }
+
+/* Empty state */
+.oh-empty {
+    margin-top: 14px;
+    padding: 16px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: #fff;
+    box-shadow: var(--shadow);
+    text-align: center;
+}
+
+.oh-empty-title {
+    font-weight: 900;
+    font-size: 16px;
+}
+
+.oh-empty-text {
+    color: var(--muted);
+    margin-top: 6px;
+    margin-bottom: 12px;
+}
+
+.oh-empty-btn {
+    display: inline-block;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(46, 125, 50, 0.12);
+    color: var(--green);
+    font-weight: 900;
+    text-decoration: none;
+}
