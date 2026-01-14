@@ -156,6 +156,7 @@
     <Content Include="Inventory.aspx" />
     <Content Include="Login.aspx" />
     <Content Include="OrderHistory.aspx" />
+    <Content Include="Content\OrderHistory.css" />
     <Content Include="OrderSuccess.aspx" />
     <Content Include="Product.aspx" />
     <Content Include="ProductDetails.aspx" />
