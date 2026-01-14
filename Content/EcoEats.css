@@ -394,3 +394,62 @@ button, input {
         display: none;
     }
 }
+
+/* =========================================================
+   SELLER PORTAL (Master Page additions)
+   ========================================================= */
+
+/* Seller badge under logo */
+.ee-seller-badge {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--green-light);
+    color: var(--green);
+    font-weight: 700;
+    border: 1px solid var(--border);
+    margin-top: 2px;
+}
+
+/* Slightly tighter spacing for seller topbar */
+.ee-topbar-inner.seller {
+    gap: 14px;
+}
+
+/* Seller nav tweaks */
+.ee-nav.seller a {
+    padding: 8px 10px;
+    font-weight: 600;
+}
+
+/* Main content spacing for seller pages */
+.ee-main-wrap {
+    padding: 18px 0 40px;
+}
+
+/* Floating chat button (seller) */
+.ee-chat-fab {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    width: 52px;
+    height: 52px;
+    border-radius: 999px;
+    border: none;
+    background: var(--green);
+    color: #fff;
+    font-size: 22px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+}
+
+    .ee-chat-fab:hover {
+        filter: brightness(1.05);
+    }
+
+/* Responsive seller tweaks */
+@media (max-width: 980px) {
+    .ee-nav.seller {
+        display: none;
+    }
+}
