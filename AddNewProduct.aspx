@@ -4,6 +4,8 @@
     Inherits="Business_App_Dev.AddNewProduct" %>
 
 <asp:Content ID="HeadBlock" ContentPlaceHolderID="head" runat="server">
+        <link href="<%= ResolveUrl("~/Content/EcoEats.css") %>" rel="stylesheet" />
+
     <style>
         .form-wrap{max-width:820px;}
         .form-title{font-size:24px;font-weight:800;margin:12px 0 18px;}

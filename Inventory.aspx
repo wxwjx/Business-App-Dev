@@ -4,6 +4,7 @@
     Inherits="Business_App_Dev.Inventory" %>
 
 <asp:Content ID="HeadBlock" ContentPlaceHolderID="head" runat="server">
+     <link href="<%= ResolveUrl("~/Content/EcoEats.css") %>" rel="stylesheet" />
     <style type="text/css">
         .page-title {
             font-size: 24px;
