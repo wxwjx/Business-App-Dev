@@ -155,6 +155,7 @@
     <Content Include="Content\orders.css" />
     <Content Include="Inventory.aspx" />
     <Content Include="Login.aspx" />
+    <Content Include="Messages.aspx" />
     <Content Include="OrderHistory.aspx" />
     <Content Include="Content\OrderHistory.css" />
     <Content Include="OrderSuccess.aspx" />
@@ -217,6 +218,10 @@
     <Content Include="Scripts\WebForms\WebForms.js" />
     <Content Include="Scripts\WebForms\WebParts.js" />
     <Content Include="Scripts\WebForms\WebUIValidation.js" />
+    <Content Include="SellerDashboard.aspx" />
+    <Content Include="SellerLogin.aspx" />
+    <Content Include="SellerSignup.aspx" />
+    <Content Include="SellerWasteTracker.aspx" />
     <Content Include="SignUp.aspx" />
     <Content Include="Site.Master" />
     <Content Include="ViewSwitcher.ascx" />
@@ -280,6 +285,13 @@
     <Compile Include="Login.aspx.designer.cs">
       <DependentUpon>Login.aspx</DependentUpon>
     </Compile>
+    <Compile Include="Messages.aspx.cs">
+      <DependentUpon>Messages.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Messages.aspx.designer.cs">
+      <DependentUpon>Messages.aspx</DependentUpon>
+    </Compile>
     <Compile Include="OrderHistory.aspx.cs">
       <DependentUpon>OrderHistory.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -317,6 +329,34 @@
       <DependentUpon>Profile.aspx</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SellerDashboard.aspx.cs">
+      <DependentUpon>SellerDashboard.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SellerDashboard.aspx.designer.cs">
+      <DependentUpon>SellerDashboard.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SellerLogin.aspx.cs">
+      <DependentUpon>SellerLogin.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SellerLogin.aspx.designer.cs">
+      <DependentUpon>SellerLogin.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SellerSignup.aspx.cs">
+      <DependentUpon>SellerSignup.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SellerSignup.aspx.designer.cs">
+      <DependentUpon>SellerSignup.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SellerWasteTracker.aspx.cs">
+      <DependentUpon>SellerWasteTracker.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SellerWasteTracker.aspx.designer.cs">
+      <DependentUpon>SellerWasteTracker.aspx</DependentUpon>
+    </Compile>
     <Compile Include="SellPage.Master.cs">
       <DependentUpon>SellPage.Master</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
