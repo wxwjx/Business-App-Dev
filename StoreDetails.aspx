@@ -37,6 +37,10 @@
         </tr>
     </table>
 
+
+    <asp:Button ID="btnLogout" runat="server" Text="Logout" 
+    CssClass="btn btn-danger" OnClick="btnLogout_Click" />
+
 <asp:Label ID="lblMsg" runat="server" ForeColor="Green" />
 </asp:Content>
 <asp:Content ID="Content3" ContentPlaceHolderID="ScriptsContent" runat="server">

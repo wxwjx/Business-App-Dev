@@ -7,41 +7,6 @@ using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
-//namespace Business_App_Dev
-//{
-//    public partial class StoreDetails : System.Web.UI.Page
-//    {
-//        string connStr = ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
-
-//        protected void Page_Load(object sender, EventArgs e)
-//        {
-//            if (!IsPostBack)
-//            {
-//                LoadStoreDetails();
-//            }
-//        }
-
-//        void LoadStoreDetails()
-//        {
-//            using (SqlConnection conn = new SqlConnection(connStr))
-//            {
-//                string sql = "SELECT TOP 1 ShopName, Address, PostalCode, PickupWindow FROM Seller";
-//                SqlCommand cmd = new SqlCommand(sql, conn);
-
-//                conn.Open();
-//                SqlDataReader dr = cmd.ExecuteReader();
-
-//                if (dr.Read())
-//                {
-//                    lblShopName.Text = dr["ShopName"].ToString();
-//                    lblAddress.Text = dr["Address"].ToString();
-//                    lblPostalCode.Text = dr["PostalCode"].ToString();
-//                    lblPickupTiming.Text = dr["PickupWindow"].ToString();
-//                }
-//            }
-//        }
-//    }
-//}
 
 namespace Business_App_Dev
 {
@@ -92,6 +57,23 @@ namespace Business_App_Dev
         protected void Img_Edit_Click(object sender, ImageClickEventArgs e)
         {
             Response.Redirect("EditStoreDetails.aspx");
+        }
+
+        protected void btnLogout_Click(object sender, EventArgs e)
+        {
+            Session.Clear();
+            Session.Abandon();
+
+            // Optional: remove authentication cookie if any
+            if (Request.Cookies[".ASPXAUTH"] != null)
+            {
+                var c = new HttpCookie(".ASPXAUTH");
+                c.Expires = DateTime.Now.AddDays(-1);
+                Response.Cookies.Add(c);
+            }
+
+            // Redirect to login page
+            Response.Redirect("~/SellerLogin.aspx");
         }
     }
 }

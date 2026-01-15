@@ -34,7 +34,7 @@
             </asp:TemplateField>
 
         
-           <%-- <asp:TemplateField HeaderText="Image URL">
+            <asp:TemplateField HeaderText="Image URL">
                 <ItemTemplate>
                     <span class="truncate"><%# Eval("ImageUrl") %></span>
                 </ItemTemplate>
@@ -42,7 +42,7 @@
                     <asp:TextBox ID="txtImageUrl" runat="server" CssClass="grid-input"
                         Text='<%# Bind("ImageUrl") %>' />
                 </EditItemTemplate>
-            </asp:TemplateField>--%>
+            </asp:TemplateField>
 
          
             <asp:TemplateField HeaderText="Price ($)">

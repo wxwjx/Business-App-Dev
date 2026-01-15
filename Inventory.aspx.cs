@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.Data.SqlClient;
 using System.Globalization;
 using System.Web.UI;
 using System.Web.UI.WebControls;
@@ -10,17 +12,29 @@ namespace Business_App_Dev
     {
         protected void Page_Load(object sender, EventArgs e)
         {
+            if (Session["SellerAuthenticated"] == null || !(bool)Session["SellerAuthenticated"])
+            {
+                Response.Redirect("~/SellerLogin.aspx");
+                return;
+            }
+
             if (!IsPostBack)
+            {
                 BindGrid();
+            }
         }
 
         private void BindGrid()
         {
-            // Only ProductModel (no Product.cs)
-            List<ProductModel> productList = ProductModel.GetAllProducts();
+            int sellerId = Convert.ToInt32(Session["SellerId"]); // logged-in seller
+            List<ProductModel> productList = ProductModel.GetProductBySeller(sellerId);
+
             gvProducts.DataSource = productList;
             gvProducts.DataBind();
         }
+                // Only ProductModel (no Product.cs)
+               
+        
 
         protected void gvProducts_RowEditing(object sender, GridViewEditEventArgs e)
         {
@@ -36,8 +50,8 @@ namespace Business_App_Dev
 
         protected void gvProducts_RowUpdating(object sender, GridViewUpdateEventArgs e)
         {
-            //try
-            //{
+            try
+            {
                 int productId = Convert.ToInt32(gvProducts.DataKeys[e.RowIndex].Value);
 
                 GridViewRow row = gvProducts.Rows[e.RowIndex];
@@ -52,9 +66,18 @@ namespace Business_App_Dev
                 var txtQuantity = row.FindControl("txtQuantity") as TextBox;
                 var txtCategory = row.FindControl("txtCategory") as TextBox;
 
+
+                if (txtName == null || txtPriceNow == null || txtPriceOld == null || txtDiscount == null ||
+                 txtExpiry == null || txtQuantity == null || txtCategory == null)
+                {
+                    Alert("One or more input controls are missing in the row.");
+                    return;
+                }
+
                 string name = (txtName?.Text ?? "").Trim();
                 string imageUrl = (txtImageUrl?.Text ?? "").Trim();
                 string category = (txtCategory?.Text ?? "").Trim();
+
 
                 if (string.IsNullOrWhiteSpace(name))
                 {
@@ -92,6 +115,7 @@ namespace Business_App_Dev
                 var updated = new ProductModel
                 {
                     ProductID = productId,
+                    SellerID = Convert.ToInt32(Session["SellerId"]), // ✅ must include this
                     ProductName = name,
                     ImageUrl = imageUrl,
                     PriceNow = priceNow,
@@ -101,6 +125,7 @@ namespace Business_App_Dev
                     Quantity = quantity,
                     Category = category
                 };
+
 
                 int result = ProductModel.UpdateProduct(updated);
 
@@ -114,11 +139,11 @@ namespace Business_App_Dev
                 {
                     Alert("Product update failed");
                 }
-            //}
-            //catch (Exception ex)
-            //{
-            //    Alert("Error: " + ex.Message);
-            //}
+            }
+            catch (Exception ex)
+            {
+                Alert("Error: " + ex.Message);
+            }
         }
 
         protected void gvProducts_RowDeleting(object sender, GridViewDeleteEventArgs e)

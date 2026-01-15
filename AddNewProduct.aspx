@@ -34,13 +34,13 @@
             </div>
         </div>
 
-        <%--<div class="form-row">
+        <div class="form-row">
             <label>Image URL (optional)</label>
             <div>
                 <asp:TextBox ID="tb_ImageUrl" runat="server" CssClass="input" />
                 <div class="hint">Example: https://images…/meal.jpg</div>
             </div>
-        </div>--%>
+        </div>
 
         <div class="form-row">
             <label>Price</label>

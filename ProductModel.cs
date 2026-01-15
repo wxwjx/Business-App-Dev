@@ -30,6 +30,7 @@ namespace Business_App_Dev
             ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
 
         // ====== READ: Get all products ======
+
         public static List<ProductModel> GetAllProducts()
         {
             var list = new List<ProductModel>();
@@ -70,6 +71,49 @@ namespace Business_App_Dev
             return list;
         }
 
+        public static List<ProductModel> GetProductBySeller(int SellerId)
+
+        {
+            var list = new List<ProductModel>();
+
+            using (SqlConnection conn = new SqlConnection(ConnStr))
+            using (SqlCommand cmd = new SqlCommand (@"SELECT * FROM Products WHERE SellerID = @SellerID" , conn))
+
+            {
+                cmd.Parameters.AddWithValue("@SellerID", SellerId);
+                conn.Open();
+
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        list.Add(new ProductModel
+                        {
+                            ProductID = (int)reader["ProductID"],
+                            ProductName = reader["ProductName"].ToString(),
+                            Subtitle = reader["Subtitle"] != DBNull.Value ? reader["Subtitle"].ToString() : "",
+                            ImageUrl = reader["ImageUrl"] != DBNull.Value ? reader["ImageUrl"].ToString() : "",
+                            PriceNow = reader["Price"] != DBNull.Value ? Convert.ToDecimal(reader["Price"]) : 0m,
+                            PriceOld = reader["PriceOld"] != DBNull.Value ? Convert.ToDecimal(reader["PriceOld"]) : 0m,
+                            Rating = reader["Rating"] != DBNull.Value ? Convert.ToDouble(reader["Rating"]) : 0.0,
+                            Reviews = reader["Reviews"] != DBNull.Value ? Convert.ToInt32(reader["Reviews"]) : 0,
+                            DistanceKm = reader["DistanceKm"] != DBNull.Value ? Convert.ToInt32(reader["DistanceKm"]) : 0,
+                            ExpiryHours = reader["ExpiryHours"] != DBNull.Value ? Convert.ToInt32(reader["ExpiryHours"]) : 0,
+                            CO2Saved = reader["CO2Saved"] != DBNull.Value ? Convert.ToDouble(reader["CO2Saved"]) : 0.0,
+                            DiscountPercent = reader["DiscountPercent"] != DBNull.Value ? Convert.ToInt32(reader["DiscountPercent"]) : 0,
+                            Quantity = reader["Quantity"] != DBNull.Value ? Convert.ToInt32(reader["Quantity"]) : 0,
+                            Category = reader["Category"] != DBNull.Value ? reader["Category"].ToString() : "",
+                            CreatedAt = reader["CreatedAt"] != DBNull.Value ? Convert.ToDateTime(reader["CreatedAt"]) : DateTime.Now,
+                            SellerID = reader["SellerID"] != DBNull.Value ? Convert.ToInt32(reader["SellerID"]) : 0
+                        });
+                    }
+                }
+            }
+
+            return list;
+
+
+        }
         // ====== DELETE: Delete by ProductID ======
         public static int DeleteProduct(int productID)
         {
@@ -119,8 +163,8 @@ VALUES
         // ====== UPDATE: Update product ======
         public static int UpdateProduct(ProductModel p)
         {
-            using (SqlConnection conn = new SqlConnection(ConnStr))
-            {
+            using(SqlConnection conn = new SqlConnection(ConnStr))
+    {
                 string query = @"
 UPDATE Products
 SET ProductName=@Name,
@@ -128,30 +172,23 @@ SET ProductName=@Name,
     ImageUrl=@ImageUrl,
     Price=@Price,
     PriceOld=@PriceOld,
-    Rating=@Rating,
-    Reviews=@Reviews,
-    DistanceKm=@DistanceKm,
-    ExpiryHours=@ExpiryHours,
-    CO2Saved=@CO2Saved,
     DiscountPercent=@DiscountPercent,
+    ExpiryHours=@ExpiryHours,
     Quantity=@Quantity,
     Category=@Category
-WHERE ProductID=@ID";
+WHERE ProductID=@ID AND SellerID=@SellerID";  // ✅ Make sure only the seller can update their own product
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
                     cmd.Parameters.AddWithValue("@ID", p.ProductID);
+                    cmd.Parameters.AddWithValue("@SellerID", p.SellerID);  // ✅ Need SellerID here
                     cmd.Parameters.AddWithValue("@Name", p.ProductName ?? "");
                     cmd.Parameters.AddWithValue("@Subtitle", (object)(p.Subtitle ?? "") ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@ImageUrl", (object)(p.ImageUrl ?? "") ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@Price", p.PriceNow);
                     cmd.Parameters.AddWithValue("@PriceOld", p.PriceOld);
-                    cmd.Parameters.AddWithValue("@Rating", p.Rating);
-                    cmd.Parameters.AddWithValue("@Reviews", p.Reviews);
-                    cmd.Parameters.AddWithValue("@DistanceKm", p.DistanceKm);
-                    cmd.Parameters.AddWithValue("@ExpiryHours", p.ExpiryHours);
-                    cmd.Parameters.AddWithValue("@CO2Saved", p.CO2Saved);
                     cmd.Parameters.AddWithValue("@DiscountPercent", p.DiscountPercent);
+                    cmd.Parameters.AddWithValue("@ExpiryHours", p.ExpiryHours);
                     cmd.Parameters.AddWithValue("@Quantity", p.Quantity);
                     cmd.Parameters.AddWithValue("@Category", p.Category ?? "");
 

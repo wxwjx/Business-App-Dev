@@ -7,22 +7,24 @@ namespace Business_App_Dev
     {
         protected void Page_Load(object sender, EventArgs e)
         {
+            if (Session["SellerAuthenticated"] == null || !(bool)Session["SellerAuthenticated"])
+            {
+                Response.Redirect("~/SellerLogin.aspx");
+                return;
+            }
         }
 
         protected void btn_Insert_Click(object sender, EventArgs e)
         {
             try
             {
-                // Let ASP.NET validators run first
                 if (!Page.IsValid) return;
 
-                // ✅ TEMP: fake seller until login is ready
-                // (Make sure SellerID 1 exists in dbo.Seller — your screenshot shows it does)
-                int fakeSellerId = 1;
+                // Get SellerID from session
+                int sellerId = Convert.ToInt32(Session["SellerId"]);
 
                 string name = (tb_ProductName.Text ?? "").Trim();
                 string subtitle = (tb_Subtitle.Text ?? "").Trim();
-                //string imageUrl = (tb_ImageUrl.Text ?? "").Trim();
                 string category = (tb_category.Text ?? "").Trim();
 
                 if (string.IsNullOrWhiteSpace(name))
@@ -31,52 +33,34 @@ namespace Business_App_Dev
                     return;
                 }
 
-                if (!decimal.TryParse((tb_Price.Text ?? "").Trim(), out decimal priceNow))
+                if (!decimal.TryParse((tb_Price.Text ?? "").Trim(), out decimal priceNow) || priceNow < 0)
                 {
-                    Alert("Price must be a valid number.");
+                    Alert("Price must be a valid non-negative number.");
                     return;
                 }
 
-                // optional fields
                 decimal.TryParse((tb_OldPrice.Text ?? "").Trim(), out decimal priceOld);
                 int.TryParse((tb_DiscountPercent.Text ?? "").Trim(), out int discountPercent);
+                int.TryParse((tb_Expiry.Text ?? "").Trim(), out int expiryHours);
+                int.TryParse((tb_quantity.Text ?? "").Trim(), out int quantity);
 
-                if (!int.TryParse((tb_Expiry.Text ?? "").Trim(), out int expiryHours))
-                {
-                    Alert("Expiry hours must be a valid integer.");
-                    return;
-                }
-
-                if (!int.TryParse((tb_quantity.Text ?? "").Trim(), out int quantity))
-                {
-                    Alert("Quantity must be a valid integer.");
-                    return;
-                }
-
-                if (expiryHours < 0 || quantity < 0 || discountPercent < 0 || priceNow < 0 || priceOld < 0)
+                if (expiryHours < 0 || quantity < 0 || discountPercent < 0 || priceOld < 0)
                 {
                     Alert("Values cannot be negative.");
                     return;
                 }
 
-                // ✅ Create ProductModel (no Product.cs)
-                var p = new ProductModel
+                var product = new ProductModel
                 {
-                    SellerID = fakeSellerId,   // ✅ IMPORTANT: prevents NULL SellerID insert error
-
+                    SellerID = sellerId,
                     ProductName = name,
                     Subtitle = subtitle,
-                    //ImageUrl = imageUrl,
-
                     PriceNow = priceNow,
                     PriceOld = priceOld,
-
                     DiscountPercent = discountPercent,
                     ExpiryHours = expiryHours,
                     Quantity = quantity,
                     Category = category,
-
-                    // Defaults for fields not collected on this page
                     Rating = 0,
                     Reviews = 0,
                     DistanceKm = 0,
@@ -84,8 +68,7 @@ namespace Business_App_Dev
                     CreatedAt = DateTime.Now
                 };
 
-                int rows = ProductModel.AddProduct(p);
-
+                int rows = ProductModel.AddProduct(product);
                 if (rows > 0)
                 {
                     Response.Redirect("Inventory.aspx");
