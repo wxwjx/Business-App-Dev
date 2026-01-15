@@ -302,7 +302,7 @@ namespace Business_App_Dev
                     lblPayMsg.Text = "Select at least 1 item to checkout.";
                     return;
                 }
-                ``
+                
                 RedirectToStripeCheckout(selectedItems);
             }
             catch (Exception)
