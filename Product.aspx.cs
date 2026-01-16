@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
 using System.Data.SqlClient;
 
 namespace Business_App_Dev
@@ -11,75 +9,149 @@ namespace Business_App_Dev
         {
             if (!IsPostBack)
             {
-                try
-                {
-                    LoadProducts();
-                }
-                catch (SqlException ex)
-                {
-                    // show error panel (optional)
-                    pnlError.Visible = true;
-                    lblError.Text = "Database error loading products: " + ex.Message;
-                }
-                catch (Exception ex)
-                {
-                    pnlError.Visible = true;
-                    lblError.Text = "Unexpected error loading products: " + ex.Message;
-                }
+                SetActivePillCss();
+                TryLoad();
+            }
+        }
+
+        protected void btnRefreshByLoc_Click(object sender, EventArgs e)
+        {
+            TryLoad();
+        }
+
+        protected void btnSearch_Click(object sender, EventArgs e)
+        {
+            TryLoad();
+        }
+
+        protected void txtSearch_TextChanged(object sender, EventArgs e)
+        {
+            TryLoad();
+        }
+
+        // Pills
+        protected void btnAI_Click(object sender, EventArgs e)
+        {
+            hfMode.Value = "AI";
+            hfCategory.Value = "";
+            pnlCategories.Visible = false;
+            SetActivePillCss();
+            TryLoad();
+        }
+
+        protected void btnDeals_Click(object sender, EventArgs e)
+        {
+            hfMode.Value = "DEALS";
+            hfCategory.Value = "";
+            pnlCategories.Visible = false;
+            SetActivePillCss();
+            TryLoad();
+        }
+
+        protected void btnCats_Click(object sender, EventArgs e)
+        {
+            hfMode.Value = "CATS";
+            pnlCategories.Visible = true;
+
+            // load chips
+            rptCategories.DataSource = ProductModel.GetCategories();
+            rptCategories.DataBind();
+
+            SetActivePillCss();
+            TryLoad();
+        }
+
+        protected void rptCategories_ItemCommand(object source, System.Web.UI.WebControls.RepeaterCommandEventArgs e)
+        {
+            if (e.CommandName == "Pick")
+            {
+                hfCategory.Value = (e.CommandArgument ?? "").ToString();
+                TryLoad();
+            }
+        }
+
+        protected void btnClearCategory_Click(object sender, EventArgs e)
+        {
+            hfCategory.Value = "";
+            TryLoad();
+        }
+
+        private void SetActivePillCss()
+        {
+            // Reset
+            btnAI.CssClass = "ee-pill";
+            btnDeals.CssClass = "ee-pill";
+            btnCats.CssClass = "ee-pill";
+
+            // Active
+            string mode = (hfMode.Value ?? "AI").ToUpperInvariant();
+            if (mode == "AI") btnAI.CssClass = "ee-pill active";
+            else if (mode == "DEALS") btnDeals.CssClass = "ee-pill active";
+            else if (mode == "CATS") btnCats.CssClass = "ee-pill active";
+        }
+
+        private void TryLoad()
+        {
+            try
+            {
+                LoadProducts();
+            }
+            catch (SqlException ex)
+            {
+                pnlError.Visible = true;
+                lblError.Text = "Database error loading products: " + ex.Message;
+            }
+            catch (Exception ex)
+            {
+                pnlError.Visible = true;
+                lblError.Text = "Unexpected error loading products: " + ex.Message;
             }
         }
 
         private void LoadProducts()
         {
-            string connStr = ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
-            List<ProductModel> products = new List<ProductModel>();
+            // Location parse (FIX CS0165)
+            double userLat = 0;
+            double userLng = 0;
 
-            using (SqlConnection conn = new SqlConnection(connStr))
+            bool hasLoc =
+                double.TryParse(hfLat.Value, out userLat) &&
+                double.TryParse(hfLng.Value, out userLng);
+
+            string keyword = (txtSearch.Text ?? "").Trim();
+            string mode = (hfMode.Value ?? "AI").ToUpperInvariant();
+            string category = (hfCategory.Value ?? "").Trim();
+
+            if (mode == "DEALS")
             {
-                string query = @"
-SELECT
-    ProductID, ProductName, Subtitle, ImageUrl,
-    Price, PriceOld, Rating, Reviews, DistanceKm,
-    ExpiryHours, CO2Saved, DiscountPercent, Quantity,
-    Category, CreatedAt
-FROM Products;
-";
+                // Deals mode: most bought today pinned + best deals
+                var products = hasLoc
+                    ? ProductModel.GetDailyBestDealsWithDistance(userLat, userLng, keyword)
+                    : ProductModel.GetDailyBestDeals(keyword);
 
-                using (SqlCommand cmd = new SqlCommand(query, conn))
-                {
-                    conn.Open();
-                    using (SqlDataReader reader = cmd.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            products.Add(new ProductModel
-                            {
-                                ProductID = reader["ProductID"] != DBNull.Value ? Convert.ToInt32(reader["ProductID"]) : 0,
-                                ProductName = reader["ProductName"]?.ToString() ?? "",
-                                Subtitle = reader["Subtitle"] != DBNull.Value ? reader["Subtitle"].ToString() : "",
-                                ImageUrl = reader["ImageUrl"] != DBNull.Value ? reader["ImageUrl"].ToString() : "",
-
-                                // DB column Price -> ProductModel.PriceNow
-                                PriceNow = reader["Price"] != DBNull.Value ? Convert.ToDecimal(reader["Price"]) : 0m,
-                                PriceOld = reader["PriceOld"] != DBNull.Value ? Convert.ToDecimal(reader["PriceOld"]) : 0m,
-
-                                Rating = reader["Rating"] != DBNull.Value ? Convert.ToDouble(reader["Rating"]) : 0,
-                                Reviews = reader["Reviews"] != DBNull.Value ? Convert.ToInt32(reader["Reviews"]) : 0,
-                                DistanceKm = reader["DistanceKm"] != DBNull.Value ? Convert.ToInt32(reader["DistanceKm"]) : 0,
-                                ExpiryHours = reader["ExpiryHours"] != DBNull.Value ? Convert.ToInt32(reader["ExpiryHours"]) : 0,
-                                CO2Saved = reader["CO2Saved"] != DBNull.Value ? Convert.ToDouble(reader["CO2Saved"]) : 0,
-
-                                DiscountPercent = reader["DiscountPercent"] != DBNull.Value ? Convert.ToInt32(reader["DiscountPercent"]) : 0,
-                                Quantity = reader["Quantity"] != DBNull.Value ? Convert.ToInt32(reader["Quantity"]) : 0,
-                                Category = reader["Category"] != DBNull.Value ? reader["Category"].ToString() : "",
-                                CreatedAt = reader["CreatedAt"] != DBNull.Value ? Convert.ToDateTime(reader["CreatedAt"]) : DateTime.Now
-                            });
-                        }
-                    }
-                }
+                ProductRepeater.DataSource = products;
+                ProductRepeater.DataBind();
+                return;
             }
 
-            ProductRepeater.DataSource = products;
+            if (mode == "CATS")
+            {
+                // Category mode: filter by category (if picked), still allow search keyword
+                var products = hasLoc
+                    ? ProductModel.GetProductsByCategoryWithDistance(userLat, userLng, category, keyword)
+                    : ProductModel.GetProductsByCategory(category, keyword);
+
+                ProductRepeater.DataSource = products;
+                ProductRepeater.DataBind();
+                return;
+            }
+
+            // Default: AI mode (distance + search)
+            var aiProducts = hasLoc
+                ? ProductModel.GetProductsWithDistanceAndSearch(userLat, userLng, keyword)
+                : ProductModel.GetProductsBySearch(keyword);
+
+            ProductRepeater.DataSource = aiProducts;
             ProductRepeater.DataBind();
         }
     }
