@@ -56,7 +56,6 @@
                 <a href="About.aspx">About Us</a>
                 <a href="#">Help</a>
                 <a href="Feedback.aspx">Feedback</a>
-                <a href="#">Rate Sellers</a>
             </nav>
 
             <div class="ee-actions">
