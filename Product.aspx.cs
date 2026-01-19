@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Web.UI.WebControls;
+using Business_App_Dev.Services;
 
 namespace Business_App_Dev
 {
@@ -9,22 +12,13 @@ namespace Business_App_Dev
         {
             if (!IsPostBack)
             {
+                ApplyTranslations();   // UI text (hero/pills)
                 SetActivePillCss();
                 TryLoad();
             }
         }
 
         protected void btnRefreshByLoc_Click(object sender, EventArgs e)
-        {
-            TryLoad();
-        }
-
-        protected void btnSearch_Click(object sender, EventArgs e)
-        {
-            TryLoad();
-        }
-
-        protected void txtSearch_TextChanged(object sender, EventArgs e)
         {
             TryLoad();
         }
@@ -53,7 +47,6 @@ namespace Business_App_Dev
             hfMode.Value = "CATS";
             pnlCategories.Visible = true;
 
-            // load chips
             rptCategories.DataSource = ProductModel.GetCategories();
             rptCategories.DataBind();
 
@@ -61,7 +54,7 @@ namespace Business_App_Dev
             TryLoad();
         }
 
-        protected void rptCategories_ItemCommand(object source, System.Web.UI.WebControls.RepeaterCommandEventArgs e)
+        protected void rptCategories_ItemCommand(object source, RepeaterCommandEventArgs e)
         {
             if (e.CommandName == "Pick")
             {
@@ -78,12 +71,10 @@ namespace Business_App_Dev
 
         private void SetActivePillCss()
         {
-            // Reset
             btnAI.CssClass = "ee-pill";
             btnDeals.CssClass = "ee-pill";
             btnCats.CssClass = "ee-pill";
 
-            // Active
             string mode = (hfMode.Value ?? "AI").ToUpperInvariant();
             if (mode == "AI") btnAI.CssClass = "ee-pill active";
             else if (mode == "DEALS") btnDeals.CssClass = "ee-pill active";
@@ -108,9 +99,71 @@ namespace Business_App_Dev
             }
         }
 
+        private string GetKeywordFromMaster()
+        {
+            var tb = Master?.FindControl("txtSearch") as TextBox;
+            return (tb?.Text ?? "").Trim();
+        }
+
+        private string GetLang()
+        {
+            return (Session["LANG"] as string) ?? "en";
+        }
+
+        private string TranslateCached(string text, string targetLang, string sourceLang = "en")
+        {
+            text = text ?? "";
+            targetLang = (targetLang ?? "en").Trim().ToLowerInvariant();
+            sourceLang = (sourceLang ?? "en").Trim().ToLowerInvariant();
+
+            if (string.IsNullOrWhiteSpace(text)) return text;
+            if (targetLang == "en" || targetLang == sourceLang) return text;
+
+            string key = $"tr:{sourceLang}->{targetLang}:{text}";
+
+            return TranslationCache.GetOrAdd(key, () =>
+                TranslationService.Translate(text, targetLang, sourceLang), hours: 24);
+        }
+
+        private void ApplyTranslations()
+        {
+            string lang = GetLang();
+            if (lang.Equals("en", StringComparison.OrdinalIgnoreCase)) return;
+
+            lblHeroTitle.Text = TranslateCached(lblHeroTitle.Text, lang, "en");
+            lblHeroSubtitle.Text = TranslateCached(lblHeroSubtitle.Text, lang, "en");
+
+            lblMealsSaved.Text = TranslateCached(lblMealsSaved.Text, lang, "en");
+            lblMoneySaved.Text = TranslateCached(lblMoneySaved.Text, lang, "en");
+            lblCO2Saved.Text = TranslateCached(lblCO2Saved.Text, lang, "en");
+
+            btnAI.Text = TranslateCached("✨ AI Recommended", lang, "en");
+            btnDeals.Text = TranslateCached("🔥 Daily Best Deals", lang, "en");
+            btnCats.Text = TranslateCached("🧭 Explore Categories", lang, "en");
+        }
+
+        private List<ProductModel> TranslateProductsIfNeeded(List<ProductModel> products)
+        {
+            string lang = GetLang();
+            if (lang.Equals("en", StringComparison.OrdinalIgnoreCase)) return products;
+            if (products == null) return products;
+
+            foreach (var p in products)
+            {
+                if (p == null) continue;
+
+                if (!string.IsNullOrWhiteSpace(p.ProductName))
+                    p.ProductName = TranslateCached(p.ProductName, lang, "en");
+
+                if (!string.IsNullOrWhiteSpace(p.Subtitle))
+                    p.Subtitle = TranslateCached(p.Subtitle, lang, "en");
+            }
+
+            return products;
+        }
+
         private void LoadProducts()
         {
-            // Location parse (FIX CS0165)
             double userLat = 0;
             double userLng = 0;
 
@@ -118,16 +171,17 @@ namespace Business_App_Dev
                 double.TryParse(hfLat.Value, out userLat) &&
                 double.TryParse(hfLng.Value, out userLng);
 
-            string keyword = (txtSearch.Text ?? "").Trim();
+            string keyword = GetKeywordFromMaster();
             string mode = (hfMode.Value ?? "AI").ToUpperInvariant();
             string category = (hfCategory.Value ?? "").Trim();
 
             if (mode == "DEALS")
             {
-                // Deals mode: most bought today pinned + best deals
                 var products = hasLoc
                     ? ProductModel.GetDailyBestDealsWithDistance(userLat, userLng, keyword)
                     : ProductModel.GetDailyBestDeals(keyword);
+
+                products = TranslateProductsIfNeeded(products);
 
                 ProductRepeater.DataSource = products;
                 ProductRepeater.DataBind();
@@ -136,20 +190,22 @@ namespace Business_App_Dev
 
             if (mode == "CATS")
             {
-                // Category mode: filter by category (if picked), still allow search keyword
                 var products = hasLoc
                     ? ProductModel.GetProductsByCategoryWithDistance(userLat, userLng, category, keyword)
                     : ProductModel.GetProductsByCategory(category, keyword);
+
+                products = TranslateProductsIfNeeded(products);
 
                 ProductRepeater.DataSource = products;
                 ProductRepeater.DataBind();
                 return;
             }
 
-            // Default: AI mode (distance + search)
             var aiProducts = hasLoc
                 ? ProductModel.GetProductsWithDistanceAndSearch(userLat, userLng, keyword)
                 : ProductModel.GetProductsBySearch(keyword);
+
+            aiProducts = TranslateProductsIfNeeded(aiProducts);
 
             ProductRepeater.DataSource = aiProducts;
             ProductRepeater.DataBind();

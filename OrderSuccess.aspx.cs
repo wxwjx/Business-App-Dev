@@ -9,6 +9,7 @@ using System.Web.UI.HtmlControls;
 using System.Web.UI.WebControls;
 using Stripe;
 using Stripe.Checkout;
+using Business_App_Dev.Services;
 
 namespace Business_App_Dev
 {
@@ -24,35 +25,32 @@ namespace Business_App_Dev
 
             try
             {
-                // 1) Read session_id from Stripe redirect
+                ApplyPageTranslations(); // NEW
+
                 string sessionId = Request.QueryString["session_id"];
                 if (string.IsNullOrWhiteSpace(sessionId))
                 {
-                    ShowError("Missing session_id from Stripe redirect.");
+                    ShowError(T("Missing session_id from Stripe redirect."));
                     return;
                 }
 
-                // 2) Verify payment with Stripe
                 if (!VerifyStripePaid(sessionId, out string failMsg))
                 {
-                    ShowError(failMsg);
+                    ShowError(T(failMsg));
                     return;
                 }
 
-                // 3) Display an Order ID (nice format)
                 lblOrderId.Text = "ORD-" + ShortId(sessionId);
 
-                // 4) Load snapshot from Session saved in Cart.aspx.cs
                 var items = Session["PENDING_ORDER_" + sessionId] as List<PurchasedItem>;
                 if (items == null || items.Count == 0)
                 {
-                    ShowError("Order data not found (Session expired). Try paying again, or implement Orders table to persist.");
+                    ShowError(T("Order data not found (Session expired). Try paying again, or implement Orders table to persist."));
                     return;
                 }
 
                 pnlError.Visible = false;
 
-                // 5) Total
                 decimal total;
                 if (Session["PENDING_ORDER_TOTAL_" + sessionId] is decimal t)
                     total = t;
@@ -60,48 +58,136 @@ namespace Business_App_Dev
                     total = items.Sum(x => x.LineTotal);
 
                 lblTotal.Text = total.ToString("0.00");
-                lblPayStatus.Text = "PAID";
+                lblPayStatus.Text = T("PAID");
 
-                // 6) Build seller groups using ProductID -> Seller data from DB
+                // OPTIONAL: translate purchased item names for the receipt
+                items = TranslatePurchasedItemsIfNeeded(items);
+
                 var groups = BuildSellerGroups(items);
                 if (groups.Count == 0)
                 {
-                    ShowError("Could not determine pickup locations. Ensure Products.SellerID is filled and Seller table has data.");
+                    ShowError(T("Could not determine pickup locations. Ensure Products.SellerID is filled and Seller table has data."));
                     return;
                 }
 
-                // 7) SAVE ORDER INTO MDF (Orders + OrderItems) (safe against refresh)
                 int userId = GetUserIdOrThrow();
                 int orderId = SaveOrderIfNotExists(sessionId, userId, total, items);
 
-                // (Optional) If you want to show DB orderId somewhere:
-                // lblDbOrderId.Text = orderId.ToString();
-
-                // 8) Clear purchased items from cart AFTER payment confirmed
-                // Safe against refresh: we remove only using items list (same as before)
                 RemovePurchasedItemsFromCart(items);
 
-                // 9) Bind seller groups
                 rptSellerGroups.DataSource = groups;
                 rptSellerGroups.DataBind();
 
-                // 10) Clean up pending snapshot so refresh won't remove again
+                // After binding, translate the repeated UI labels inside the repeaters
+                ApplyRepeaterTranslations(rptSellerGroups);
+
                 Session.Remove("PENDING_ORDER_" + sessionId);
                 Session.Remove("PENDING_ORDER_TOTAL_" + sessionId);
             }
             catch (StripeException)
             {
-                ShowError("Payment verification failed due to a payment service error. Please try again.");
+                ShowError(T("Payment verification failed due to a payment service error. Please try again."));
             }
             catch (SqlException)
             {
-                ShowError("Database error while saving/loading your order. Please try again later.");
+                ShowError(T("Database error while saving/loading your order. Please try again later."));
             }
             catch (Exception ex)
             {
-                // show message (or use generic if you prefer)
-                ShowError(ex.Message);
+                ShowError(T(ex.Message));
             }
+        }
+
+        // =========================
+        // TRANSLATION HELPERS
+        // =========================
+        private string GetLang()
+        {
+            return (Session["LANG"] as string) ?? "en";
+        }
+
+        private string T(string text)
+        {
+            string lang = GetLang();
+            if (lang.Equals("en", StringComparison.OrdinalIgnoreCase)) return text ?? "";
+
+            text = text ?? "";
+            if (string.IsNullOrWhiteSpace(text)) return text;
+
+            string key = $"tr:en->{lang}:{text}";
+            return TranslationCache.GetOrAdd(key, () =>
+                TranslationService.Translate(text, lang, "en"), hours: 24);
+        }
+
+        private void ApplyPageTranslations()
+        {
+            string lang = GetLang();
+            if (lang.Equals("en", StringComparison.OrdinalIgnoreCase)) return;
+
+            lblBackToShopping.Text = T(lblBackToShopping.Text);
+            lblOrderSuccessful.Text = T(lblOrderSuccessful.Text);
+            lblOrderIdText.Text = T(lblOrderIdText.Text);
+            lblStatusText.Text = T(lblStatusText.Text);
+
+            lblStepConfirmed.Text = T(lblStepConfirmed.Text);
+            lblStepPreparing.Text = T(lblStepPreparing.Text);
+            lblStepReady.Text = T(lblStepReady.Text);
+
+            lblTotalText.Text = T(lblTotalText.Text);
+        }
+
+        private void ApplyRepeaterTranslations(Repeater rpt)
+        {
+            string lang = GetLang();
+            if (lang.Equals("en", StringComparison.OrdinalIgnoreCase)) return;
+
+            foreach (RepeaterItem it in rpt.Items)
+            {
+                // seller header labels
+                var pickupLoc = it.FindControl("lblPickupLocationText") as Label;
+                if (pickupLoc != null) pickupLoc.Text = T(pickupLoc.Text);
+
+                var pickupWin = it.FindControl("lblPickupWindowText") as Label;
+                if (pickupWin != null) pickupWin.Text = T(pickupWin.Text);
+
+                var sellerStatus = it.FindControl("lblSellerStatusText") as Label;
+                if (sellerStatus != null) sellerStatus.Text = T(sellerStatus.Text);
+
+                // directions button
+                var lnk = it.FindControl("lnkDirectionsSeller") as HyperLink;
+                if (lnk != null) lnk.Text = T(lnk.Text);
+
+                // seller subtotal label
+                var sellerSubtotal = it.FindControl("lblSellerSubtotalText") as Label;
+                if (sellerSubtotal != null) sellerSubtotal.Text = T(sellerSubtotal.Text);
+
+                // translate "Qty:" inside nested repeater items
+                var inner = it.FindControl("rptItemsBySeller") as Repeater;
+                if (inner != null)
+                {
+                    foreach (RepeaterItem row in inner.Items)
+                    {
+                        var qty = row.FindControl("lblQtyText") as Label;
+                        if (qty != null) qty.Text = T(qty.Text);
+                    }
+                }
+            }
+        }
+
+        private List<PurchasedItem> TranslatePurchasedItemsIfNeeded(List<PurchasedItem> items)
+        {
+            string lang = GetLang();
+            if (lang.Equals("en", StringComparison.OrdinalIgnoreCase)) return items;
+            if (items == null) return items;
+
+            foreach (var it in items)
+            {
+                if (it == null) continue;
+                if (!string.IsNullOrWhiteSpace(it.ProductName))
+                    it.ProductName = T(it.ProductName);
+            }
+
+            return items;
         }
 
         /* =========================
@@ -109,12 +195,11 @@ namespace Business_App_Dev
          * ========================= */
         private int GetUserIdOrThrow()
         {
-            // CHANGE this if your session key is different
             if (Session["UserID"] == null)
-                throw new Exception("Your session has expired. Please log in again.");
+                throw new Exception(T("Your session has expired. Please log in again."));
 
             if (!int.TryParse(Session["UserID"].ToString(), out int userId) || userId <= 0)
-                throw new Exception("Invalid user session. Please log in again.");
+                throw new Exception(T("Invalid user session. Please log in again."));
 
             return userId;
         }
@@ -124,15 +209,12 @@ namespace Business_App_Dev
          * ========================= */
         private int SaveOrderIfNotExists(string stripeSessionId, int userId, decimal total, List<PurchasedItem> items)
         {
-            // If this Stripe session was already saved (refresh), return existing OrderID
             int existing = GetOrderIdByStripeSession(stripeSessionId);
             if (existing > 0)
                 return existing;
 
-            // Map ProductID -> SellerID (for OrderItems.SellerID)
             var productIds = items.Select(i => i.ProductID).Distinct().ToList();
-            var productSellerMap = LoadSellerInfoForProducts(productIds); // already in your code
-            // productSellerMap maps productId -> SellerInfo (SellerID inside)
+            var productSellerMap = LoadSellerInfoForProducts(productIds);
 
             using (SqlConnection con = new SqlConnection(ConnStr()))
             {
@@ -141,7 +223,6 @@ namespace Business_App_Dev
 
                 try
                 {
-                    // 1) Insert Orders row
                     string insertOrderSql = @"
 INSERT INTO dbo.Orders (UserID, StripeSessionId, TotalAmount, PayStatus)
 OUTPUT INSERTED.OrderID
@@ -157,7 +238,6 @@ VALUES (@UserID, @StripeSessionId, @TotalAmount, @PayStatus);";
                         orderId = Convert.ToInt32(cmd.ExecuteScalar());
                     }
 
-                    // 2) Insert OrderItems
                     string insertItemSql = @"
 INSERT INTO dbo.OrderItems
 (OrderID, ProductID, ProductName, Quantity, UnitPrice, LineTotal, SellerID)
@@ -263,13 +343,11 @@ VALUES
             if (purchasedItems == null || purchasedItems.Count == 0) return;
 
             var cart = Session[CART_KEY] as List<CartItem> ?? new List<CartItem>();
-
             var purchasedIds = purchasedItems.Select(x => x.ProductID).ToHashSet();
 
             cart.RemoveAll(ci => purchasedIds.Contains(ci.ProductID));
 
             Session[CART_KEY] = cart;
-
             Session[CART_SELECTED_KEY] = new HashSet<int>();
             Session[CART_SELECTED_INIT_KEY] = false;
         }
@@ -279,7 +357,6 @@ VALUES
             return ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
         }
 
-        // Grouping & Seller info (your existing logic)
         private List<SellerGroupVM> BuildSellerGroups(List<PurchasedItem> items)
         {
             var productIds = items.Select(i => i.ProductID).Distinct().ToList();
@@ -323,9 +400,7 @@ VALUES
         private Dictionary<int, SellerInfo> LoadSellerInfoForProducts(List<int> productIds)
         {
             var map = new Dictionary<int, SellerInfo>();
-
-            if (productIds == null || productIds.Count == 0)
-                return map;
+            if (productIds == null || productIds.Count == 0) return map;
 
             var paramNames = productIds.Select((id, idx) => "@p" + idx).ToList();
             string inClause = string.Join(",", paramNames);
@@ -396,6 +471,26 @@ WHERE p.ProductID IN ({inClause});";
             var iframe = (HtmlIframe)e.Item.FindControl("mapFrameSeller");
             if (iframe != null)
                 iframe.Attributes["src"] = BuildMapEmbedSrc(group);
+
+            // translate per-group UI labels after binding
+            string lang = GetLang();
+            if (!lang.Equals("en", StringComparison.OrdinalIgnoreCase))
+            {
+                var pickupLoc = e.Item.FindControl("lblPickupLocationText") as Label;
+                if (pickupLoc != null) pickupLoc.Text = T(pickupLoc.Text);
+
+                var pickupWin = e.Item.FindControl("lblPickupWindowText") as Label;
+                if (pickupWin != null) pickupWin.Text = T(pickupWin.Text);
+
+                var sellerStatus = e.Item.FindControl("lblSellerStatusText") as Label;
+                if (sellerStatus != null) sellerStatus.Text = T(sellerStatus.Text);
+
+                var sellerSubtotal = e.Item.FindControl("lblSellerSubtotalText") as Label;
+                if (sellerSubtotal != null) sellerSubtotal.Text = T(sellerSubtotal.Text);
+
+                var link = e.Item.FindControl("lnkDirectionsSeller") as HyperLink;
+                if (link != null) link.Text = T(link.Text);
+            }
         }
 
         private string BuildDirectionsUrl(SellerGroupVM group)
@@ -475,7 +570,4 @@ WHERE p.ProductID IN ({inClause});";
             public decimal? Longitude { get; set; }
         }
     }
-
-    // PurchasedItem class is in Cart.aspx.cs already.
-    // CartItem class is your existing CartItem model.
 }

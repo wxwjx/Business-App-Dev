@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data.SqlClient;
 using System.Linq;
+using Business_App_Dev.Services;
 
 namespace Business_App_Dev
 {
@@ -24,24 +25,75 @@ namespace Business_App_Dev
 
             if (CurrentProductId <= 0)
             {
-                // Optional: redirect if missing/invalid id
-                // Response.Redirect("Product.aspx");
                 return;
             }
 
             try
             {
                 LoadProduct(CurrentProductId);
+                ApplyTranslations(); // translate UI labels + the loaded product text
             }
             catch (SqlException)
             {
-                // Optional: show an error label/panel if you have one
-                // lblError.Text = "Database error loading product details.";
             }
             catch (Exception)
             {
-                // lblError.Text = "Unexpected error loading product details.";
             }
+        }
+
+        private string GetLang()
+        {
+            return (Session["LANG"] as string) ?? "en";
+        }
+
+        private string TranslateCached(string text, string targetLang, string sourceLang = "en")
+        {
+            text = text ?? "";
+            targetLang = (targetLang ?? "en").Trim().ToLowerInvariant();
+            sourceLang = (sourceLang ?? "en").Trim().ToLowerInvariant();
+
+            if (string.IsNullOrWhiteSpace(text)) return text;
+            if (targetLang == "en" || targetLang == sourceLang) return text;
+
+            string key = $"tr:{sourceLang}->{targetLang}:{text}";
+            return TranslationCache.GetOrAdd(key, () =>
+                TranslationService.Translate(text, targetLang, sourceLang), hours: 24);
+        }
+
+        private void ApplyTranslations()
+        {
+            string lang = GetLang();
+            if (lang.Equals("en", StringComparison.OrdinalIgnoreCase)) return;
+
+            // Translate product content (already loaded into labels)
+            lblName.Text = TranslateCached(lblName.Text, lang, "en");
+            lblSubtitle.Text = TranslateCached(lblSubtitle.Text, lang, "en");
+            lblDescription.Text = TranslateCached(lblDescription.Text, lang, "en");
+
+            // UI labels
+            lblBackHome.Text = TranslateCached(lblBackHome.Text, lang, "en");
+            lblReviewsText.Text = TranslateCached(lblReviewsText.Text, lang, "en");
+            lblKmAway.Text = TranslateCached(lblKmAway.Text, lang, "en");
+            lblExpiresIn.Text = TranslateCached(lblExpiresIn.Text, lang, "en");
+
+            lblImpactTitle.Text = TranslateCached(lblImpactTitle.Text, lang, "en");
+            lblImpactMeal.Text = TranslateCached(lblImpactMeal.Text, lang, "en");
+            lblImpactCO2.Text = TranslateCached(lblImpactCO2.Text, lang, "en");
+
+            lblDescTitle.Text = TranslateCached(lblDescTitle.Text, lang, "en");
+            lblSaveText.Text = TranslateCached(lblSaveText.Text, lang, "en");
+
+            btnAddToCart.Text = TranslateCached(btnAddToCart.Text, lang, "en");
+            btnBuyNow.Text = TranslateCached(btnBuyNow.Text, lang, "en");
+
+            lblWhyTitle.Text = TranslateCached(lblWhyTitle.Text, lang, "en");
+            lblWhy1.Text = TranslateCached(lblWhy1.Text, lang, "en");
+            lblWhy2.Text = TranslateCached(lblWhy2.Text, lang, "en");
+            lblWhy3.Text = TranslateCached(lblWhy3.Text, lang, "en");
+            lblWhy4.Text = TranslateCached(lblWhy4.Text, lang, "en");
+
+            lblToastTitle.Text = TranslateCached(lblToastTitle.Text, lang, "en");
+            lblToastSub.Text = TranslateCached(lblToastSub.Text, lang, "en");
         }
 
         private void LoadProduct(int id)
@@ -61,7 +113,10 @@ namespace Business_App_Dev
 
                     lblName.Text = r["ProductName"]?.ToString() ?? "";
                     lblSubtitle.Text = r["Subtitle"] != DBNull.Value ? r["Subtitle"].ToString() : "";
+
+                    // You are using Subtitle as description currently
                     lblDescription.Text = r["Subtitle"] != DBNull.Value ? r["Subtitle"].ToString() : "";
+
                     imgProduct.ImageUrl = r["ImageUrl"] != DBNull.Value ? r["ImageUrl"].ToString() : "";
 
                     decimal now = r["Price"] != DBNull.Value ? Convert.ToDecimal(r["Price"]) : 0m;
@@ -78,7 +133,6 @@ namespace Business_App_Dev
                     lblCO2.Text = r["CO2Saved"] != DBNull.Value ? r["CO2Saved"].ToString() : "0";
                     lblDiscount.Text = r["DiscountPercent"] != DBNull.Value ? r["DiscountPercent"].ToString() : "0";
 
-                    // Optional: ensure txtQty has a default value
                     if (string.IsNullOrWhiteSpace(txtQty.Text))
                         txtQty.Text = "1";
                 }
@@ -98,7 +152,6 @@ namespace Business_App_Dev
 
         private int GetQtySafe()
         {
-            // clamp between 1 and 99
             if (!int.TryParse(txtQty.Text, out int qty))
                 qty = 1;
 
@@ -112,7 +165,6 @@ namespace Business_App_Dev
             int qty = GetQtySafe();
             var cart = GetCart();
 
-            // parse labels safely
             decimal priceNow = 0m;
             decimal priceOld = 0m;
             double co2 = 0;
@@ -161,12 +213,9 @@ namespace Business_App_Dev
             try
             {
                 AddItemToCart();
-                // Optional: show toast/label
-                // lblMsg.Text = "Added to cart!";
             }
             catch (Exception)
             {
-                // lblMsg.Text = "Could not add to cart. Please try again.";
             }
         }
 
@@ -179,7 +228,6 @@ namespace Business_App_Dev
             }
             catch (Exception)
             {
-                // lblMsg.Text = "Could not proceed to cart. Please try again.";
             }
         }
     }

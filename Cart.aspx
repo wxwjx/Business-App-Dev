@@ -1,35 +1,31 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="Cart.aspx.cs" Inherits="Business_App_Dev.Cart" %>
+﻿<%@ Page Title="Shopping Cart | EcoEats"
+    Language="C#"
+    MasterPageFile="~/Site.Master"
+    AutoEventWireup="true"
+    CodeBehind="Cart.aspx.cs"
+    Inherits="Business_App_Dev.Cart" %>
 
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head runat="server">
-    <title>Shopping Cart | EcoEats</title>
+<asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-    <!-- Site + Cart CSS -->
-    <link href="<%= ResolveUrl("~/Content/EcoEats.css") %>" rel="stylesheet" />
     <link href="<%= ResolveUrl("~/Content/Cart.css") %>" rel="stylesheet" />
+</asp:Content>
 
-    <!-- Font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-</head>
-
-<body class="ck-body ck-has-items">
-<form id="form1" runat="server">
+<asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
 
     <div class="ck-container">
 
-        <a class="ck-back" href="Product.aspx">← Continue Shopping</a>
+        <a class="ck-back" href="Product.aspx">
+            ← <asp:Label ID="lblContinueShopping" runat="server" Text="Continue Shopping" />
+        </a>
 
         <!-- Title -->
         <div class="ck-header-title">
             <div class="ck-h-title">
                 <span class="ck-cart-ic">🛒</span>
-                Shopping Cart
+                <asp:Label ID="lblCartTitle" runat="server" Text="Shopping Cart" />
                 <span class="ck-muted ck-title-count">
-                    (<asp:Label ID="lblItemCount" runat="server" Text="0" /> items)
+                    (<asp:Label ID="lblItemCount" runat="server" Text="0" />
+                    <asp:Label ID="lblItemsText" runat="server" Text="items" />)
                 </span>
             </div>
         </div>
@@ -41,7 +37,7 @@
 
                 <!-- Empty state -->
                 <asp:Panel ID="lblEmpty" runat="server" Visible="false" CssClass="ck-empty">
-                    Your cart is empty.
+                    <asp:Label ID="lblEmptyText" runat="server" Text="Your cart is empty." />
                 </asp:Panel>
 
                 <!-- Select all row -->
@@ -51,10 +47,9 @@
                             runat="server"
                             AutoPostBack="true"
                             OnCheckedChanged="chkSelectAll_CheckedChanged" />
-                        <span>Select all</span>
+                        <span><asp:Label ID="lblSelectAllText" runat="server" Text="Select all" /></span>
                     </label>
 
-                    <!-- Optional: if you want, set this text from code-behind -->
                     <asp:Label ID="lblSelectedCount" runat="server" CssClass="ck-selected-count" Text="" />
                 </asp:Panel>
 
@@ -66,7 +61,6 @@
                     <ItemTemplate>
                         <div class="ck-item-card">
 
-                            <!-- selection checkbox -->
                             <div class="ck-item-select">
                                 <asp:HiddenField ID="hfPid" runat="server" Value='<%# Eval("ProductID") %>' />
                                 <asp:CheckBox ID="chkSelect"
@@ -75,12 +69,10 @@
                                     OnCheckedChanged="chkSelect_CheckedChanged" />
                             </div>
 
-                            <!-- image -->
                             <div class="ck-item-img"
                                  style='background-image:url("<%# Eval("ImageUrl") %>");'>
                             </div>
 
-                            <!-- middle -->
                             <div class="ck-item-mid">
                                 <div class="ck-item-name"><%# Eval("ProductName") %></div>
                                 <div class="ck-item-desc"><%# Eval("Subtitle") %></div>
@@ -90,7 +82,6 @@
                                 </div>
                             </div>
 
-                            <!-- right -->
                             <div class="ck-item-right">
                                 <div class="ck-qty-pill">
                                     <asp:LinkButton ID="btnDec" runat="server"
@@ -128,31 +119,44 @@
             <!-- RIGHT -->
             <div class="ck-right">
                 <div class="ck-summary-card">
-                    <div class="ck-summary-title">Order Summary</div>
+                    <div class="ck-summary-title">
+                        <asp:Label ID="lblOrderSummaryTitle" runat="server" Text="Order Summary" />
+                    </div>
 
                     <div class="ck-sum-row">
-                        <div class="ck-muted">Subtotal (selected)</div>
+                        <div class="ck-muted">
+                            <asp:Label ID="lblSubtotalText" runat="server" Text="Subtotal (selected)" />
+                        </div>
                         <div class="ck-strong">$<asp:Label ID="lblSubtotal" runat="server" Text="0.00" /></div>
                     </div>
 
                     <div class="ck-sum-row">
-                        <div class="ck-muted">Delivery</div>
-                        <div class="ck-pickup">Self Pickup</div>
+                        <div class="ck-muted">
+                            <asp:Label ID="lblDeliveryText" runat="server" Text="Delivery" />
+                        </div>
+                        <div class="ck-pickup">
+                            <asp:Label ID="lblSelfPickup" runat="server" Text="Self Pickup" />
+                        </div>
                     </div>
 
                     <div class="ck-divider"></div>
 
                     <div class="ck-total-row">
-                        <div class="ck-total-label">Total</div>
+                        <div class="ck-total-label">
+                            <asp:Label ID="lblTotalText" runat="server" Text="Total" />
+                        </div>
                         <div class="ck-total-val">$<asp:Label ID="lblTotal" runat="server" Text="0.00" /></div>
                     </div>
 
                     <div class="ck-impact-box">
                         <div class="ck-impact-icon">🌿</div>
                         <div>
-                            <div class="ck-impact-top">Total Impact (selected)</div>
+                            <div class="ck-impact-top">
+                                <asp:Label ID="lblTotalImpactText" runat="server" Text="Total Impact (selected)" />
+                            </div>
                             <div class="ck-impact-big">
-                                <asp:Label ID="lblCO2" runat="server" Text="0.0" /> kg CO₂ saved
+                                <asp:Label ID="lblCO2" runat="server" Text="0.0" />
+                                <asp:Label ID="lblKgCO2SavedText" runat="server" Text="kg CO₂ saved" />
                             </div>
                         </div>
                     </div>
@@ -171,6 +175,4 @@
         </div>
     </div>
 
-</form>
-</body>
-</html>
+</asp:Content>

@@ -2,6 +2,8 @@
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.Web.UI.WebControls;
+using Business_App_Dev.Services;
 
 namespace Business_App_Dev
 {
@@ -16,23 +18,56 @@ namespace Business_App_Dev
                 pnlError.Visible = false;
                 pnlEmpty.Visible = false;
 
+                ApplyTranslations();
+
                 int userId = GetUserIdOrThrow();
                 BindOrders(userId);
             }
             catch (SqlException)
             {
-                ShowError("Database error while loading your order history. Please try again.");
+                ShowError(T("Database error while loading your order history. Please try again."));
             }
             catch (Exception ex)
             {
-                ShowError(ex.Message);
+                ShowError(T(ex.Message));
             }
         }
 
+        // -------- Translation helpers --------
+        private string GetLang()
+        {
+            return (Session["LANG"] as string) ?? "en";
+        }
+
+        private string T(string text)
+        {
+            string lang = GetLang();
+            if (lang.Equals("en", StringComparison.OrdinalIgnoreCase)) return text ?? "";
+
+            text = text ?? "";
+            if (string.IsNullOrWhiteSpace(text)) return text;
+
+            string key = $"tr:en->{lang}:{text}";
+            return TranslationCache.GetOrAdd(key, () =>
+                TranslationService.Translate(text, lang, "en"), hours: 24);
+        }
+
+        private void ApplyTranslations()
+        {
+            string lang = GetLang();
+            if (lang.Equals("en", StringComparison.OrdinalIgnoreCase)) return;
+
+            lblHeroTitle.Text = T(lblHeroTitle.Text);
+            lblHeroSub.Text = T(lblHeroSub.Text);
+
+            lblEmptyTitle.Text = T(lblEmptyTitle.Text);
+            lblEmptyText.Text = T(lblEmptyText.Text);
+            lblBrowseDeals.Text = T(lblBrowseDeals.Text);
+        }
+
+        // -------- Existing logic --------
         private int GetUserIdOrThrow()
         {
-            // CHANGE THIS KEY if your login uses a different session key
-            // e.g. "CustomerID" instead of "UserID"
             if (Session["UserID"] == null)
                 throw new Exception("Session expired. Please log in again.");
 
@@ -82,6 +117,28 @@ ORDER BY CreatedAt DESC;";
                     rptOrders.DataBind();
                 }
             }
+        }
+
+        protected void rptOrders_ItemDataBound(object sender, RepeaterItemEventArgs e)
+        {
+            if (e.Item.ItemType != ListItemType.Item &&
+                e.Item.ItemType != ListItemType.AlternatingItem)
+                return;
+
+            string lang = GetLang();
+            if (lang.Equals("en", StringComparison.OrdinalIgnoreCase)) return;
+
+            var lblOrderHash = e.Item.FindControl("lblOrderHash") as Label;
+            if (lblOrderHash != null) lblOrderHash.Text = T(lblOrderHash.Text);
+
+            var lblViewDetails = e.Item.FindControl("lblViewDetails") as Label;
+            if (lblViewDetails != null) lblViewDetails.Text = T(lblViewDetails.Text);
+
+            var lblPaymentRef = e.Item.FindControl("lblPaymentRef") as Label;
+            if (lblPaymentRef != null) lblPaymentRef.Text = T(lblPaymentRef.Text);
+
+            var lblPayStatusRow = e.Item.FindControl("lblPayStatusRow") as Label;
+            if (lblPayStatusRow != null) lblPayStatusRow.Text = T(lblPayStatusRow.Text);
         }
 
         private void ShowError(string msg)
