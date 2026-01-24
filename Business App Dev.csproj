@@ -195,6 +195,8 @@
     <Content Include="Content\EcoEats.css" />
     <Content Include="Content\EcoEatsLogin.css" />
     <Content Include="Content\EcoEatsAdmin.css" />
+    <Content Include="Content\Landing.css" />
+    <Content Include="Content\Product.css" />
     <Content Include="EcoEatsAdmin.aspx" />
     <Content Include="Enable2FA.aspx" />
     <Content Include="favicon.ico" />
@@ -202,6 +204,7 @@
     <Content Include="Global.asax" />
     <Content Include="Content\orders.css" />
     <Content Include="Inventory.aspx" />
+    <Content Include="Landing.aspx" />
     <Content Include="Login.aspx" />
     <Content Include="Content\LoginSite.css" />
     <Content Include="Messages.aspx" />
@@ -358,6 +361,13 @@
     </Compile>
     <Compile Include="Inventory.aspx.designer.cs">
       <DependentUpon>Inventory.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Landing.aspx.cs">
+      <DependentUpon>Landing.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Landing.aspx.designer.cs">
+      <DependentUpon>Landing.aspx</DependentUpon>
     </Compile>
     <Compile Include="Login.aspx.cs">
       <DependentUpon>Login.aspx</DependentUpon>

@@ -1,19 +1,21 @@
 ﻿/* =========================================================
-   EcoEats – Single CSS File (FINAL, fixed cards + badges)
+   EcoEats.css — GLOBAL STYLES (FINAL)
+   Navbar, layout, footer, branding
+   Dark sage green theme
    ========================================================= */
 
+/* =========================
+   ROOT (SAGE PALETTE)
+   ========================= */
 :root {
-    --green: #2f7d32;
-    --green-light: #e8f6f1;
-    --teal: #0aa2b6;
-    --bg: #f4fbf8;
-    --card: #ffffff;
+    --sage-dark: #1f3a2e; /* footer / deep */
+    --sage-main: #2f5d46; /* brand green */
+    --sage-mid: #4f8f73; /* logo highlight */
+    --sage-soft: #e6f0eb;
+    --white: #ffffff;
     --text: #0f172a;
     --muted: #64748b;
-    --border: #e6efe9;
-    --danger: #ef4444;
-    --shadow: 0 10px 30px rgba(2, 40, 32, .10);
-    --radius: 18px;
+    --border: rgba(15,23,42,.08);
 }
 
 /* =========================
@@ -24,18 +26,20 @@
 }
 
 html, body {
-    height: 100%;
-}
-
-body {
     margin: 0;
+    padding: 0;
+    min-height: 100%;
+    background: var(--white);
     font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    background: var(--bg);
     color: var(--text);
 }
 
-/* No underline / no purple links */
-a, a:visited, a:hover, a:active {
+    body > form {
+        min-height: 100vh;
+        background: var(--white);
+    }
+
+a {
     text-decoration: none;
     color: inherit;
 }
@@ -45,115 +49,129 @@ img {
     display: block;
 }
 
-button, input {
-    font-family: inherit;
-}
-
 /* =========================
-   CONTAINER
+   LAYOUT
    ========================= */
 .ee-container {
-    width: min(1200px, calc(100% - 40px));
+    width: min(1200px, calc(100% - 48px));
     margin: 0 auto;
 }
 
+.ee-page {
+    width: 100%;
+}
+
 /* =========================
-   HEADER / TOP BAR
+   NAVBAR / TOP BAR
    ========================= */
 .ee-topbar {
     position: sticky;
     top: 0;
-    z-index: 20;
-    background: #fff;
+    z-index: 1000;
+    background: #ffffff;
     border-bottom: 1px solid var(--border);
 }
 
 .ee-topbar-inner {
+    height: 70px;
     display: flex;
     align-items: center;
     gap: 18px;
-    padding: 14px 0;
 }
 
-/* Logo */
+/* =========================
+   BRAND
+   ========================= */
 .ee-brand {
     display: flex;
     align-items: center;
     gap: 10px;
-    min-width: 160px;
+    font-weight: 900;
+    color: var(--sage-main);
 }
 
 .ee-logo {
-    width: 42px;
-    height: 42px;
+    width: 36px;
+    height: 36px;
     border-radius: 999px;
-    background: var(--green);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: radial-gradient( circle at 30% 30%, var(--sage-mid), var(--sage-dark) );
+    display: grid;
+    place-items: center;
+    box-shadow: 0 6px 14px rgba(31,58,46,.35);
 }
 
     .ee-logo svg {
-        width: 22px;
-        height: 22px;
-        fill: #d8f4df;
+        width: 20px;
+        height: 20px;
+        fill: #ffffff;
     }
 
 .ee-brand-name {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--green);
+    font-size: 18px;
 }
 
-/* Search */
+/* =========================
+   SEARCH BAR
+   ========================= */
 .ee-search {
     flex: 1;
     display: flex;
     align-items: center;
     gap: 10px;
-    background: #f3f6f6;
-    border: 1px solid #edf2f1;
-    padding: 10px 14px;
+    padding: 8px 14px;
     border-radius: 999px;
+    background: #f3f6f4;
+    border: 1px solid var(--border);
 }
 
-    .ee-search input {
+    .ee-search input[type="text"] {
+        flex: 1;
         border: none;
         outline: none;
         background: transparent;
-        width: 100%;
         font-size: 14px;
     }
 
-/* Nav */
-.ee-nav {
+    .ee-search input[type="submit"] {
+        border: none;
+        background: transparent;
+        font-weight: 800;
+        cursor: pointer;
+        padding: 6px 10px;
+        border-radius: 999px;
+    }
+
+        .ee-search input[type="submit"]:hover {
+            background: rgba(47,93,70,.12);
+        }
+
+/* =========================
+   NAV LINKS
+   ========================= */
+.ee-navlinks {
     display: flex;
-    gap: 14px;
-    white-space: nowrap;
+    align-items: center;
+    gap: 6px;
 }
 
-    .ee-nav a {
-        font-size: 14px;
+    .ee-navlinks a {
         padding: 8px 12px;
         border-radius: 999px;
-        color: #334155;
-        font-weight: 500;
+        font-weight: 700;
+        color: rgba(15,23,42,.8);
     }
 
-        .ee-nav a:hover {
-            background: #f1f5f9;
+        .ee-navlinks a:hover {
+            background: rgba(47,93,70,.12);
         }
 
-        .ee-nav a.active {
-            background: var(--green-light);
-            color: var(--green);
-            font-weight: 600;
-        }
-
-/* Icons */
+/* =========================
+   ACTION ICONS
+   ========================= */
 .ee-actions {
     display: flex;
-    gap: 8px;
+    align-items: center;
+    gap: 10px;
 }
 
 .ee-icon-btn {
@@ -161,295 +179,95 @@ button, input {
     height: 36px;
     border-radius: 999px;
     border: 1px solid var(--border);
-    background: #fff;
+    background: #ffffff;
     display: grid;
     place-items: center;
     cursor: pointer;
 }
 
-/* =========================
-   HERO / BANNER
-   ========================= */
-.ee-hero {
-    background: linear-gradient(90deg, #2f7d32 0%, #2f8b58 45%, #0aa2b6 100%);
-    color: #fff;
-    padding: 70px 0 60px;
-}
-
-    .ee-hero h1 {
-        font-size: 46px;
-        font-weight: 800;
-        margin: 0;
+    .ee-icon-btn:hover {
+        background: rgba(47,93,70,.12);
     }
 
-    .ee-hero p {
-        margin-top: 12px;
-        font-size: 16px;
-        opacity: .92;
-    }
-
-.ee-hero-stats {
-    margin-top: 24px;
-    display: flex;
-    gap: 18px;
-    flex-wrap: wrap;
-}
-
-.ee-stat {
-    background: rgba(255,255,255,.18);
-    border: 1px solid rgba(255,255,255,.25);
-    border-radius: 18px;
-    padding: 18px 28px;
-}
-
-.ee-stat-value {
-    font-size: 26px;
-    font-weight: 800;
-}
-
-.ee-stat-label {
-    font-size: 13px;
-    opacity: .9;
-}
-
-/* =========================
-   PILLS / FILTERS
-   ========================= */
-.ee-pills {
-    margin: 24px 0;
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
-.ee-pill {
-    background: #fff;
+/* Language dropdown */
+.ee-lang {
+    height: 34px;
+    border-radius: 8px;
     border: 1px solid var(--border);
-    padding: 10px 16px;
-    border-radius: 999px;
-    font-size: 14px;
-    cursor: pointer;
+    background: #ffffff;
+    padding: 0 10px;
+    font-weight: 700;
+    color: rgba(15,23,42,.85);
 }
 
-    .ee-pill.active {
-        background: var(--green-light);
-        color: var(--green);
-        font-weight: 600;
-    }
-
 /* =========================
-   GRID
+   FOOTER (DARK SAGE)
    ========================= */
-.ee-grid {
-    padding: 26px 0 60px;
+.lp-footer {
+    background: var(--sage-dark);
+    color: #ffffff;
+    padding: 40px 0 24px;
+}
+
+.lp-footer-inner {
+    width: min(1200px, calc(100% - 48px));
+    margin: 0 auto;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 22px;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 24px;
 }
 
-/* =========================
-   CARD (FIXED — no more “60% off at corner”)
-   ========================= */
-.ee-card {
-    background: var(--card);
-    border-radius: var(--radius);
-    overflow: hidden; /* ✅ keeps badge inside */
-    box-shadow: 0 8px 24px rgba(2,40,32,.08);
-    transition: transform .15s ease, box-shadow .15s ease;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-}
-
-    .ee-card:hover {
-        transform: translateY(-3px);
-        box-shadow: var(--shadow);
+@media (max-width: 900px) {
+    .lp-footer-inner {
+        grid-template-columns: 1fr;
     }
-
-/* Image block must be relative */
-.ee-card-img {
-    position: relative; /* ✅ anchor badge/heart */
-    height: 200px;
-    background-size: cover;
-    background-position: center;
 }
 
-/* badge top-right */
-.ee-discount {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    z-index: 2;
-    background: #f59e0b;
-    color: #111827;
-    font-size: 12px;
-    font-weight: 800;
-    padding: 6px 12px;
-    border-radius: 999px;
+.lp-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 900;
 }
 
-/* heart top-left */
-.ee-like {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    z-index: 2;
+.lp-brand-badge {
     width: 34px;
     height: 34px;
     border-radius: 999px;
+    background: rgba(255,255,255,.15);
     display: grid;
     place-items: center;
-    background: rgba(0,0,0,.28);
-    color: #fff;
-    border: 1px solid rgba(255,255,255,.35);
 }
 
-/* Body */
-.ee-card-body {
-    padding: 16px 18px 18px;
-    min-width: 0;
+.lp-footer p {
+    color: rgba(255,255,255,.82);
+    max-width: 52ch;
 }
 
-.ee-title {
-    font-size: 16px;
-    font-weight: 800;
-    line-height: 1.2;
+.lp-links {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 16px;
 }
 
-    .ee-title:hover {
-        color: var(--green);
+    .lp-links a {
+        color: rgba(255,255,255,.9);
+        font-weight: 700;
     }
 
-.ee-subtitle {
-    font-size: 13px;
-    color: var(--muted);
-    margin-top: 6px;
-}
+        .lp-links a:hover {
+            text-decoration: underline;
+            color: #d1fae5;
+        }
 
-.ee-meta {
-    display: flex;
-    gap: 10px;
-    font-size: 13px;
-    color: #475569;
-    margin-top: 10px;
-    flex-wrap: wrap;
-}
-
-.ee-expiry {
-    color: var(--danger);
-    font-weight: 700;
-}
-
-/* Price */
-.ee-price-row {
-    margin-top: 14px;
+.lp-footnote {
+    width: min(1200px, calc(100% - 48px));
+    margin: 18px auto 0;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,.18);
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-}
-
-.ee-price-now {
-    font-size: 18px;
-    font-weight: 900;
-    color: #0f766e;
-}
-
-.ee-price-old {
-    margin-left: 8px;
+    gap: 10px;
     font-size: 13px;
-    color: #94a3b8;
-    text-decoration: line-through;
-}
-
-.ee-pill-small {
-    background: var(--green-light);
-    color: var(--green);
-    font-size: 12px;
-    font-weight: 700;
-    padding: 6px 10px;
-    border-radius: 999px;
-    white-space: nowrap;
-}
-
-/* =========================
-   RESPONSIVE
-   ========================= */
-@media (max-width: 980px) {
-    .ee-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .ee-nav {
-        display: none;
-    }
-}
-
-@media (max-width: 640px) {
-    .ee-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .ee-search {
-        display: none;
-    }
-}
-
-/* =========================================================
-   SELLER PORTAL (Master Page additions)
-   ========================================================= */
-
-/* Seller badge under logo */
-.ee-seller-badge {
-    font-size: 12px;
-    padding: 4px 10px;
-    border-radius: 999px;
-    background: var(--green-light);
-    color: var(--green);
-    font-weight: 700;
-    border: 1px solid var(--border);
-    margin-top: 2px;
-}
-
-/* Slightly tighter spacing for seller topbar */
-.ee-topbar-inner.seller {
-    gap: 14px;
-}
-
-/* Seller nav tweaks */
-.ee-nav.seller a {
-    padding: 8px 10px;
-    font-weight: 600;
-}
-
-/* Main content spacing for seller pages */
-.ee-main-wrap {
-    padding: 18px 0 40px;
-}
-
-/* Floating chat button (seller) */
-.ee-chat-fab {
-    position: fixed;
-    right: 18px;
-    bottom: 18px;
-    width: 52px;
-    height: 52px;
-    border-radius: 999px;
-    border: none;
-    background: var(--green);
-    color: #fff;
-    font-size: 22px;
-    cursor: pointer;
-    box-shadow: var(--shadow);
-}
-
-    .ee-chat-fab:hover {
-        filter: brightness(1.05);
-    }
-
-/* Responsive seller tweaks */
-@media (max-width: 980px) {
-    .ee-nav.seller {
-        display: none;
-    }
+    color: rgba(255,255,255,.7);
 }

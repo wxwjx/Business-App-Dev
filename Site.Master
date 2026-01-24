@@ -8,25 +8,11 @@
     <title><%: Page.Title %> - EcoEats</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- Use SAME CSS as Product.aspx so header matches -->
     <link href="<%= ResolveUrl("~/Content/EcoEats.css") %>" rel="stylesheet" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-
-    <!-- small master-only tweaks -->
-    <style>
-        .ee-actions .ee-lang {
-            width: 90px;
-            height: 38px;
-            border-radius: 12px;
-            border: 1px solid rgba(0,0,0,.10);
-            padding: 6px 10px;
-            font-weight: 600;
-            background: #fff;
-        }
-    </style>
 
     <asp:ContentPlaceHolder ID="HeadContent" runat="server" />
 </head>
@@ -34,7 +20,7 @@
 <body>
 <form id="form1" runat="server">
 
-    <!-- TOP BAR (exact structure from your Product.aspx) -->
+    <!-- TOP BAR -->
     <header class="ee-topbar">
         <div class="ee-container ee-topbar-inner">
 
@@ -47,7 +33,6 @@
                 <div class="ee-brand-name">EcoEats</div>
             </div>
 
-            <!-- SEARCH (server controls so Product.aspx can read it) -->
             <div class="ee-search">
                 <asp:TextBox ID="txtSearch" runat="server"
                     placeholder="Search meals or shop..."
@@ -56,7 +41,8 @@
                 <asp:Button ID="btnSearch" runat="server" Text="Search" OnClick="btnSearch_Click" />
             </div>
 
-            <nav class="ee-nav">
+            <!-- NAV LINKS -->
+            <nav class="ee-navlinks">
                 <a href="Product.aspx" id="navHome" runat="server">Home</a>
                 <a href="OrderHistory.aspx" id="navOrders" runat="server">Orders</a>
                 <a href="About.aspx" id="navAbout" runat="server">About Us</a>
@@ -66,7 +52,6 @@
 
             <div class="ee-actions">
 
-                <!-- Language dropdown (kept in top bar, styled) -->
                 <asp:DropDownList
                     ID="ddlLanguage"
                     runat="server"
@@ -87,7 +72,40 @@
         </div>
     </header>
 
-    <asp:ContentPlaceHolder ID="MainContent" runat="server" />
+    <!-- PAGE CONTENT -->
+    <main class="ee-page">
+        <asp:ContentPlaceHolder ID="MainContent" runat="server" />
+    </main>
+
+    <!-- FOOTER (MUST BE AFTER CONTENT) -->
+    <footer class="lp-footer">
+        <div class="lp-footer-inner">
+            <div>
+                <div class="lp-brand">
+                    <span class="lp-brand-badge">🌱</span>
+                    EcoEats
+                </div>
+                <p>
+                    EcoEats connects users with surplus meals from local sellers — helping you save money while reducing food waste.
+                </p>
+            </div>
+
+            <div class="lp-links">
+                <a href="Product.aspx">Browse Deals</a>
+                <a href="OrderHistory.aspx">Your Orders</a>
+                <a href="About.aspx">About EcoEats</a>
+                <a href="Feedback.aspx">Feedback</a>
+                <a href="Profile.aspx">Profile</a>
+                <a href="SellerSignup.aspx">Become a Seller</a>
+            </div>
+        </div>
+
+        <div class="lp-footnote">
+            <div>© <%: DateTime.Now.Year %> EcoEats. All rights reserved.</div>
+            <div>Made for NYP DBFT • Enterprise Dev Project</div>
+        </div>
+    </footer>
+
     <asp:ContentPlaceHolder ID="ScriptsContent" runat="server" />
 
 </form>
