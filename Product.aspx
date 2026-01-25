@@ -75,7 +75,7 @@
 
         <!-- PILLS -->
         <div class="ee-pills">
-            <asp:LinkButton ID="btnAI" runat="server" CssClass="ee-pill" OnClick="btnAI_Click">✨ AI Recommended</asp:LinkButton>
+            <asp:LinkButton ID="btnAI" runat="server" CssClass="ee-pill" OnClick="btnAI_Click">✨ Recommended</asp:LinkButton>
             <asp:LinkButton ID="btnDeals" runat="server" CssClass="ee-pill" OnClick="btnDeals_Click">🔥 Daily Best Deals</asp:LinkButton>
             <asp:LinkButton ID="btnCats" runat="server" CssClass="ee-pill" OnClick="btnCats_Click">🧭 Explore Categories</asp:LinkButton>
         </div>
