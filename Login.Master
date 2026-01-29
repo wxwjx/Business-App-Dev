@@ -1,7 +1,4 @@
-﻿<%@ Master Language="C#" AutoEventWireup="true"
-    CodeBehind="Login.Master.cs"
-    Inherits="Business_App_Dev.LoginMaster" %>
-
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="Login.Master.cs" Inherits="Business_App_Dev.LoginMaster" %>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -21,6 +18,11 @@
 
 <body>
     <form id="form1" runat="server">
+        <asp:ScriptManager 
+    ID="ScriptManager1" 
+    runat="server" 
+    EnablePageMethods="true" />
+
 
 
         <main class="page">
@@ -32,6 +34,7 @@
                 © <%: DateTime.Now.Year %> EcoEats
             </div>
         </footer>
+
 
     </form>
 </body>

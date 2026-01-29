@@ -96,7 +96,7 @@
                 <a href="About.aspx">About EcoEats</a>
                 <a href="Feedback.aspx">Feedback</a>
                 <a href="Profile.aspx">Profile</a>
-                <a href="SellerSignup.aspx">Become a Seller</a>
+                <a href="RegisterSeller.aspx">Become a Seller</a>
             </div>
         </div>
 

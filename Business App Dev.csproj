@@ -167,7 +167,10 @@
     <Content Include=".gitignore" />
     <Content Include="About.aspx" />
     <Content Include="AddNewProduct.aspx" />
-    <Content Include="AdminLogin.aspx" />
+    <Content Include="Content\EcoEatsRegister.css" />
+    <Content Include="Content\SellerPending.css" />
+    <Content Include="ForgotPassword.aspx" />
+    <Content Include="login.aspx" />
     <Content Include="Content\AdminCommon.css" />
     <Content Include="App_Data\EcoEats.mdf" />
     <Content Include="App_Data\EcoEats_log.ldf">
@@ -205,7 +208,7 @@
     <Content Include="Content\orders.css" />
     <Content Include="Inventory.aspx" />
     <Content Include="Landing.aspx" />
-    <Content Include="Login.aspx" />
+    <Content Include="RegisterCustomer.aspx" />
     <Content Include="Content\LoginSite.css" />
     <Content Include="Messages.aspx" />
     <Content Include="OrderHistory.aspx" />
@@ -215,6 +218,7 @@
     <Content Include="ProductDetails.aspx" />
     <Content Include="Content\ProductDetails.css" />
     <Content Include="Profile.aspx" />
+    <Content Include="ResetPassword.aspx" />
     <Content Include="Scripts\bootstrap.bundle.js" />
     <Content Include="Scripts\bootstrap.bundle.min.js" />
     <Content Include="Scripts\bootstrap.esm.js" />
@@ -273,8 +277,8 @@
     <Content Include="Scripts\WebForms\WebParts.js" />
     <Content Include="Scripts\WebForms\WebUIValidation.js" />
     <Content Include="SellerDashboard.aspx" />
-    <Content Include="SellerLogin.aspx" />
-    <Content Include="SellerSignup.aspx" />
+    <Content Include="RegisterSeller.aspx" />
+    <Content Include="SellerPending.aspx" />
     <Content Include="SellerWasteTracker.aspx" />
     <Content Include="SignUp.aspx" />
     <Content Include="Site.Master" />
@@ -300,12 +304,19 @@
     <Compile Include="Admin.Master.designer.cs">
       <DependentUpon>Admin.Master</DependentUpon>
     </Compile>
-    <Compile Include="AdminLogin.aspx.cs">
-      <DependentUpon>AdminLogin.aspx</DependentUpon>
+    <Compile Include="ForgotPassword.aspx.cs">
+      <DependentUpon>ForgotPassword.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
-    <Compile Include="AdminLogin.aspx.designer.cs">
-      <DependentUpon>AdminLogin.aspx</DependentUpon>
+    <Compile Include="ForgotPassword.aspx.designer.cs">
+      <DependentUpon>ForgotPassword.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="login.aspx.cs">
+      <DependentUpon>login.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="login.aspx.designer.cs">
+      <DependentUpon>login.aspx</DependentUpon>
     </Compile>
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="About.aspx.cs">
@@ -369,12 +380,12 @@
     <Compile Include="Landing.aspx.designer.cs">
       <DependentUpon>Landing.aspx</DependentUpon>
     </Compile>
-    <Compile Include="Login.aspx.cs">
-      <DependentUpon>Login.aspx</DependentUpon>
+    <Compile Include="RegisterCustomer.aspx.cs">
+      <DependentUpon>RegisterCustomer.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
-    <Compile Include="Login.aspx.designer.cs">
-      <DependentUpon>Login.aspx</DependentUpon>
+    <Compile Include="RegisterCustomer.aspx.designer.cs">
+      <DependentUpon>RegisterCustomer.aspx</DependentUpon>
     </Compile>
     <Compile Include="Login.Master.cs">
       <DependentUpon>Login.Master</DependentUpon>
@@ -427,6 +438,13 @@
       <DependentUpon>Profile.aspx</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ResetPassword.aspx.cs">
+      <DependentUpon>ResetPassword.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="ResetPassword.aspx.designer.cs">
+      <DependentUpon>ResetPassword.aspx</DependentUpon>
+    </Compile>
     <Compile Include="SellerDashboard.aspx.cs">
       <DependentUpon>SellerDashboard.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -434,19 +452,19 @@
     <Compile Include="SellerDashboard.aspx.designer.cs">
       <DependentUpon>SellerDashboard.aspx</DependentUpon>
     </Compile>
-    <Compile Include="SellerLogin.aspx.cs">
-      <DependentUpon>SellerLogin.aspx</DependentUpon>
+    <Compile Include="RegisterSeller.aspx.cs">
+      <DependentUpon>RegisterSeller.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
-    <Compile Include="SellerLogin.aspx.designer.cs">
-      <DependentUpon>SellerLogin.aspx</DependentUpon>
+    <Compile Include="RegisterSeller.aspx.designer.cs">
+      <DependentUpon>RegisterSeller.aspx</DependentUpon>
     </Compile>
-    <Compile Include="SellerSignup.aspx.cs">
-      <DependentUpon>SellerSignup.aspx</DependentUpon>
+    <Compile Include="SellerPending.aspx.cs">
+      <DependentUpon>SellerPending.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
-    <Compile Include="SellerSignup.aspx.designer.cs">
-      <DependentUpon>SellerSignup.aspx</DependentUpon>
+    <Compile Include="SellerPending.aspx.designer.cs">
+      <DependentUpon>SellerPending.aspx</DependentUpon>
     </Compile>
     <Compile Include="SellerWasteTracker.aspx.cs">
       <DependentUpon>SellerWasteTracker.aspx</DependentUpon>

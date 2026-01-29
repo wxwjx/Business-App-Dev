@@ -6,6 +6,8 @@ using System.Text;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using System.Net;
+using System.Net.Mail;
 
 namespace Business_App_Dev
 {
@@ -60,19 +62,77 @@ namespace Business_App_Dev
 
             if (e.CommandName == "APPROVE")
             {
-                UpdateStatus(appId, "APPROVED");
+                ApproveSeller(appId);
                 lblMsg.Text = "✅ Seller application approved.";
-                ShowToast("Approve Granted");
+                ShowToast("Seller approved & email sent");
             }
             else if (e.CommandName == "REJECT")
             {
                 UpdateStatus(appId, "REJECTED");
                 lblMsg.Text = "❌ Seller application rejected.";
-                ShowToast("Application Rejected!", "error");
+                ShowToast("Application rejected", "error");
             }
 
             LoadPendingApplications();
         }
+        private void ApproveSeller(int applicationId)
+        {
+            using (SqlConnection conn = new SqlConnection(_connStr))
+            {
+                conn.Open();
+
+                // 1️⃣ Get application data
+                SqlCommand get = new SqlCommand(@"
+            SELECT BusinessName, Address, Email
+            FROM SellerApplications
+            WHERE Id = @Id
+        ", conn);
+
+                get.Parameters.AddWithValue("@Id", applicationId);
+
+                string shopName, address, email;
+
+                using (var r = get.ExecuteReader())
+                {
+                    if (!r.Read())
+                        return;
+
+                    shopName = r["BusinessName"].ToString();
+                    address = r["Address"].ToString();
+                    email = r["Email"].ToString();
+                }
+
+                // 2️⃣ Prevent duplicate seller insert
+                SqlCommand check = new SqlCommand(@"
+            SELECT COUNT(1)
+            FROM Seller
+            WHERE LOWER(Email) = LOWER(@Email)
+        ", conn);
+
+                check.Parameters.AddWithValue("@Email", email);
+
+                if (Convert.ToInt32(check.ExecuteScalar()) > 0)
+                    return;
+
+                // 3️⃣ Insert into Seller table
+                SqlCommand insert = new SqlCommand(@"
+            INSERT INTO Seller (ShopName, Address, Email, CreatedAt)
+            VALUES (@ShopName, @Address, @Email, GETDATE())
+        ", conn);
+
+                insert.Parameters.AddWithValue("@ShopName", shopName);
+                insert.Parameters.AddWithValue("@Address", address);
+                insert.Parameters.AddWithValue("@Email", email);
+
+                insert.ExecuteNonQuery();
+
+                // 4️⃣ Update application status
+                UpdateStatus(applicationId, "APPROVED");
+                // 4️⃣ SEND EMAIL ✅
+                SendSellerApprovedEmail(email, shopName);
+            }
+        }
+
 
         private void UpdateStatus(int id, string status)
         {
@@ -89,6 +149,36 @@ namespace Business_App_Dev
                 cmd.ExecuteNonQuery();
             }
         }
+
+        private void SendSellerApprovedEmail(string toEmail, string shopName)
+        {
+            var msg = new MailMessage();
+            msg.To.Add(toEmail);
+            msg.Subject = "EcoEats Seller Application Approved 🎉";
+            msg.Body = $@"
+                Hello {shopName},
+
+                Great news! 🎉
+
+                Your seller application on EcoEats has been APPROVED.
+
+                You can now log in and start listing surplus food items on our platform.
+
+                Thank you for helping reduce food waste 🌱
+
+                Best regards,
+                EcoEats Team
+";
+
+            msg.IsBodyHtml = false;
+            msg.From = new MailAddress("ecoeats.noreply@gmail.com", "EcoEats");
+
+            using (var smtp = new SmtpClient())
+            {
+                smtp.Send(msg);
+            }
+        }
+
         private void LoadFeedback()
         {
             try
@@ -282,3 +372,4 @@ namespace Business_App_Dev
     }
 }
 
+// test admin branch

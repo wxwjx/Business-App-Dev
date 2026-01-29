@@ -34,7 +34,7 @@
                 <div class="lp-cta">
                     <a class="lp-btn lp-btn-primary" href="Product.aspx">🛍 Explore Deals</a>
                     <a class="lp-btn lp-btn-ghost" href="About.aspx">✨ How it works</a>
-                    <a class="lp-btn lp-btn-ghost" href="SellerSignup.aspx">🏬 Become a seller</a>
+                    <a class="lp-btn lp-btn-ghost" href="RegisterSeller.aspx">🏬 Become a seller</a>
                 </div>
             </div>
 

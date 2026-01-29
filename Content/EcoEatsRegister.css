@@ -1,0 +1,556 @@
+﻿/* page background */
+.login-page {
+    min-height: calc(100vh - 40px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 16px;
+    background: radial-gradient(1200px 700px at 50% 20%, rgba(23,180,169,.18), transparent 60%), radial-gradient(900px 600px at 20% 50%, rgba(46,125,50,.18), transparent 55%), #eaf6f2;
+}
+
+.brand {
+    text-align: center;
+    margin-bottom: 18px;
+}
+
+.brand-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #2e7d32;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,.12);
+    margin-bottom: 10px;
+}
+
+    .brand-icon svg {
+        width: 28px;
+        height: 28px;
+        fill: #fff;
+    }
+
+.brand-name {
+    font-size: 44px;
+    font-weight: 800;
+    letter-spacing: .2px;
+    color: #2e7d32;
+    line-height: 1.05;
+}
+
+.brand-tagline {
+    margin-top: 6px;
+    color: #6b7280;
+    font-size: 16px;
+}
+
+.card {
+    width: 520px;
+    max-width: 92vw;
+    background: #fff;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 22px 55px rgba(0,0,0,.18);
+}
+
+.card-header {
+    padding: 22px 26px;
+    background: linear-gradient(90deg, #2e7d32 0%, #11a7a2 100%);
+    color: #fff;
+}
+
+.header-title {
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.header-sub {
+    opacity: .9;
+    margin-top: 4px;
+    font-size: 14px;
+}
+
+.card-body {
+    padding: 22px 26px 24px;
+}
+
+.field {
+    margin-bottom: 14px;
+}
+
+.label {
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #111827;
+}
+
+.hint {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.input-wrap {
+    position: relative;
+}
+
+.icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    opacity: .6;
+}
+
+    .icon svg {
+        width: 18px;
+        height: 18px;
+        fill: #111827;
+    }
+
+.textbox {
+    width: 100%;
+    height: 44px;
+    border: 1px solid #e5e7eb;
+    background: #f3f4f6;
+    border-radius: 999px;
+    padding: 0 14px 0 44px;
+    outline: none;
+    font-size: 14px;
+}
+
+    .textbox:focus {
+        border-color: #11a7a2;
+        box-shadow: 0 0 0 3px rgba(17,167,162,.18);
+        background: #fff;
+    }
+
+/* Pills (locked to Customer) */
+.role-pills {
+    display: flex;
+    gap: 8px;
+    background: #f3f4f6;
+    padding: 6px;
+    border-radius: 999px;
+    width: fit-content;
+}
+
+    .role-pills input {
+        display: none;
+    }
+
+    .role-pills label {
+        display: inline-block;
+        padding: 10px 18px;
+        border-radius: 999px;
+        cursor: not-allowed;
+        font-weight: 700;
+        color: #111827;
+        opacity: .7;
+    }
+
+    .role-pills input:checked + label {
+        background: #fff;
+        box-shadow: 0 8px 20px rgba(0,0,0,.12);
+        opacity: 1;
+    }
+
+.terms {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    color: #374151;
+    font-size: 14px;
+    margin-top: 6px;
+}
+
+.btn {
+    width: 100%;
+    height: 48px;
+    border: none;
+    border-radius: 999px;
+    background: #2e7d32;
+    color: #fff;
+    font-weight: 800;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+    .btn:hover {
+        filter: brightness(.95);
+    }
+
+.error {
+    display: block;
+    margin: 8px 0 0;
+    color: #dc2626;
+    font-weight: 700;
+    min-height: 18px;
+}
+
+.footer-link {
+    text-align: center;
+    margin-top: 16px;
+    color: #2e7d32;
+    font-weight: 700;
+}
+
+.link {
+    color: #2e7d32;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+    .link:hover {
+        text-decoration: underline;
+    }
+/* =========================
+   Password Eye Button Fix
+   ========================= */
+
+/* make sure the wrapper is the positioning parent */
+.input-wrap.has-eye {
+    position: relative;
+}
+
+    /* add space on right for the eye button */
+    .input-wrap.has-eye .textbox {
+        padding-right: 52px; /* enough room for button */
+    }
+
+/* eye button sits INSIDE the pill input (right side) */
+.eye-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    opacity: 0.75;
+    padding: 0;
+    line-height: 1;
+}
+
+    .eye-btn:hover {
+        opacity: 1;
+        background: rgba(17, 167, 162, 0.10);
+    }
+
+    /* when clicking the eye, don't show ugly outline */
+    .eye-btn:focus {
+        outline: none;
+    }
+
+/* =========================
+   Password rules box (matches your theme)
+   ========================= */
+.pw-rules {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border: 1px solid rgba(17, 24, 39, 0.12); /* soft grey */
+    background: #f9fafb;
+    border-radius: 12px;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.rule {
+    opacity: 0.7;
+}
+
+    .rule.ok {
+        opacity: 1;
+        font-weight: 800;
+        color: #2e7d32;
+    }
+
+/* confirm msg */
+.pw-confirm {
+    margin-top: 6px;
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+    .pw-confirm.ok {
+        font-weight: 800;
+        color: #2e7d32;
+    }
+
+    .pw-confirm.bad {
+        font-weight: 800;
+        color: #dc2626;
+    }
+
+
+.pw-rules {
+    margin-top: 8px;
+    padding: 10px 12px;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.rule {
+    opacity: 0.75;
+}
+
+    .rule.ok {
+        opacity: 1;
+        font-weight: 600;
+    }
+
+.pw-confirm {
+    margin-top: 6px;
+    font-size: 13px;
+    opacity: 0.85;
+}
+
+    .pw-confirm.ok {
+        font-weight: 600;
+    }
+
+    .pw-confirm.bad {
+        font-weight: 600;
+    }
+
+.field-msg {
+    margin-top: 6px;
+    font-size: 13px;
+    opacity: 0.9;
+    min-height: 18px;
+}
+
+    .field-msg.ok {
+        color: #2e7d32;
+        font-weight: 800;
+    }
+
+    .field-msg.bad {
+        color: #dc2626;
+        font-weight: 800;
+    }
+/* reserve space so icon/input never moves */
+.email-status {
+    min-height: 20px; /* space for message */
+    margin-top: 6px;
+}
+
+/* message styling */
+.field-msg {
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+    /* success / error */
+    .field-msg.ok {
+        color: #2e7d32;
+    }
+
+    .field-msg.bad {
+        color: #dc2626;
+    }
+
+.input-wrap {
+    height: 44px; /* same as textbox */
+}
+/* ===== Terms Modal ===== */
+.terms-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+}
+
+    .terms-modal.show {
+        display: flex;
+    }
+
+.terms-box {
+    width: 520px;
+    max-width: 92vw;
+    max-height: 80vh;
+    background: #fff;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 25px 60px rgba(0,0,0,.25);
+    display: flex;
+    flex-direction: column;
+}
+
+.terms-header {
+    padding: 16px 20px;
+    background: linear-gradient(90deg, #2e7d32 0%, #11a7a2 100%);
+    color: #fff;
+}
+
+.terms-body {
+    padding: 16px 20px;
+    overflow-y: auto;
+    font-size: 14px;
+    color: #111827;
+    line-height: 1.6;
+}
+
+    .terms-body h4 {
+        margin-top: 14px;
+        margin-bottom: 6px;
+        color: #2e7d32;
+    }
+
+.terms-footer {
+    padding: 14px 20px;
+    border-top: 1px solid #e5e7eb;
+    text-align: right;
+}
+
+.terms-close {
+    width: auto;
+    padding: 10px 22px;
+}
+/* Categories: allow wrapping and keep icon aligned */
+.input-wrap-categories {
+    align-items: flex-start; /* icon stays at top */
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+
+
+/* Limit overall card size */
+.card {
+    width: 100%;
+    max-width: 460px; /* smaller than before */
+    max-height: 80vh; /* key: limit height */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header stays fixed */
+.card-header {
+    flex-shrink: 0;
+}
+
+/* Make only the body scroll */
+.card-body {
+    overflow-y: auto;
+    padding: 22px 22px 26px;
+}
+
+/* Make inputs slightly more compact */
+.textbox {
+    height: 44px;
+    font-size: 14px;
+}
+
+/* Reduce spacing between fields */
+.field {
+    margin-bottom: 16px;
+}
+
+/* Category pills scale better */
+.cat-pills label {
+    padding: 8px 12px;
+    font-size: 13px;
+}
+
+/* Reduce password rules spacing */
+.pw-rules {
+    margin-top: 8px;
+    font-size: 13px;
+}
+
+/* Mobile friendliness */
+@media (max-height: 800px) {
+    .card {
+        max-height: 75vh;
+    }
+}
+
+
+/* ===== Food category horizontal scroll (ASP.NET CheckBoxList friendly) ===== */
+
+/* wrapper so categories take proper height */
+.cat-wrap {
+    margin-top: 8px;
+}
+
+/* scrolling pills */
+.cat-pills {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 14px;
+    padding: 10px 4px 12px;
+    margin: 0;
+    -webkit-overflow-scrolling: touch;
+}
+
+    /* each pill label */
+    .cat-pills label {
+        flex: 0 0 auto;
+        white-space: nowrap;
+        padding: 10px 16px;
+        font-size: 14px;
+        border-radius: 999px;
+        background: #f6f8fa;
+        border: 1px solid #e3e7eb;
+        display: inline-flex;
+        align-items: center;
+        cursor: pointer;
+    }
+
+    /* Each item in CheckBoxList is wrapped in a <span> */
+    .cat-pills span {
+        position: relative;
+        display: inline-block;
+    }
+
+    /* Hide checkbox BUT keep it clickable via its label */
+    .cat-pills input[type="checkbox"] {
+        position: absolute;
+        opacity: 0;
+        width: 1px;
+        height: 1px;
+        left: 0;
+        top: 0;
+    }
+
+        .cat-pills input[type="checkbox"]:checked + label {
+            background: #1f9d75;
+            color: #fff;
+            border-color: #1f9d75;
+            box-shadow: 0 4px 10px rgba(31, 157, 117, 0.25);
+        }
+
+
+/* spacing so hint never overlaps */
+.hint {
+    display: block;
+    margin-top: 10px;
+    margin-bottom: 18px;
+    font-size: 12.5px;
+    color: #777;
+    clear: both;
+}
+
+.cat-wrap, .cat-pills, .cat-pills label {
+    pointer-events: auto;
+}

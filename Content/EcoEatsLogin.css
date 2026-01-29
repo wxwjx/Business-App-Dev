@@ -186,3 +186,57 @@
     .eye-icon:hover {
         color: #2e7d32;
     }
+/* Forgot password */
+.forgot-wrap {
+    margin-top: 6px;
+    font-size: 13px;
+}
+
+    .forgot-wrap.left {
+        text-align: left;
+    }
+
+.forgot-link {
+    font-weight: 700;
+    color: #2e7d32;
+    text-decoration: none;
+}
+
+    .forgot-link:hover {
+        text-decoration: underline;
+        opacity: 0.9;
+    }
+
+/* Sign up under sign in */
+.signup-wrap {
+    margin-top: 16px;
+    text-align: center;
+    font-size: 14px;
+    color: #374151;
+}
+
+.signup-link {
+    margin-left: 6px;
+    font-weight: 800;
+    color: #2e7d32;
+    text-decoration: none;
+}
+
+    .signup-link:hover {
+        text-decoration: underline;
+    }
+
+/* keeps space even when hidden */
+.error {
+    visibility: hidden; /* hidden by default */
+    opacity: 0;
+    transition: opacity .25s ease;
+    min-height: 18px; /* reserve space so layout stays same */
+    display: block;
+}
+
+    /* when showing */
+    .error.show {
+        visibility: visible;
+        opacity: 1;
+    }
