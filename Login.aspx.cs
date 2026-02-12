@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Configuration;
 using System.Data.SqlClient;
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -36,6 +37,13 @@ namespace Business_App_Dev
             // Always clear any old 2FA flow BEFORE starting a new login
             Session.Remove("Pending2FAEmail");
             Session.Remove("TwoFAAttempts");
+
+            // ✅ reCAPTCHA check (ADD THIS HERE)
+            if (!IsCaptchaValid())
+            {
+                lblError.Text = "❌ Please verify that you are not a robot.";
+                return;
+            }
 
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             {
@@ -266,10 +274,25 @@ namespace Business_App_Dev
                 }
             }
         }
+        private bool IsCaptchaValid()
+        {
+            string secretKey = Environment.GetEnvironmentVariable("RECAPTCHA_SECRET");
+            string response = Request.Form["g-recaptcha-response"];
 
+            if (string.IsNullOrWhiteSpace(secretKey))
+                return false;
 
+            if (string.IsNullOrWhiteSpace(response))
+                return false;
 
+            string url = $"https://www.google.com/recaptcha/api/siteverify?secret={secretKey}&response={response}";
 
+            using (var client = new WebClient())
+            {
+                string result = client.DownloadString(url);
+                return result.Contains("\"success\": true");
+            }
+        }
 
     }
 }

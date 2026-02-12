@@ -3,6 +3,8 @@
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
     <link href="<%= ResolveUrl("~/Content/EcoEatsLogin.css") %>" rel="stylesheet" />
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
 </asp:Content>
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
@@ -77,13 +79,16 @@
                         class="forgot-link">Forgot password?</a>
                 </div>
 
-
+                <!-- reCAPTCHA -->
+                <div class="captcha-wrap">
+                    <div class="g-recaptcha" data-sitekey="6Lf6c2ksAAAAAPosb1sOq_vnpJgsshNqYlZmTEvY"></div>
+                </div>
 
                 <asp:Label ID="lblError" runat="server" CssClass="error" Text="" EnableViewState="false" />
 
-
                 <asp:Button ID="btnSignIn" runat="server" Text="Sign In" CssClass="btn"
                     OnClick="btnSignIn_Click" />
+
                 <div class="signup-wrap" id="signupWrap">
                     Don’t have an account?
                     <a id="signupLink" href="RegisterCustomer.aspx" class="signup-link">
