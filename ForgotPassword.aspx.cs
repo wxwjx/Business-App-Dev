@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Configuration;
 using System.Data.SqlClient;
+using System.Net;
 using System.Net.Mail;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
@@ -122,15 +123,35 @@ namespace Business_App_Dev
                 "If you did not request this, you can ignore this email.";
             msg.IsBodyHtml = false;
 
-            using (var smtp = new SmtpClient())
+            msg.From = new MailAddress("kwayongle54@gmail.com", "EcoEats");
+            using (var smtp = CreateSmtpClient())
             {
-                smtp.Send(msg); // uses Web.config smtp settings
+                smtp.Send(msg);
             }
+
         }
 
         private bool IsValidEmail(string email)
         {
             return Regex.IsMatch(email ?? "", @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
         }
+
+        private SmtpClient CreateSmtpClient()
+        {
+            string appPassword = Environment.GetEnvironmentVariable("EMAIL_APP_PASSWORD");
+
+            if (string.IsNullOrWhiteSpace(appPassword))
+                throw new Exception("EMAIL_APP_PASSWORD is missing. Set it using setx.");
+
+            var smtp = new SmtpClient("smtp.gmail.com", 587)
+            {
+                EnableSsl = true,
+                UseDefaultCredentials = false,
+                Credentials = new NetworkCredential("kwayongle54@gmail.com", appPassword)
+            };
+
+            return smtp;
+        }
+
     }
 }

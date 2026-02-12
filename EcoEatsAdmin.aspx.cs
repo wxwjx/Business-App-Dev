@@ -171,12 +171,13 @@ namespace Business_App_Dev
 ";
 
             msg.IsBodyHtml = false;
-            msg.From = new MailAddress("ecoeats.noreply@gmail.com", "EcoEats");
+            msg.From = new MailAddress("kwayongle54@gmail.com", "EcoEats");
 
-            using (var smtp = new SmtpClient())
+            using (var smtp = CreateSmtpClient())
             {
                 smtp.Send(msg);
             }
+
         }
 
         private void LoadFeedback()
@@ -367,6 +368,23 @@ namespace Business_App_Dev
         {
             if (ActiveReplyId == null) return false;
             return Convert.ToInt32(idObj) == ActiveReplyId.Value;
+        }
+
+        private SmtpClient CreateSmtpClient()
+        {
+            string appPassword = Environment.GetEnvironmentVariable("EMAIL_APP_PASSWORD");
+
+            if (string.IsNullOrWhiteSpace(appPassword))
+                throw new Exception("EMAIL_APP_PASSWORD is missing. Set it using setx.");
+
+            var smtp = new SmtpClient("smtp.gmail.com", 587)
+            {
+                EnableSsl = true,
+                UseDefaultCredentials = false,
+                Credentials = new NetworkCredential("kwayongle54@gmail.com", appPassword)
+            };
+
+            return smtp;
         }
 
     }
