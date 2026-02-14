@@ -24,13 +24,31 @@ namespace Business_App_Dev
         protected global::System.Web.UI.WebControls.RadioButtonList rblRole;
 
         /// <summary>
-        /// txtEmail control.
+        /// ddlLoginCountryCode control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtEmail;
+        protected global::System.Web.UI.WebControls.DropDownList ddlLoginCountryCode;
+
+        /// <summary>
+        /// txtLoginId control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox txtLoginId;
+
+        /// <summary>
+        /// hfLoginMode control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HiddenField hfLoginMode;
 
         /// <summary>
         /// txtPassword control.

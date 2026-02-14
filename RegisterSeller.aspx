@@ -75,6 +75,44 @@
                 <!-- server-side immediate message (same idea as your customer page) -->
                 <asp:Label ID="lblEmailStatus" runat="server" CssClass="field-msg" />
             </div>
+                        <!-- Phone -->
+            <!-- Phone Number -->
+            <div class="field">
+                <div class="label">Phone Number</div>
+                <div class="input-wrap">
+
+                    <div class="phone-row">
+                        <asp:DropDownList ID="ddlCountryCode" runat="server" CssClass="country-code">
+                            <asp:ListItem Value="+65" Selected="True">🇸🇬 +65</asp:ListItem>
+                            <asp:ListItem Value="+60">🇲🇾 +60</asp:ListItem>
+                            <asp:ListItem Value="+62">🇮🇩 +62</asp:ListItem>
+                            <asp:ListItem Value="+66">🇹🇭 +66</asp:ListItem>
+                            <asp:ListItem Value="+84">🇻🇳 +84</asp:ListItem>
+                        </asp:DropDownList>
+
+                        <asp:TextBox ID="txtPhone" runat="server" CssClass="phone-textbox"
+                            placeholder="Enter phone number" />
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- OTP + Get OTP -->
+            <div class="field">
+                <div class="label">OTP</div>
+
+                <div class="otp-row">
+                    <div class="input-wrap otp-input">
+                        <asp:TextBox ID="txtOtp" runat="server" CssClass="textbox" placeholder="Enter OTP" />
+                    </div>
+
+                    <asp:Button ID="btnGetOtp" runat="server" Text="Get OTP" CssClass="otp-btn"
+                        OnClick="btnGetOtp_Click" UseSubmitBehavior="false" />
+                </div>
+
+                <asp:Label ID="lblOtpMsg" runat="server" CssClass="field-msg" EnableViewState="false" />
+            </div>
+
 
             <!-- Address -->
             <div class="field">

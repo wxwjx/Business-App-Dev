@@ -257,3 +257,151 @@
     transform-origin: center;
 }
 
+/* Login ID: dropdown inside pill (only for Customer/Seller) */
+.login-cc {
+    position: absolute;
+    left: 44px; /* after icon space */
+    top: 50%;
+    transform: translateY(-50%);
+    height: 34px;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-weight: 800;
+    cursor: pointer;
+    display: none; /* default hidden (Admin) */
+    width: 90px;
+}
+
+/* When dropdown is visible, push textbox typing start to the right */
+.textbox.login-id.has-cc {
+    padding-left: 140px; /* icon(44) + dropdown width */
+}
+/* Toggle pills (reuse your look) */
+.login-toggle {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.toggle-pill {
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-weight: 800;
+    user-select: none;
+}
+
+    .toggle-pill input {
+        display: none;
+    }
+
+    .toggle-pill span {
+        opacity: .8;
+    }
+
+    .toggle-pill input:checked + span {
+        opacity: 1;
+    }
+
+/* Make input-wrap hold dropdown + textbox */
+.input-wrap.login-id-wrap {
+    position: relative;
+}
+
+/* Dropdown inside the pill */
+.login-cc {
+    display: none; /* hidden by default (Email mode) */
+    height: 44px;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-weight: 800;
+    cursor: pointer;
+    margin-left: 44px; /* icon space */
+    width: 95px;
+}
+
+/* Make textbox "flat" inside the pill */
+.textbox.login-id {
+    border: none;
+    background: transparent;
+    border-radius: 0;
+}
+
+    /* When phone mode, push typing start after dropdown */
+    .textbox.login-id.phone-mode {
+        padding-left: 150px; /* icon + dropdown space */
+    }
+
+    /* When email mode, keep standard icon padding */
+    .textbox.login-id.email-mode {
+        padding-left: 44px;
+    }
+
+/* Login with toggle spacing */
+#loginToggle.login-toggle {
+    margin-top: 6px;
+    margin-bottom: 10px;
+}
+
+/* Make toggle pills match your design better */
+#loginToggle .toggle-pill {
+    padding: 8px 16px;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    font-weight: 800;
+    opacity: .75;
+}
+
+    #loginToggle .toggle-pill:has(input:checked) {
+        background: #fff;
+        opacity: 1;
+        box-shadow: 0 8px 18px rgba(0,0,0,.10);
+    }
+/* Email mode: typing closer to left (icon still has space) */
+.input-wrap.login-id-wrap .textbox.login-id.email-mode {
+    padding-left: 0px !important; /* was 44px, tighten */
+}
+
+/* Phone mode: needs more padding because dropdown takes space */
+.input-wrap.login-id-wrap .textbox.login-id.phone-mode {
+    padding-left: 150px !important;
+}
+#phoneDigitsMsg{
+  font-size: 13px;
+  font-weight: 800;
+  color: #dc2626;
+}
+/* Phone mode: move everything more left */
+.login-id-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Country dropdown */
+.login-id-wrap .login-cc {
+    margin-left: 0 !important;
+    width: 95px;
+    font-weight: 800;
+    padding-left: 0;
+}
+
+/* Phone textbox */
+.login-id-wrap .textbox.login-id.phone-mode {
+    flex: 1;
+    padding-left: 0px !important;  /* remove extra padding */
+}
+.login-id-wrap .icon {
+    margin-right: 6px;
+}
+/* phone textbox: move text closer to dropdown */
+.login-id-wrap .textbox.login-id.phone-mode {
+    padding-left: 2px !important;   /* reduce gap */
+    margin-left: -10px;              /* pull closer */
+}
+

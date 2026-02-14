@@ -7,6 +7,8 @@
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
     <link href="<%= ResolveUrl("~/Content/EcoEatsRegister.css") %>" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@19.5.7/build/css/intlTelInput.css">
+
 </asp:Content>
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
@@ -71,6 +73,43 @@
                     </div>
 
                 </div>
+
+                <!-- Phone Number -->
+                <div class="field">
+                    <div class="label">Phone Number</div>
+                    <div class="input-wrap">
+
+                        <div class="phone-row">
+                            <asp:DropDownList ID="ddlCountryCode" runat="server" CssClass="country-code">
+                                <asp:ListItem Value="+65" Selected="True">🇸🇬 +65</asp:ListItem>
+                                <asp:ListItem Value="+60">🇲🇾 +60</asp:ListItem>
+                                <asp:ListItem Value="+62">🇮🇩 +62</asp:ListItem>
+                                <asp:ListItem Value="+66">🇹🇭 +66</asp:ListItem>
+                                <asp:ListItem Value="+84">🇻🇳 +84</asp:ListItem>
+                            </asp:DropDownList>
+
+                            <asp:TextBox ID="txtPhone" runat="server" CssClass="phone-textbox" placeholder="Enter phone number" />
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- OTP + Get OTP -->
+                <div class="field">
+                    <div class="label">OTP</div>
+
+                    <div class="otp-row">
+                        <div class="input-wrap otp-input">
+                            <asp:TextBox ID="txtOtp" runat="server" CssClass="textbox" placeholder="Enter OTP" />
+                        </div>
+
+                        <asp:Button ID="btnGetOtp" runat="server" Text="Get OTP" CssClass="otp-btn"
+                            OnClick="btnGetOtp_Click" UseSubmitBehavior="false" />
+                    </div>
+
+                    <asp:Label ID="lblOtpMsg" runat="server" CssClass="field-msg" EnableViewState="false" />
+                </div>
+
 
                 <div class="field">
                     <div class="label">Password</div>
@@ -147,6 +186,7 @@
             </div>
         </div>
     </div>
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@19.5.7/build/js/intlTelInput.min.js"></script>
 <script>
     function togglePw(inputId, btn) {
         const input = document.getElementById(inputId);
@@ -259,6 +299,25 @@
     function closeTerms() {
         document.getElementById("termsModal").classList.remove("show");
     }
+    const phoneInput = document.querySelector("#phone");
+
+    const iti = window.intlTelInput(phoneInput, {
+        initialCountry: "sg",
+        preferredCountries: ["sg", "my", "id"],
+        separateDialCode: true, // shows +65 separately
+        utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@19.5.7/build/js/utils.js"
+    });
+
+    // When sending OTP to backend, use E.164 format (best for Twilio):
+    function getPhoneE164() {
+        return iti.getNumber(); // e.g. +6584362985
+    }
+
+    document.querySelector("#btnGetOtp")?.addEventListener("click", async () => {
+        const phoneE164 = getPhoneE164();
+        console.log("Send OTP to:", phoneE164);
+        // call your backend /send-otp with phoneE164
+    });
 </script>
 <!-- Terms & Conditions Modal -->
 <div id="termsModal" class="terms-modal">
