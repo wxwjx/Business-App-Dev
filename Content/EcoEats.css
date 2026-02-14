@@ -271,3 +271,162 @@ img {
     font-size: 13px;
     color: rgba(255,255,255,.7);
 }
+
+
+
+.ee-btn-danger {
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+    background: #e53935;
+    color: #fff;
+}
+
+    .ee-btn-danger:hover {
+        filter: brightness(.95);
+    }
+
+.ee-btn-secondary {
+    border: 1px solid var(--border);
+    cursor: pointer;
+    font-weight: 700;
+    background: #ffffff;
+    color: rgba(15,23,42,.9);
+}
+
+    .ee-btn-secondary:hover {
+        background: rgba(47,93,70,.08);
+    }
+
+/* ===== Buttons (if you don't already have these) ===== */
+.ee-btn-primary {
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+    background: var(--sage-main);
+    color: #fff;
+}
+
+    .ee-btn-primary:hover {
+        filter: brightness(.95);
+    }
+
+.ee-btn-danger {
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+    background: #e53935;
+    color: #fff;
+}
+
+    .ee-btn-danger:hover {
+        filter: brightness(.95);
+    }
+
+.ee-btn-secondary {
+    border: 1px solid var(--border);
+    cursor: pointer;
+    font-weight: 700;
+    background: #ffffff;
+    color: rgba(15,23,42,.9);
+}
+
+    .ee-btn-secondary:hover {
+        background: rgba(47,93,70,.08);
+    }
+
+/* ===== Modal ===== */
+.ee-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, .45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    z-index: 2000;
+}
+
+.ee-modal {
+    width: min(520px, 100%);
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 22px 60px rgba(0,0,0,.25);
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+
+.ee-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+}
+
+.ee-modal-title {
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--text);
+}
+
+.ee-modal-x {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #fff;
+    cursor: pointer;
+}
+
+    .ee-modal-x:hover {
+        background: rgba(47,93,70,.08);
+    }
+
+.ee-modal-body {
+    padding: 16px 18px 8px;
+}
+
+.ee-modal-text {
+    margin: 0 0 12px;
+    color: rgba(15,23,42,.78);
+    line-height: 1.5;
+    font-size: 14px;
+}
+
+.ee-input {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    outline: none;
+    font-size: 14px;
+    background: #fff;
+}
+
+    .ee-input:focus {
+        border-color: rgba(47,93,70,.55);
+        box-shadow: 0 0 0 4px rgba(47,93,70,.12);
+    }
+
+.ee-error {
+    margin-top: 10px;
+    font-size: 13px;
+    color: #d93025;
+    font-weight: 600;
+}
+
+.ee-modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    padding: 14px 18px 18px;
+}
+
+    .ee-modal-actions .ee-btn-primary,
+    .ee-modal-actions .ee-btn-secondary,
+    .ee-modal-actions .ee-btn-danger {
+        border-radius: 999px;
+        padding: 10px 16px;
+        font-size: 14px;
+    }

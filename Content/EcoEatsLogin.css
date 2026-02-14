@@ -318,7 +318,7 @@
     border: none;
     outline: none;
     background: transparent;
-    font-weight: 800;
+    font-weight: 700;
     cursor: pointer;
     margin-left: 44px; /* icon space */
     width: 95px;
@@ -353,7 +353,7 @@
     background: #f3f4f6;
     border: 1px solid #e5e7eb;
     border-radius: 999px;
-    font-weight: 800;
+    font-weight: 600;
     opacity: .75;
 }
 
@@ -373,7 +373,7 @@
 }
 #phoneDigitsMsg{
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   color: #dc2626;
 }
 /* Phone mode: move everything more left */
@@ -387,7 +387,7 @@
 .login-id-wrap .login-cc {
     margin-left: 0 !important;
     width: 95px;
-    font-weight: 800;
+    font-weight: 700;
     padding-left: 0;
 }
 

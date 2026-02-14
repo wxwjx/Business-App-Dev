@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Configuration;
 using System.Data.SqlClient;
+using System.Web.Security;
+
+using System.Web;
 
 namespace Business_App_Dev
 {
@@ -139,5 +142,81 @@ namespace Business_App_Dev
                 lblMessage.Text = "Upgrade failed. Please try again later.";
             }
         }
+        protected void btnDeleteAccount_Click(object sender, EventArgs e)
+        {
+            lblAccountActionMsg.Text = "";
+
+            if (Session["UserID"] == null)
+            {
+                Response.Redirect("Login.aspx");
+                return;
+            }
+
+            int userId = Convert.ToInt32(Session["UserID"]);
+
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(_connStr))
+                {
+                    conn.Open();
+
+                    string sql = "DELETE FROM Users WHERE UserID = @UserID";
+
+                    using (SqlCommand cmd = new SqlCommand(sql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@UserID", userId);
+                        int rows = cmd.ExecuteNonQuery();
+
+                        if (rows == 0)
+                        {
+                            lblAccountActionMsg.Text = "Account not found or already deleted.";
+                            return;
+                        }
+                    }
+                }
+
+                Session.Clear();
+                Session.Abandon();
+
+                lblAccountActionMsg.ForeColor = System.Drawing.Color.Green;
+                lblAccountActionMsg.Text = "Account deleted successfully. Redirecting to login...";
+
+                Response.AddHeader("REFRESH", "2;URL=Login.aspx");
+            }
+            catch (Exception)
+            {
+                lblAccountActionMsg.Text = "Something went wrong while deleting your account.";
+            }
+        }
+
+        protected void btnLogout_Click(object sender, EventArgs e)
+        {
+            // Clear session
+            Session.Clear();
+            Session.Abandon();
+
+            // Sign out forms auth (if used anywhere)
+            FormsAuthentication.SignOut();
+
+            // Expire auth cookie
+            if (Request.Cookies[FormsAuthentication.FormsCookieName] != null)
+            {
+                var auth = new HttpCookie(FormsAuthentication.FormsCookieName, "");
+                auth.Expires = DateTime.Now.AddDays(-1);
+                Response.Cookies.Add(auth);
+            }
+
+            // Expire session cookie
+            if (Request.Cookies["ASP.NET_SessionId"] != null)
+            {
+                var s = new HttpCookie("ASP.NET_SessionId", "");
+                s.Expires = DateTime.Now.AddDays(-1);
+                Response.Cookies.Add(s);
+            }
+
+            Response.Redirect("Login.aspx", true);
+        }
+
+
     }
 }
