@@ -11,7 +11,7 @@ namespace Business_App_Dev
 {
 
 
-    public partial class Messages
+    public partial class SellerMessages
     {
 
         /// <summary>

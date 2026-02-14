@@ -65,6 +65,7 @@
                 </asp:DropDownList>
 
                 <a class="ee-icon-btn" href="#" title="Notifications">🔔</a>
+                <a class="ee-icon-btn" href="Messages.aspx" title="Messages">💬</a>
                 <a class="ee-icon-btn" href="Cart.aspx" title="Cart">🛒</a>
                 <a class="ee-icon-btn" href="Profile.aspx" title="Account">👤</a>
             </div>

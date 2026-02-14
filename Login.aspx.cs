@@ -16,9 +16,6 @@ namespace Business_App_Dev
         {
             lblError.Text = "";
 
-            // init attempts counter if missing
-
-
             if (!IsPostBack)
             {
                 if (Request.QueryString["err"] == "2fa_locked")
@@ -38,7 +35,7 @@ namespace Business_App_Dev
             Session.Remove("Pending2FAEmail");
             Session.Remove("TwoFAAttempts");
 
-            // ✅ reCAPTCHA check (ADD THIS HERE)
+            // ✅ reCAPTCHA check
             if (!IsCaptchaValid())
             {
                 lblError.Text = "❌ Please verify that you are not a robot.";
@@ -53,16 +50,17 @@ namespace Business_App_Dev
 
             string passwordHash = Sha256(password);
 
+            // =======================
+            // ADMIN
+            // =======================
             if (role == "Admin")
             {
-                // ✅ Admin password check (your existing Admin query)
                 if (!IsValidAdmin(email, passwordHash))
                 {
                     lblError.Text = "Invalid admin email or password.";
                     return;
                 }
 
-                // ✅ Start 2FA flow
                 Session["Pending2FAEmail"] = email;
                 Session["TwoFAAttempts"] = 0;
 
@@ -76,7 +74,10 @@ namespace Business_App_Dev
                 Response.Redirect("~/Verify2FA.aspx");
                 return;
             }
-            // ✅ Customer login flow (NO 2FA)
+
+            // =======================
+            // CUSTOMER
+            // =======================
             if (role == "Customer")
             {
                 if (!TryLoginUser(email, password, out int userId))
@@ -85,47 +86,66 @@ namespace Business_App_Dev
                     return;
                 }
 
+                // Clear seller session so roles don't mix
+                Session.Remove("SellerID");
+                Session.Remove("SellerId");
+
+                // Set BOTH keys for compatibility with different pages
+                Session["UserID"] = userId;
                 Session["UserId"] = userId;
+
                 Session["UserEmail"] = email;
                 Session["UserRole"] = "Customer";
+
                 Response.Redirect("Product.aspx");
                 return;
             }
 
-            // ✅ Seller login flow (NO 2FA)
+            // =======================
+            // SELLER
+            // =======================
             if (role == "Seller")
             {
                 if (!TryLoginSeller(email, password, out int sellerId, out string status))
                 {
-                    // status can explain why
-                    if (status == "Pending")
+                    if (status.Equals("Pending", StringComparison.OrdinalIgnoreCase))
                         lblError.Text = "Your seller application is still pending approval.";
-                    else if (status == "Rejected" || status == "REJECTED")
+                    else if (status.Equals("Rejected", StringComparison.OrdinalIgnoreCase))
                         lblError.Text = "Your seller application was rejected.";
+                    else if (status.Equals("NoSellerRecord", StringComparison.OrdinalIgnoreCase))
+                        lblError.Text = "Seller approved, but Seller profile is missing (no row in Seller table).";
                     else
                         lblError.Text = "Invalid seller email or password.";
                     return;
                 }
 
+                // Clear customer session so roles don't mix
+                Session.Remove("UserID");
+                Session.Remove("UserId");
+
+                // Set BOTH keys for compatibility with different pages
+                Session["SellerID"] = sellerId;
                 Session["SellerId"] = sellerId;
+
                 Session["UserEmail"] = email;
                 Session["UserRole"] = "Seller";
 
                 Response.Redirect("SellerDashboard.aspx");
                 return;
             }
-
-
-
         }
+
+        // =======================
+        // ADMIN HELPERS
+        // =======================
         private bool IsValidAdmin(string email, string passwordHash)
         {
             using (SqlConnection conn = new SqlConnection(_connStr))
             using (SqlCommand cmd = new SqlCommand(@"
-        SELECT COUNT(1)
-        FROM Admin
-        WHERE Email=@Email AND PasswordHash=@PasswordHash AND IsActive=1
-    ", conn))
+                SELECT COUNT(1)
+                FROM Admin
+                WHERE Email=@Email AND PasswordHash=@PasswordHash AND IsActive=1
+            ", conn))
             {
                 cmd.Parameters.AddWithValue("@Email", email);
                 cmd.Parameters.AddWithValue("@PasswordHash", passwordHash);
@@ -134,22 +154,6 @@ namespace Business_App_Dev
             }
         }
 
-
-
-        private static string Sha256(string input)
-        {
-            using (SHA256 sha = SHA256.Create())
-            {
-                byte[] bytes = Encoding.UTF8.GetBytes(input);
-                byte[] hash = sha.ComputeHash(bytes);
-
-                StringBuilder sb = new StringBuilder();
-                foreach (byte b in hash)
-                    sb.Append(b.ToString("x2"));
-
-                return sb.ToString();
-            }
-        }
         private (bool enabled, string secret) GetAdmin2FA(string email)
         {
             using (SqlConnection conn = new SqlConnection(_connStr))
@@ -174,17 +178,20 @@ namespace Business_App_Dev
                 }
             }
         }
-        //customer login method
+
+        // =======================
+        // CUSTOMER LOGIN
+        // =======================
         private bool TryLoginUser(string email, string password, out int userId)
         {
             userId = 0;
 
             using (SqlConnection conn = new SqlConnection(_connStr))
             using (SqlCommand cmd = new SqlCommand(@"
-        SELECT UserId, Password
-        FROM Users
-        WHERE LOWER(LTRIM(RTRIM(Email))) = LOWER(LTRIM(RTRIM(@Email)))
-    ", conn))
+                SELECT UserId, Password
+                FROM Users
+                WHERE LOWER(LTRIM(RTRIM(Email))) = LOWER(LTRIM(RTRIM(@Email)))
+            ", conn))
             {
                 cmd.Parameters.AddWithValue("@Email", email);
                 conn.Open();
@@ -197,7 +204,7 @@ namespace Business_App_Dev
                     userId = Convert.ToInt32(r["UserId"]);
                     string stored = r["Password"]?.ToString() ?? "";
 
-                    // ❌ Reject non-hashed passwords
+                    // Must be PBKDF2 format
                     if (!stored.StartsWith("pbkdf2$"))
                         return false;
 
@@ -205,6 +212,94 @@ namespace Business_App_Dev
                 }
             }
         }
+
+        // =======================
+        // SELLER LOGIN (FIXED)
+        // =======================
+        private bool TryLoginSeller(string email, string password, out int sellerId, out string status)
+        {
+            sellerId = 0;
+            status = "";
+
+            // 1) Verify seller credentials + approval from SellerApplications
+            string stored = "";
+            string appStatus = "";
+
+            using (SqlConnection conn = new SqlConnection(_connStr))
+            using (SqlCommand cmd = new SqlCommand(@"
+                SELECT TOP 1 PasswordHash, Status
+                FROM SellerApplications
+                WHERE LOWER(LTRIM(RTRIM(Email))) = LOWER(LTRIM(RTRIM(@Email)))
+            ", conn))
+            {
+                cmd.Parameters.AddWithValue("@Email", email);
+                conn.Open();
+
+                using (var r = cmd.ExecuteReader())
+                {
+                    if (!r.Read())
+                        return false;
+
+                    appStatus = (r["Status"]?.ToString() ?? "").Trim();
+                    stored = (r["PasswordHash"]?.ToString() ?? "").Trim();
+                }
+            }
+
+            status = appStatus;
+
+            // Must be approved
+            if (!appStatus.Equals("Approved", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            // Must be PBKDF2 format
+            if (!stored.StartsWith("pbkdf2$"))
+                return false;
+
+            // Must verify password
+            if (!VerifyPbkdf2(password, stored))
+                return false;
+
+            // 2) Map to real Seller.SellerID using Seller table
+            using (SqlConnection conn = new SqlConnection(_connStr))
+            using (SqlCommand cmd = new SqlCommand(@"
+                SELECT SellerID
+                FROM Seller
+                WHERE LOWER(LTRIM(RTRIM(Email))) = LOWER(LTRIM(RTRIM(@Email)))
+            ", conn))
+            {
+                cmd.Parameters.AddWithValue("@Email", email);
+                conn.Open();
+
+                object result = cmd.ExecuteScalar();
+                if (result == null)
+                {
+                    status = "NoSellerRecord";
+                    return false;
+                }
+
+                sellerId = Convert.ToInt32(result);
+                return true;
+            }
+        }
+
+        // =======================
+        // HASHING HELPERS
+        // =======================
+        private static string Sha256(string input)
+        {
+            using (SHA256 sha = SHA256.Create())
+            {
+                byte[] bytes = Encoding.UTF8.GetBytes(input);
+                byte[] hash = sha.ComputeHash(bytes);
+
+                StringBuilder sb = new StringBuilder();
+                foreach (byte b in hash)
+                    sb.Append(b.ToString("x2"));
+
+                return sb.ToString();
+            }
+        }
+
         private bool VerifyPbkdf2(string password, string stored)
         {
             // Format: pbkdf2$iterations$saltBase64$hashBase64
@@ -227,6 +322,7 @@ namespace Business_App_Dev
 
             return FixedTimeEquals(storedKey, computedKey);
         }
+
         private bool FixedTimeEquals(byte[] a, byte[] b)
         {
             if (a == null || b == null || a.Length != b.Length)
@@ -238,42 +334,10 @@ namespace Business_App_Dev
 
             return diff == 0;
         }
-        private bool TryLoginSeller(string email, string password, out int sellerId, out string status)
-        {
-            sellerId = 0;
-            status = "";
 
-            using (SqlConnection conn = new SqlConnection(_connStr))
-            using (SqlCommand cmd = new SqlCommand(@"
-        SELECT TOP 1 Id, PasswordHash, Status
-        FROM SellerApplications
-        WHERE LOWER(LTRIM(RTRIM(Email))) = LOWER(LTRIM(RTRIM(@Email)))
-    ", conn))
-            {
-                cmd.Parameters.AddWithValue("@Email", email);
-                conn.Open();
-
-                using (var r = cmd.ExecuteReader())
-                {
-                    if (!r.Read())
-                        return false;
-
-                    sellerId = Convert.ToInt32(r["Id"]);
-                    status = (r["Status"]?.ToString() ?? "").Trim();
-                    string stored = (r["PasswordHash"]?.ToString() ?? "").Trim();
-
-                    // ❌ Not approved
-                    if (!status.Equals("Approved", StringComparison.OrdinalIgnoreCase))
-                        return false;
-
-                    // ❌ Invalid hash
-                    if (!stored.StartsWith("pbkdf2$"))
-                        return false;
-
-                    return VerifyPbkdf2(password, stored);
-                }
-            }
-        }
+        // =======================
+        // CAPTCHA
+        // =======================
         private bool IsCaptchaValid()
         {
             string secretKey = Environment.GetEnvironmentVariable("RECAPTCHA_SECRET");
@@ -293,6 +357,5 @@ namespace Business_App_Dev
                 return result.Contains("\"success\": true");
             }
         }
-
     }
 }
