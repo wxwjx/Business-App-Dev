@@ -6,23 +6,22 @@ using System.Web.UI.WebControls;
 
 namespace Business_App_Dev
 {
-    public partial class Messages : System.Web.UI.Page
+    public partial class SellerMessages : System.Web.UI.Page
     {
         private readonly string _connStr =
             ConfigurationManager.ConnectionStrings["EcoEatsDB"].ConnectionString;
 
-        private int CurrentUserId => Convert.ToInt32(Session["UserID"]);
+        private int CurrentSellerId => Convert.ToInt32(Session["SellerID"]);
 
         protected void Page_Load(object sender, EventArgs e)
         {
             lblError.Text = "";
 
-            if (Session["UserID"] == null)
+            if (Session["SellerID"] == null)
             {
-                Response.Redirect("~/Login.aspx");
+                Response.Redirect("~/SellerLogin.aspx");
                 return;
             }
-
             if (!IsPostBack)
             {
                 BindInbox();
@@ -34,7 +33,7 @@ namespace Business_App_Dev
             }
         }
 
-        // ===== Inbox (Customer sees sellers) =====
+        // ===== Inbox (Seller sees customers) =====
         private void BindInbox()
         {
             using (var conn = new SqlConnection(_connStr))
@@ -42,7 +41,8 @@ namespace Business_App_Dev
                 SELECT
                     c.ConversationID,
                     c.LastMessageAt,
-                    s.ShopName,
+                    u.FullName,
+                    u.Email,
                     ISNULL((
                         SELECT TOP 1 m.MessageText
                         FROM Messages m
@@ -53,15 +53,15 @@ namespace Business_App_Dev
                         SELECT COUNT(*)
                         FROM Messages m2
                         WHERE m2.ConversationID = c.ConversationID
-                          AND m2.SenderType = 'Seller'
+                          AND m2.SenderType = 'User'
                           AND m2.IsRead = 0
                     ), 0) AS UnreadCount
                 FROM Conversations c
-                INNER JOIN Seller s ON s.SellerID = c.SellerID
-                WHERE c.UserID = @UserID
+                INNER JOIN Users u ON u.UserID = c.UserID
+                WHERE c.SellerID = @SellerID
                 ORDER BY c.LastMessageAt DESC;", conn))
             {
-                cmd.Parameters.AddWithValue("@UserID", CurrentUserId);
+                cmd.Parameters.AddWithValue("@SellerID", CurrentSellerId);
 
                 var dt = new DataTable();
                 new SqlDataAdapter(cmd).Fill(dt);
@@ -88,8 +88,8 @@ namespace Business_App_Dev
 
         private void OpenConversation(int conversationId)
         {
-            // Safety: only allow opening a conversation that belongs to this user
-            if (!UserOwnsConversation(conversationId))
+            // Safety: only allow opening a conversation that belongs to this seller
+            if (!SellerOwnsConversation(conversationId))
             {
                 lblError.Text = "You can't open this conversation.";
                 return;
@@ -99,20 +99,20 @@ namespace Business_App_Dev
             lblChatHeader.Text = "Conversation #" + conversationId;
 
             BindThread(conversationId);
-            MarkOtherSideMessagesAsRead(conversationId, currentSide: "User");
+            MarkOtherSideMessagesAsRead(conversationId, currentSide: "Seller");
             BindInbox();
         }
 
-        private bool UserOwnsConversation(int conversationId)
+        private bool SellerOwnsConversation(int conversationId)
         {
             using (var conn = new SqlConnection(_connStr))
             using (var cmd = new SqlCommand(@"
                 SELECT COUNT(*)
                 FROM Conversations
-                WHERE ConversationID=@CID AND UserID=@UID;", conn))
+                WHERE ConversationID=@CID AND SellerID=@SID;", conn))
             {
                 cmd.Parameters.AddWithValue("@CID", conversationId);
-                cmd.Parameters.AddWithValue("@UID", CurrentUserId);
+                cmd.Parameters.AddWithValue("@SID", CurrentSellerId);
                 conn.Open();
                 return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
             }
@@ -138,7 +138,7 @@ namespace Business_App_Dev
                 {
                     string senderType = r["SenderType"].ToString();
                     int senderId = Convert.ToInt32(r["SenderID"]);
-                    r["IsMe"] = (senderType == "User" && senderId == CurrentUserId);
+                    r["IsMe"] = (senderType == "Seller" && senderId == CurrentSellerId);
                 }
 
                 rptMessages.DataSource = dt;
@@ -215,12 +215,12 @@ namespace Business_App_Dev
                 FROM Messages m
                 JOIN Conversations c ON c.ConversationID = m.ConversationID
                 WHERE m.MessageID=@MessageID
-                  AND m.SenderType='User'
-                  AND m.SenderID=@UserID
-                  AND c.UserID=@UserID;", conn))
+                  AND m.SenderType='Seller'
+                  AND m.SenderID=@SellerID
+                  AND c.SellerID=@SellerID;", conn))
             {
                 cmd.Parameters.AddWithValue("@MessageID", messageId);
-                cmd.Parameters.AddWithValue("@UserID", CurrentUserId);
+                cmd.Parameters.AddWithValue("@SellerID", CurrentSellerId);
                 conn.Open();
                 return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
             }
@@ -253,14 +253,14 @@ namespace Business_App_Dev
             using (var conn = new SqlConnection(_connStr))
             using (var cmd = new SqlCommand(@"
                 INSERT INTO Messages (ConversationID, SenderType, SenderID, MessageText)
-                VALUES (@ConversationID, 'User', @SenderID, @MessageText);
+                VALUES (@ConversationID, 'Seller', @SenderID, @MessageText);
 
                 UPDATE Conversations
                 SET LastMessageAt = GETDATE()
                 WHERE ConversationID = @ConversationID;", conn))
             {
                 cmd.Parameters.AddWithValue("@ConversationID", cid);
-                cmd.Parameters.AddWithValue("@SenderID", CurrentUserId);
+                cmd.Parameters.AddWithValue("@SenderID", CurrentSellerId);
                 cmd.Parameters.AddWithValue("@MessageText", msg);
 
                 conn.Open();

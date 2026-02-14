@@ -1,7 +1,8 @@
-﻿<%@ Page Title="Messages" Language="C#" MasterPageFile="~/Site.Master"
-    AutoEventWireup="true" CodeBehind="Messages.aspx.cs" Inherits="Business_App_Dev.Messages" %>
+﻿<%@ Page Title="Messages" Language="C#" MasterPageFile="~/SellPage.Master"
+    AutoEventWireup="true" CodeBehind="SellerMessages.aspx.cs" Inherits="Business_App_Dev.SellerMessages" %>
 
-<asp:Content ID="HeadCss" ContentPlaceHolderID="HeadContent" runat="server">
+
+<asp:Content ID="HeadCss" ContentPlaceHolderID="head" runat="server">
     <style>
         .ee-msg-wrap{display:flex;gap:16px;align-items:stretch;margin:16px 0;}
         .ee-panel{background:#fff;border:1px solid #e6e8ee;border-radius:14px;box-shadow:0 6px 20px rgba(15,23,42,.06);overflow:hidden;}
@@ -42,10 +43,9 @@
     </style>
 </asp:Content>
 
+<asp:Content ID="Content1" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
 
-<asp:Content ID="Content1" ContentPlaceHolderID="MainContent" runat="server">
-
-    <div class="ee-container" style="padding:16px 0;">
+    <div style="padding:16px 0;">
         <h2 style="margin:0 0 12px 0;">Messages</h2>
 
         <asp:Label ID="lblError" runat="server" CssClass="ee-error" />
@@ -58,7 +58,7 @@
             <div class="ee-panel ee-inbox">
                 <div class="ee-panel-h">
                     <div class="ee-panel-title">Inbox</div>
-                    <div class="ee-subtle">Sellers</div>
+                    <div class="ee-subtle">Customers</div>
                 </div>
 
                 <div class="ee-inbox-list">
@@ -68,8 +68,9 @@
                                 CommandName="Open"
                                 CommandArgument='<%# Eval("ConversationID") %>'>
                                 <div>
-                                    <div class="ee-inbox-name"><%# Eval("ShopName") %></div>
+                                    <div class="ee-inbox-name"><%# Eval("FullName") %></div>
                                     <div class="ee-inbox-preview"><%# Eval("LastPreview") %></div>
+                                    <div class="ee-subtle"><%# Eval("Email") %></div>
                                 </div>
                                 <div style="text-align:right;">
                                     <div class="ee-subtle"><%# Eval("LastMessageAt", "{0:dd MMM, HH:mm}") %></div>
@@ -144,8 +145,8 @@
                         OnClick="btnSend_Click" CausesValidation="false" />
                 </div>
             </div>
+
         </div>
     </div>
 
 </asp:Content>
-

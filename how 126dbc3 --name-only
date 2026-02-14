@@ -1,0 +1,22 @@
+[33mcommit 2b834b081a5381b67aa0dd69d94e26bf7a19a084[m
+Author: ShaunK167 <kewknyahs@gmail.com>
+Date:   Sat Feb 14 01:20:12 2026 +0800
+
+    basic messaging (Create and Read)
+
+Business App Dev.csproj
+Business App Dev.sln
+ChatControl.ascx
+Controls/ChatControls.ascx
+Controls/ChatControls.ascx.cs
+Controls/ChatControls.ascx.designer.cs
+Messages.aspx
+Messages.aspx.cs
+Messages.aspx.designer.cs
+SellPage.Master
+SellPage.Master.designer.cs
+SellerMessages.aspx
+SellerMessages.aspx.cs
+SellerMessages.aspx.designer.cs
+Site.Master
+Site.Master.designer.cs
