@@ -15,13 +15,22 @@ namespace Business_App_Dev
     {
 
         /// <summary>
-        /// form1 control.
+        /// lblContinueShopping control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.HtmlControls.HtmlForm form1;
+        protected global::System.Web.UI.WebControls.Label lblContinueShopping;
+
+        /// <summary>
+        /// lblCartTitle control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblCartTitle;
 
         /// <summary>
         /// lblItemCount control.
@@ -33,6 +42,15 @@ namespace Business_App_Dev
         protected global::System.Web.UI.WebControls.Label lblItemCount;
 
         /// <summary>
+        /// lblItemsText control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblItemsText;
+
+        /// <summary>
         /// lblEmpty control.
         /// </summary>
         /// <remarks>
@@ -40,6 +58,15 @@ namespace Business_App_Dev
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Panel lblEmpty;
+
+        /// <summary>
+        /// lblEmptyText control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblEmptyText;
 
         /// <summary>
         /// pnlSelectAll control.
@@ -60,6 +87,24 @@ namespace Business_App_Dev
         protected global::System.Web.UI.WebControls.CheckBox chkSelectAll;
 
         /// <summary>
+        /// lblSelectAllText control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblSelectAllText;
+
+        /// <summary>
+        /// lblSelectedCount control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblSelectedCount;
+
+        /// <summary>
         /// rptCart control.
         /// </summary>
         /// <remarks>
@@ -67,6 +112,24 @@ namespace Business_App_Dev
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Repeater rptCart;
+
+        /// <summary>
+        /// lblOrderSummaryTitle control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblOrderSummaryTitle;
+
+        /// <summary>
+        /// lblSubtotalText control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblSubtotalText;
 
         /// <summary>
         /// lblSubtotal control.
@@ -78,6 +141,33 @@ namespace Business_App_Dev
         protected global::System.Web.UI.WebControls.Label lblSubtotal;
 
         /// <summary>
+        /// lblDeliveryText control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblDeliveryText;
+
+        /// <summary>
+        /// lblSelfPickup control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblSelfPickup;
+
+        /// <summary>
+        /// lblTotalText control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblTotalText;
+
+        /// <summary>
         /// lblTotal control.
         /// </summary>
         /// <remarks>
@@ -87,6 +177,15 @@ namespace Business_App_Dev
         protected global::System.Web.UI.WebControls.Label lblTotal;
 
         /// <summary>
+        /// lblTotalImpactText control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblTotalImpactText;
+
+        /// <summary>
         /// lblCO2 control.
         /// </summary>
         /// <remarks>
@@ -94,6 +193,15 @@ namespace Business_App_Dev
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Label lblCO2;
+
+        /// <summary>
+        /// lblKgCO2SavedText control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblKgCO2SavedText;
 
         /// <summary>
         /// lblPayMsg control.

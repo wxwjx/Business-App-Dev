@@ -7,6 +7,7 @@ using System.Web.UI;
 using System.Web.UI.WebControls;
 using Stripe;
 using Stripe.Checkout;
+using Business_App_Dev.Services;
 
 namespace Business_App_Dev
 {
@@ -22,12 +23,12 @@ namespace Business_App_Dev
             {
                 try
                 {
+                    ApplyTranslations(); // NEW
                     BindAll();
                 }
                 catch (Exception)
                 {
-                    // fail-safe: page shouldn't crash
-                    lblPayMsg.Text = "Unable to load your cart right now. Please refresh and try again.";
+                    lblPayMsg.Text = TranslateUi("Unable to load your cart right now. Please refresh and try again.");
                     btnPay.Enabled = false;
                     rptCart.Visible = false;
                     pnlSelectAll.Visible = false;
@@ -35,6 +36,53 @@ namespace Business_App_Dev
                 }
             }
         }
+
+        // -------- Translation helpers --------
+
+        private string GetLang()
+        {
+            return (Session["LANG"] as string) ?? "en";
+        }
+
+        private string TranslateUi(string text)
+        {
+            string lang = GetLang();
+            if (lang.Equals("en", StringComparison.OrdinalIgnoreCase)) return text ?? "";
+
+            text = text ?? "";
+            if (string.IsNullOrWhiteSpace(text)) return text;
+
+            string key = $"tr:en->{lang}:{text}";
+            return TranslationCache.GetOrAdd(key, () =>
+                TranslationService.Translate(text, lang, "en"), hours: 24);
+        }
+
+        private void ApplyTranslations()
+        {
+            string lang = GetLang();
+            if (lang.Equals("en", StringComparison.OrdinalIgnoreCase)) return;
+
+            // top / left
+            lblContinueShopping.Text = TranslateUi(lblContinueShopping.Text);
+            lblCartTitle.Text = TranslateUi(lblCartTitle.Text);
+            lblItemsText.Text = TranslateUi(lblItemsText.Text);
+            lblEmptyText.Text = TranslateUi(lblEmptyText.Text);
+            lblSelectAllText.Text = TranslateUi(lblSelectAllText.Text);
+
+            // right summary
+            lblOrderSummaryTitle.Text = TranslateUi(lblOrderSummaryTitle.Text);
+            lblSubtotalText.Text = TranslateUi(lblSubtotalText.Text);
+            lblDeliveryText.Text = TranslateUi(lblDeliveryText.Text);
+            lblSelfPickup.Text = TranslateUi(lblSelfPickup.Text);
+            lblTotalText.Text = TranslateUi(lblTotalText.Text);
+            lblTotalImpactText.Text = TranslateUi(lblTotalImpactText.Text);
+            lblKgCO2SavedText.Text = TranslateUi(lblKgCO2SavedText.Text);
+
+            // button
+            btnPay.Text = TranslateUi(btnPay.Text);
+        }
+
+        // -------- Cart logic --------
 
         private List<CartItem> GetCart()
         {
@@ -47,7 +95,6 @@ namespace Business_App_Dev
             }
             catch
             {
-                // if Session has an unexpected state, reset cart
                 var cart = new List<CartItem>();
                 Session[CART_KEY] = cart;
                 return cart;
@@ -85,7 +132,6 @@ namespace Business_App_Dev
         {
             var selected = GetSelected();
 
-            // Auto-select all only ONCE (first time user enters cart)
             if (!IsSelectionInitialized() && cart.Count > 0)
             {
                 selected.Clear();
@@ -95,7 +141,6 @@ namespace Business_App_Dev
                 MarkSelectionInitialized();
             }
 
-            // Remove selections that no longer exist
             var idsInCart = cart.Select(x => x.ProductID).ToHashSet();
             selected.RemoveWhere(id => !idsInCart.Contains(id));
 
@@ -109,11 +154,8 @@ namespace Business_App_Dev
 
             bool hasItems = cart.Count > 0;
 
-            // Empty state
             lblEmpty.Visible = !hasItems;
             rptCart.Visible = hasItems;
-
-            // hide select-all when cart empty
             pnlSelectAll.Visible = hasItems;
 
             if (!hasItems)
@@ -128,12 +170,27 @@ namespace Business_App_Dev
                 return;
             }
 
+            // OPTIONAL: translate product names/subtitles in cart session too
+            // (Only if your cart items are often English)
+            string lang = GetLang();
+            if (!lang.Equals("en", StringComparison.OrdinalIgnoreCase))
+            {
+                foreach (var it in cart)
+                {
+                    if (!string.IsNullOrWhiteSpace(it.ProductName))
+                        it.ProductName = TranslateUi(it.ProductName);
+
+                    if (!string.IsNullOrWhiteSpace(it.Subtitle))
+                        it.Subtitle = TranslateUi(it.Subtitle);
+                }
+                Session[CART_KEY] = cart;
+            }
+
             rptCart.DataSource = cart;
             rptCart.DataBind();
 
             lblItemCount.Text = cart.Sum(x => x.Quantity).ToString();
 
-            // Totals based on selected items
             var selected = GetSelected();
             var selectedItems = cart.Where(x => selected.Contains(x.ProductID)).ToList();
 
@@ -148,11 +205,10 @@ namespace Business_App_Dev
 
             btnPay.Enabled = selectedItems.Count > 0;
             lblPayMsg.Text = (selectedItems.Count == 0)
-                ? "Select at least 1 item to checkout."
+                ? TranslateUi("Select at least 1 item to checkout.")
                 : "";
         }
 
-        // checkbox stays checked after postback
         protected void rptCart_ItemDataBound(object sender, RepeaterItemEventArgs e)
         {
             if (e.Item.ItemType != ListItemType.Item &&
@@ -209,7 +265,7 @@ namespace Business_App_Dev
             }
             catch (Exception)
             {
-                lblPayMsg.Text = "Could not update selection. Please refresh and try again.";
+                lblPayMsg.Text = TranslateUi("Could not update selection. Please refresh and try again.");
             }
         }
 
@@ -232,7 +288,7 @@ namespace Business_App_Dev
             }
             catch (Exception)
             {
-                lblPayMsg.Text = "Could not update selection. Please refresh and try again.";
+                lblPayMsg.Text = TranslateUi("Could not update selection. Please refresh and try again.");
             }
         }
 
@@ -253,7 +309,7 @@ namespace Business_App_Dev
                 {
                     case "INC":
                         item.Quantity += 1;
-                        selected.Add(productId); // keep selected
+                        selected.Add(productId);
                         break;
 
                     case "DEC":
@@ -277,7 +333,7 @@ namespace Business_App_Dev
             }
             catch (Exception)
             {
-                lblPayMsg.Text = "Could not update cart. Please refresh and try again.";
+                lblPayMsg.Text = TranslateUi("Could not update cart. Please refresh and try again.");
             }
         }
 
@@ -290,7 +346,7 @@ namespace Business_App_Dev
                 var cart = GetCart();
                 if (cart == null || cart.Count == 0)
                 {
-                    lblPayMsg.Text = "Your cart is empty.";
+                    lblPayMsg.Text = TranslateUi("Your cart is empty.");
                     return;
                 }
 
@@ -299,7 +355,7 @@ namespace Business_App_Dev
 
                 if (selectedItems.Count == 0)
                 {
-                    lblPayMsg.Text = "Select at least 1 item to checkout.";
+                    lblPayMsg.Text = TranslateUi("Select at least 1 item to checkout.");
                     return;
                 }
 
@@ -307,7 +363,7 @@ namespace Business_App_Dev
             }
             catch (Exception)
             {
-                lblPayMsg.Text = "Something went wrong starting payment. Please try again.";
+                lblPayMsg.Text = TranslateUi("Something went wrong starting payment. Please try again.");
             }
         }
 
@@ -317,14 +373,14 @@ namespace Business_App_Dev
             {
                 if (cartToPay == null || cartToPay.Count == 0)
                 {
-                    lblPayMsg.Text = "No items selected.";
+                    lblPayMsg.Text = TranslateUi("No items selected.");
                     return;
                 }
 
                 var key = ConfigurationManager.AppSettings["StripeSecretKey"];
                 if (string.IsNullOrWhiteSpace(key))
                 {
-                    lblPayMsg.Text = "Stripe is not configured (StripeSecretKey missing in Web.config).";
+                    lblPayMsg.Text = TranslateUi("Stripe is not configured (StripeSecretKey missing in Web.config).");
                     return;
                 }
 
@@ -357,7 +413,6 @@ namespace Business_App_Dev
                 var service = new SessionService();
                 var session = service.Create(options);
 
-                // Snapshot only selected
                 var snapshot = cartToPay.Select(x => new PurchasedItem
                 {
                     ProductID = x.ProductID,
@@ -370,17 +425,16 @@ namespace Business_App_Dev
                 Session["PENDING_ORDER_" + session.Id] = snapshot;
                 Session["PENDING_ORDER_TOTAL_" + session.Id] = snapshot.Sum(i => i.LineTotal);
 
-                // avoid ThreadAbortException sometimes caused by Redirect()
                 Response.Redirect(session.Url, false);
                 Context.ApplicationInstance.CompleteRequest();
             }
             catch (StripeException)
             {
-                lblPayMsg.Text = "Payment service is unavailable right now. Please try again later.";
+                lblPayMsg.Text = TranslateUi("Payment service is unavailable right now. Please try again later.");
             }
             catch (Exception)
             {
-                lblPayMsg.Text = "Could not start payment. Please try again.";
+                lblPayMsg.Text = TranslateUi("Could not start payment. Please try again.");
             }
         }
     }

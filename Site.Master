@@ -1,74 +1,114 @@
 ﻿<%@ Master Language="C#" AutoEventWireup="true"
-    CodeBehind="SellPage.master.cs"
-    Inherits="Business_App_Dev.SellPage" %>
+    CodeBehind="Site.Master.cs"
+    Inherits="Business_App_Dev.SiteMaster" %>
 
 <!DOCTYPE html>
 <html lang="en">
 <head runat="server">
     <title><%: Page.Title %> - EcoEats</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="<%= ResolveUrl("~/Content/EcoEats.css") %>" rel="stylesheet" />
 
-   
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-
-    
-    <link href="~/Content/Site.css" rel="stylesheet" type="text/css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
     <asp:ContentPlaceHolder ID="HeadContent" runat="server" />
 </head>
 
 <body>
-    <form id="form1" runat="server">
-        <div class="ee-page">
+<form id="form1" runat="server">
 
-            
-            <header class="ee-header">
-                <div class="container ee-header-main">
-                    <div class="ee-logo">
-                        <div class="ee-logo-icon">🌱</div>
-                        <span class="ee-logo-text">EcoEats</span>
-                    </div>
+    <!-- TOP BAR -->
+    <header class="ee-topbar">
+        <div class="ee-container ee-topbar-inner">
 
-                    <div class="ee-search-wrapper">
-                        <input type="text" class="ee-search-input"
-                               placeholder="Search for meals, restaurants..." />
-                    </div>
-
-                    <div class="ee-header-icons">
-                        <button type="button" class="ee-icon-btn">💬</button>
-                        <button type="button" class="ee-icon-btn">📦</button>
-                        <button type="button" class="ee-icon-btn">🛒</button>
-                        <button type="button" class="ee-icon-btn">👤</button>
-                    </div>
+            <div class="ee-brand">
+                <div class="ee-logo">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M19 3c-6.5.7-11 3.8-13.8 7.2C2.6 13.4 2.2 17.2 4 21c3.8 1.8 7.6 1.4 10.8-1.2C18.2 17 21.3 12.5 22 6c.1-1.2-.7-2.9-3-3z"></path>
+                    </svg>
                 </div>
+                <div class="ee-brand-name">EcoEats</div>
+            </div>
 
-                <nav class="ee-nav">
-                    <div class="container ee-nav-links">
-                        <a href="Default.aspx" class="ee-nav-link ee-nav-active">Home</a>
-                        <a href="#" class="ee-nav-link">Orders</a>
-                        <a href="#" class="ee-nav-link">Profile</a>
-                        <a href="#" class="ee-nav-link">About Us</a>
-                        <a href="#" class="ee-nav-link">Help</a>
-                        <a href="#" class="ee-nav-link">Feedback</a>
-                        <a href="#" class="ee-nav-link">Rate Sellers</a>
-                    </div>
-                </nav>
-            </header>
+            <div class="ee-search">
+                <asp:TextBox ID="txtSearch" runat="server"
+                    placeholder="Search meals or shop..."
+                    AutoPostBack="true"
+                    OnTextChanged="txtSearch_TextChanged" />
+                <asp:Button ID="btnSearch" runat="server" Text="Search" OnClick="btnSearch_Click" />
+            </div>
 
-            <main class="ee-main">
-                <asp:ContentPlaceHolder ID="MainContent" runat="server" />
-            </main>
+            <!-- NAV LINKS -->
+            <nav class="ee-navlinks">
+                <a href="Product.aspx" id="navHome" runat="server">Home</a>
+                <a href="OrderHistory.aspx" id="navOrders" runat="server">Orders</a>
+                <a href="About.aspx" id="navAbout" runat="server">About Us</a>
+                <a href="#" id="navHelp" runat="server">Help</a>
+                <a href="Feedback.aspx" id="navFeedback" runat="server">Feedback</a>
+            </nav>
 
-           
-            <button type="button" class="ee-chat-fab">💬</button>
+            <div class="ee-actions">
+
+                <asp:DropDownList
+                    ID="ddlLanguage"
+                    runat="server"
+                    CssClass="ee-lang"
+                    AutoPostBack="true"
+                    OnSelectedIndexChanged="ddlLanguage_SelectedIndexChanged">
+                    <asp:ListItem Value="en">EN</asp:ListItem>
+                    <asp:ListItem Value="zh">中文</asp:ListItem>
+                    <asp:ListItem Value="ms">BM</asp:ListItem>
+                    <asp:ListItem Value="ta">TA</asp:ListItem>
+                </asp:DropDownList>
+
+                <a class="ee-icon-btn" href="#" title="Notifications">🔔</a>
+                <a class="ee-icon-btn" href="Messages.aspx" title="Messages">💬</a>
+                <a class="ee-icon-btn" href="Cart.aspx" title="Cart">🛒</a>
+                <a class="ee-icon-btn" href="Profile.aspx" title="Account">👤</a>
+            </div>
 
         </div>
-    </form>
+    </header>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- PAGE CONTENT -->
+    <main class="ee-page">
+        <asp:ContentPlaceHolder ID="MainContent" runat="server" />
+    </main>
+
+    <!-- FOOTER (MUST BE AFTER CONTENT) -->
+    <footer class="lp-footer">
+        <div class="lp-footer-inner">
+            <div>
+                <div class="lp-brand">
+                    <span class="lp-brand-badge">🌱</span>
+                    EcoEats
+                </div>
+                <p>
+                    EcoEats connects users with surplus meals from local sellers — helping you save money while reducing food waste.
+                </p>
+            </div>
+
+            <div class="lp-links">
+                <a href="Product.aspx">Browse Deals</a>
+                <a href="OrderHistory.aspx">Your Orders</a>
+                <a href="About.aspx">About EcoEats</a>
+                <a href="Feedback.aspx">Feedback</a>
+                <a href="Profile.aspx">Profile</a>
+                <a href="RegisterSeller.aspx">Become a Seller</a>
+            </div>
+        </div>
+
+        <div class="lp-footnote">
+            <div>© <%: DateTime.Now.Year %> EcoEats. All rights reserved.</div>
+            <div>Made for NYP DBFT • Enterprise Dev Project</div>
+        </div>
+    </footer>
 
     <asp:ContentPlaceHolder ID="ScriptsContent" runat="server" />
+
+</form>
 </body>
 </html>

@@ -11,9 +11,68 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <script type="text/javascript">
+        function byId(id) { return document.getElementById(id); }
+
+        // ===== Delete modal =====
+        function openDeleteModal() {
+            byId("eeDeleteError").style.display = "none";
+            byId("eeDeleteInput").value = "";
+            byId("eeDeleteModal").style.display = "flex";
+            setTimeout(() => byId("eeDeleteInput").focus(), 0);
+        }
+
+        function closeDeleteModal() {
+            byId("eeDeleteModal").style.display = "none";
+        }
+
+        function submitDeleteIfValid() {
+            const v = (byId("eeDeleteInput").value || "").trim();
+            if (v !== "DELETE") {
+                byId("eeDeleteError").style.display = "block";
+                byId("eeDeleteInput").focus();
+                return;
+            }
+            closeDeleteModal();
+            __doPostBack('<%= btnDeleteAccount.UniqueID %>', '');
+        }
+
+        // ===== Logout modal =====
+        function openLogoutModal() {
+            byId("eeLogoutModal").style.display = "flex";
+        }
+
+        function closeLogoutModal() {
+            byId("eeLogoutModal").style.display = "none";
+        }
+
+        function submitLogout() {
+            closeLogoutModal();
+            if (typeof __doPostBack !== "function") {
+                alert("Postback not available. Move ScriptManager to top of form.");
+                return;
+            }
+            __doPostBack('<%= btnLogout.UniqueID %>', '');
+        }
+
+        // close modal if click outside
+        document.addEventListener("click", function (e) {
+            if (e.target && e.target.id === "eeDeleteModal") closeDeleteModal();
+            if (e.target && e.target.id === "eeLogoutModal") closeLogoutModal();
+        });
+
+        // ESC to close
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") {
+                closeDeleteModal();
+                closeLogoutModal();
+            }
+        });
+    </script>
 </head>
 <body>
     <form id="form1" runat="server">
+        <asp:ScriptManager ID="ScriptManager1" runat="server" />
 
         <!-- TOP BAR (same as Product page) -->
         <header class="ee-topbar">
@@ -96,8 +155,34 @@
 
                 <div style="font-size:14px; color:#555; line-height:1.7;">
                     <p><strong>User ID:</strong> <asp:Label ID="lblUserId" runat="server" Text=""></asp:Label></p>
-                    <p><strong>Password:</strong> •••••••• (hidden for security)</p>
+
+                    <p style="margin-bottom:10px;">
+                        <strong>Password:</strong> •••••••• (hidden for security)
+                    </p>
+
+                    <!-- Buttons row: left = delete, right = logout -->
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:6px;">
+                        <asp:Button ID="btnDeleteAccount" runat="server"
+                            Text="Delete Account"
+                            OnClick="btnDeleteAccount_Click"
+                            OnClientClick="openDeleteModal(); return false;"
+                            CssClass="ee-btn-danger"
+                            Style="border-radius:999px; padding:9px 16px; font-size:14px;" />
+
+                        <asp:Button ID="btnLogout" runat="server"
+                            Text="Log Out"
+                            OnClick="btnLogout_Click"
+                            OnClientClick="openLogoutModal(); return false;"
+                            CssClass="ee-btn-secondary"
+                            Style="border-radius:999px; padding:9px 16px; font-size:14px;" />
+                    </div>
+
+                    <!-- feedback message -->
+                    <asp:Label ID="lblAccountActionMsg" runat="server"
+                        Style="display:block; margin-top:10px; font-size:13px;"
+                        ForeColor="#d93025"></asp:Label>
                 </div>
+
             </div>
 
             <!-- RIGHT: MEMBERSHIP CARD -->
@@ -171,7 +256,53 @@
             </div>
 
         </section>
+<!-- ===== Delete Account Modal ===== -->
+<div id="eeDeleteModal" class="ee-modal-overlay" style="display:none;">
+    <div class="ee-modal">
+        <div class="ee-modal-head">
+            <div class="ee-modal-title">Delete account</div>
+            <button type="button" class="ee-modal-x" onclick="closeDeleteModal()">✕</button>
+        </div>
 
+        <div class="ee-modal-body">
+            <p class="ee-modal-text">
+                This action is permanent. To confirm, please type <strong>DELETE</strong>.
+            </p>
+
+            <input id="eeDeleteInput" class="ee-input" type="text" placeholder="Type DELETE" />
+
+            <div id="eeDeleteError" class="ee-error" style="display:none;">
+                You must type DELETE exactly.
+            </div>
+        </div>
+
+        <div class="ee-modal-actions">
+            <button type="button" class="ee-btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+
+            <!-- IMPORTANT: use a normal HTML button to trigger the ASP.NET button click -->
+            <button type="button" class="ee-btn-danger" onclick="submitDeleteIfValid()">Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Logout Modal ===== -->
+<div id="eeLogoutModal" class="ee-modal-overlay" style="display:none;">
+    <div class="ee-modal">
+        <div class="ee-modal-head">
+            <div class="ee-modal-title">Log out</div>
+            <button type="button" class="ee-modal-x" onclick="closeLogoutModal()">✕</button>
+        </div>
+
+        <div class="ee-modal-body">
+            <p class="ee-modal-text">Do you really want to log out?</p>
+        </div>
+
+        <div class="ee-modal-actions">
+            <button type="button" class="ee-btn-secondary" onclick="closeLogoutModal()">Cancel</button>
+            <button type="button" class="ee-btn-primary" onclick="submitLogout()">Log out</button>
+        </div>
+    </div>
+</div>
     </form>
 </body>
 </html>

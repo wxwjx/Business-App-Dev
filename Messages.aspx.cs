@@ -2,387 +2,292 @@
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
-using System.Web;
-using System.Web.UI;
 using System.Web.UI.WebControls;
 
-
-namespace FoodSaver
+namespace Business_App_Dev
 {
-    public partial class Messages : Page
+    public partial class Messages : System.Web.UI.Page
     {
-        private string ConnStr => ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
+        private readonly string _connStr =
+            ConfigurationManager.ConnectionStrings["EcoEatsDB"].ConnectionString;
 
-        private bool IsSeller => (Session["SellerAuthenticated"] as bool?) == true && Session["SellerId"] != null;
-        private int SellerId => Convert.ToInt32(Session["SellerId"]);
-        private string SellerStoreName => (Session["SellerStoreName"] ?? "Seller").ToString();
-
-        private int ConversationId
-        {
-            get
-            {
-                int cid;
-                return int.TryParse(Request.QueryString["cid"], out cid) ? cid : -1;
-            }
-        }
-
-        // Dynamic master: seller -> SellPage, otherwise customer -> Site
-        protected void Page_PreInit(object sender, EventArgs e)
-        {
-            // If you renamed your masters, update these paths:
-            if (IsSeller)
-                MasterPageFile = "~/SellPage.master";
-            else
-                MasterPageFile = "~/Site.master";
-        }
+        private int CurrentUserId => Convert.ToInt32(Session["UserID"]);
 
         protected void Page_Load(object sender, EventArgs e)
         {
             lblError.Text = "";
-            lblInfo.Text = "";
 
-            if (IsSeller)
+            if (Session["UserID"] == null)
             {
-                pnlSeller.Visible = true;
-                pnlCustomerPlaceholder.Visible = false;
-
-                if (!IsPostBack)
-                {
-                    LoadUsersDropdown();
-                    LoadInbox();
-
-                    if (ConversationId > 0 && SellerOwnsConversation(ConversationId))
-                    {
-                        OpenConversation(ConversationId);
-                    }
-                    else
-                    {
-                        pnlChat.Visible = false;
-                        pnlNoChat.Visible = true;
-                    }
-                }
-            }
-            else
-            {
-                // Customer placeholder for now
-                pnlSeller.Visible = false;
-                pnlCustomerPlaceholder.Visible = true;
-            }
-        }
-
-        // ====== INBOX ======
-        private void LoadInbox()
-        {
-            using (var conn = new SqlConnection(ConnStr))
-            using (var cmd = new SqlCommand(@"
-SELECT
-    c.ConversationID,
-    u.FullName AS CustomerName,
-    (
-        SELECT COUNT(*)
-        FROM Messages m
-        WHERE m.ConversationID = c.ConversationID
-          AND m.IsRead = 0
-          AND NOT (m.SenderType = 'Seller' AND m.SenderID = @SellerId)
-    ) AS UnreadCount
-FROM Conversations c
-JOIN Users u ON u.UserID = c.UserID
-WHERE c.SellerID = @SellerId
-ORDER BY ISNULL(c.LastMessageAt, c.CreatedAt) DESC;
-", conn))
-            {
-                cmd.Parameters.AddWithValue("@SellerId", SellerId);
-
-                conn.Open();
-                var dt = new DataTable();
-                dt.Load(cmd.ExecuteReader());
-
-                gvInbox.DataSource = dt;
-                gvInbox.DataBind();
-            }
-        }
-
-        protected void gvInbox_RowCommand(object sender, GridViewCommandEventArgs e)
-        {
-            if (e.CommandName == "OpenChat")
-            {
-                Response.Redirect("Messages.aspx?cid=" + e.CommandArgument);
-            }
-        }
-
-        // ====== Start new chat (demo using Users table) ======
-        private void LoadUsersDropdown()
-        {
-            using (var conn = new SqlConnection(ConnStr))
-            using (var cmd = new SqlCommand(@"
-SELECT UserID, FullName, Email
-FROM Users
-ORDER BY FullName;
-", conn))
-            {
-                conn.Open();
-                var dt = new DataTable();
-                dt.Load(cmd.ExecuteReader());
-
-                ddlUsers.Items.Clear();
-                ddlUsers.Items.Add(new ListItem("-- Select a customer --", ""));
-
-                foreach (DataRow row in dt.Rows)
-                {
-                    string text = $"{row["FullName"]} ({row["Email"]})";
-                    ddlUsers.Items.Add(new ListItem(text, row["UserID"].ToString()));
-                }
-            }
-        }
-
-        protected void btnStartChat_Click(object sender, EventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(ddlUsers.SelectedValue))
-            {
-                lblError.Text = "Please select a customer.";
+                Response.Redirect("~/Login.aspx");
                 return;
             }
 
-            int userId = Convert.ToInt32(ddlUsers.SelectedValue);
-            int cid = GetOrCreateConversation(userId, SellerId);
-            Response.Redirect("Messages.aspx?cid=" + cid);
-        }
-
-        private int GetOrCreateConversation(int userId, int sellerId)
-        {
-            using (var conn = new SqlConnection(ConnStr))
+            if (!IsPostBack)
             {
-                conn.Open();
+                BindInbox();
 
-                // Check existing
-                using (var check = new SqlCommand(@"
-SELECT ConversationID
-FROM Conversations
-WHERE UserID = @UserID AND SellerID = @SellerID;
-", conn))
+                if (int.TryParse(Request.QueryString["cid"], out int cid))
                 {
-                    check.Parameters.AddWithValue("@UserID", userId);
-                    check.Parameters.AddWithValue("@SellerID", sellerId);
-
-                    object existing = check.ExecuteScalar();
-                    if (existing != null) return Convert.ToInt32(existing);
-                }
-
-                // Create
-                using (var create = new SqlCommand(@"
-INSERT INTO Conversations (UserID, SellerID)
-VALUES (@UserID, @SellerID);
-SELECT SCOPE_IDENTITY();
-", conn))
-
-                {
-                    create.Parameters.AddWithValue("@UserID", userId);
-                    create.Parameters.AddWithValue("@SellerID", sellerId);
-
-                    return Convert.ToInt32(create.ExecuteScalar());
+                    OpenConversation(cid);
                 }
             }
         }
 
-        // ====== CHAT ======
-        private bool SellerOwnsConversation(int conversationId)
+        // ===== Inbox (Customer sees sellers) =====
+        private void BindInbox()
         {
-            using (var conn = new SqlConnection(ConnStr))
+            using (var conn = new SqlConnection(_connStr))
             using (var cmd = new SqlCommand(@"
-SELECT COUNT(*)
-FROM Conversations
-WHERE ConversationID = @Cid AND SellerID = @SellerId;
-", conn))
+                SELECT
+                    c.ConversationID,
+                    c.LastMessageAt,
+                    s.ShopName,
+                    ISNULL((
+                        SELECT TOP 1 m.MessageText
+                        FROM Messages m
+                        WHERE m.ConversationID = c.ConversationID
+                        ORDER BY m.SentAt DESC
+                    ), '') AS LastPreview,
+                    ISNULL((
+                        SELECT COUNT(*)
+                        FROM Messages m2
+                        WHERE m2.ConversationID = c.ConversationID
+                          AND m2.SenderType = 'Seller'
+                          AND m2.IsRead = 0
+                    ), 0) AS UnreadCount
+                FROM Conversations c
+                INNER JOIN Seller s ON s.SellerID = c.SellerID
+                WHERE c.UserID = @UserID
+                ORDER BY c.LastMessageAt DESC;", conn))
             {
-                cmd.Parameters.AddWithValue("@Cid", conversationId);
-                cmd.Parameters.AddWithValue("@SellerId", SellerId);
-                conn.Open();
-                return (int)cmd.ExecuteScalar() > 0;
+                cmd.Parameters.AddWithValue("@UserID", CurrentUserId);
+
+                var dt = new DataTable();
+                new SqlDataAdapter(cmd).Fill(dt);
+
+                foreach (DataRow r in dt.Rows)
+                {
+                    var p = (r["LastPreview"] ?? "").ToString();
+                    r["LastPreview"] = p.Length > 60 ? p.Substring(0, 60) + "…" : p;
+                }
+
+                rptInbox.DataSource = dt;
+                rptInbox.DataBind();
             }
+        }
+
+        protected void rptInbox_ItemCommand(object source, RepeaterCommandEventArgs e)
+        {
+            if (e.CommandName != "Open") return;
+
+            hfEditingMessageID.Value = "";
+            int cid = Convert.ToInt32(e.CommandArgument);
+            OpenConversation(cid);
         }
 
         private void OpenConversation(int conversationId)
         {
-            // Mark all customer messages as read
-            MarkRead(conversationId);
+            // Safety: only allow opening a conversation that belongs to this user
+            if (!UserOwnsConversation(conversationId))
+            {
+                lblError.Text = "You can't open this conversation.";
+                return;
+            }
 
-            // Load header label “Chat with ___”
-            lblChatWith.Text = " • " + GetCustomerName(conversationId);
+            hfConversationID.Value = conversationId.ToString();
+            lblChatHeader.Text = "Conversation #" + conversationId;
 
-            // Load messages
-            LoadMessages(conversationId);
-
-            pnlChat.Visible = true;
-            pnlNoChat.Visible = false;
-
-            // Refresh inbox unread counts
-            LoadInbox();
+            BindThread(conversationId);
+            MarkOtherSideMessagesAsRead(conversationId, currentSide: "User");
+            BindInbox();
         }
 
-        private string GetCustomerName(int conversationId)
+        private bool UserOwnsConversation(int conversationId)
         {
-            using (var conn = new SqlConnection(ConnStr))
+            using (var conn = new SqlConnection(_connStr))
             using (var cmd = new SqlCommand(@"
-SELECT u.FullName
-FROM Conversations c
-JOIN Users u ON u.UserID = c.UserID
-WHERE c.ConversationID = @Cid;
-", conn))
+                SELECT COUNT(*)
+                FROM Conversations
+                WHERE ConversationID=@CID AND UserID=@UID;", conn))
             {
-                cmd.Parameters.AddWithValue("@Cid", conversationId);
+                cmd.Parameters.AddWithValue("@CID", conversationId);
+                cmd.Parameters.AddWithValue("@UID", CurrentUserId);
                 conn.Open();
-                return (cmd.ExecuteScalar() ?? "Customer").ToString();
+                return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
             }
         }
 
-        private void MarkRead(int conversationId)
+        // ===== Thread =====
+        private void BindThread(int conversationId)
         {
-            using (var conn = new SqlConnection(ConnStr))
+            using (var conn = new SqlConnection(_connStr))
             using (var cmd = new SqlCommand(@"
-UPDATE Messages
-SET IsRead = 1
-WHERE ConversationID = @Cid
-  AND IsRead = 0
-  AND SenderType = 'User';
-", conn))
+                SELECT MessageID, SenderType, SenderID, MessageText, SentAt
+                FROM Messages
+                WHERE ConversationID = @ConversationID
+                ORDER BY SentAt ASC;", conn))
             {
-                cmd.Parameters.AddWithValue("@Cid", conversationId);
-                conn.Open();
-                cmd.ExecuteNonQuery();
-            }
-        }
+                cmd.Parameters.AddWithValue("@ConversationID", conversationId);
 
-
-        private void LoadMessages(int conversationId)
-        {
-            using (var conn = new SqlConnection(ConnStr))
-            using (var cmd = new SqlCommand(@"
-SELECT
-    m.MessageID,
-    m.MessageText,
-    m.SentAt,
-    CASE WHEN m.SenderType='Seller' AND m.SenderID=@SellerId THEN 1 ELSE 0 END AS IsMine
-FROM Messages m
-WHERE m.ConversationID = @Cid
-ORDER BY m.SentAt ASC;
-", conn))
-            {
-                cmd.Parameters.AddWithValue("@Cid", conversationId);
-                cmd.Parameters.AddWithValue("@SellerId", SellerId);
-
-                conn.Open();
                 var dt = new DataTable();
-                dt.Load(cmd.ExecuteReader());
+                new SqlDataAdapter(cmd).Fill(dt);
+
+                dt.Columns.Add("IsMe", typeof(bool));
+                foreach (DataRow r in dt.Rows)
+                {
+                    string senderType = r["SenderType"].ToString();
+                    int senderId = Convert.ToInt32(r["SenderID"]);
+                    r["IsMe"] = (senderType == "User" && senderId == CurrentUserId);
+                }
 
                 rptMessages.DataSource = dt;
                 rptMessages.DataBind();
             }
         }
 
+        protected void rptMessages_ItemDataBound(object sender, RepeaterItemEventArgs e)
+        {
+            if (e.Item.ItemType != ListItemType.Item && e.Item.ItemType != ListItemType.AlternatingItem) return;
 
+            var drv = (DataRowView)e.Item.DataItem;
+            bool isMe = (bool)drv["IsMe"];
+            int msgId = Convert.ToInt32(drv["MessageID"]);
+
+            var pnlActions = (System.Web.UI.WebControls.Panel)e.Item.FindControl("pnlActions");
+            var pnlView = (System.Web.UI.WebControls.Panel)e.Item.FindControl("pnlView");
+            var pnlEdit = (System.Web.UI.WebControls.Panel)e.Item.FindControl("pnlEdit");
+
+            pnlActions.Visible = isMe;
+
+            bool editingThis = int.TryParse(hfEditingMessageID.Value, out int editingId) && editingId == msgId;
+            pnlView.Visible = !editingThis;
+            pnlEdit.Visible = editingThis;
+        }
+
+        protected void rptMessages_ItemCommand(object source, RepeaterCommandEventArgs e)
+        {
+            if (!int.TryParse(hfConversationID.Value, out int cid)) return;
+
+            int msgId = Convert.ToInt32(e.CommandArgument);
+
+            switch (e.CommandName)
+            {
+                case "Edit":
+                    if (!CanModifyMessage(msgId)) return;
+                    hfEditingMessageID.Value = msgId.ToString();
+                    BindThread(cid);
+                    break;
+
+                case "Cancel":
+                    hfEditingMessageID.Value = "";
+                    BindThread(cid);
+                    break;
+
+                case "Save":
+                    if (!CanModifyMessage(msgId)) return;
+                    var txtEdit = (TextBox)e.Item.FindControl("txtEdit");
+                    string newText = (txtEdit.Text ?? "").Trim();
+                    if (newText.Length == 0) return;
+
+                    UpdateMessageText(msgId, newText);
+                    hfEditingMessageID.Value = "";
+                    BindThread(cid);
+                    BindInbox();
+                    break;
+
+                case "Delete":
+                    if (!CanModifyMessage(msgId)) return;
+
+                    UpdateMessageText(msgId, "This message was deleted");
+                    hfEditingMessageID.Value = "";
+                    BindThread(cid);
+                    BindInbox();
+                    break;
+            }
+        }
+
+        private bool CanModifyMessage(int messageId)
+        {
+            using (var conn = new SqlConnection(_connStr))
+            using (var cmd = new SqlCommand(@"
+                SELECT COUNT(*)
+                FROM Messages m
+                JOIN Conversations c ON c.ConversationID = m.ConversationID
+                WHERE m.MessageID=@MessageID
+                  AND m.SenderType='User'
+                  AND m.SenderID=@UserID
+                  AND c.UserID=@UserID;", conn))
+            {
+                cmd.Parameters.AddWithValue("@MessageID", messageId);
+                cmd.Parameters.AddWithValue("@UserID", CurrentUserId);
+                conn.Open();
+                return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+            }
+        }
+
+        private void UpdateMessageText(int messageId, string newText)
+        {
+            using (var conn = new SqlConnection(_connStr))
+            using (var cmd = new SqlCommand(@"UPDATE Messages SET MessageText=@T WHERE MessageID=@ID;", conn))
+            {
+                cmd.Parameters.AddWithValue("@T", newText);
+                cmd.Parameters.AddWithValue("@ID", messageId);
+                conn.Open();
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        // ===== Send =====
         protected void btnSend_Click(object sender, EventArgs e)
         {
-            if (ConversationId <= 0 || !SellerOwnsConversation(ConversationId))
+            if (!int.TryParse(hfConversationID.Value, out int cid))
             {
-                lblError.Text = "Invalid conversation.";
+                lblError.Text = "Please select a conversation first.";
                 return;
             }
 
-            string text = (txtMessage.Text ?? "").Trim();
-            if (text.Length == 0) { lblError.Text = "Message cannot be empty."; return; }
-            if (text.Length > 1000) { lblError.Text = "Max 1000 characters."; return; }
+            string msg = (txtMessage.Text ?? "").Trim();
+            if (msg.Length == 0) return;
 
-            using (var conn = new SqlConnection(ConnStr))
+            using (var conn = new SqlConnection(_connStr))
             using (var cmd = new SqlCommand(@"
-INSERT INTO Messages (ConversationID, SenderType, SenderID, MessageText, SentAt, IsRead)
-VALUES (@Cid, 'Seller', @SellerId, @Text, GETDATE(), 0);
+                INSERT INTO Messages (ConversationID, SenderType, SenderID, MessageText)
+                VALUES (@ConversationID, 'User', @SenderID, @MessageText);
 
-UPDATE Conversations
-SET LastMessageAt = GETDATE()
-WHERE ConversationID = @Cid;
-", conn))
+                UPDATE Conversations
+                SET LastMessageAt = GETDATE()
+                WHERE ConversationID = @ConversationID;", conn))
             {
-                cmd.Parameters.AddWithValue("@Cid", ConversationId);
-                cmd.Parameters.AddWithValue("@SellerId", SellerId);
-                cmd.Parameters.AddWithValue("@Text", text);
+                cmd.Parameters.AddWithValue("@ConversationID", cid);
+                cmd.Parameters.AddWithValue("@SenderID", CurrentUserId);
+                cmd.Parameters.AddWithValue("@MessageText", msg);
 
                 conn.Open();
                 cmd.ExecuteNonQuery();
             }
 
             txtMessage.Text = "";
-            OpenConversation(ConversationId);
+            BindThread(cid);
+            BindInbox();
         }
 
-        protected void btnCtxDelete_Click(object sender, EventArgs e)
+        private void MarkOtherSideMessagesAsRead(int conversationId, string currentSide)
         {
-            if (ConversationId <= 0 || !SellerOwnsConversation(ConversationId)) return;
+            string other = currentSide == "User" ? "Seller" : "User";
 
-            if (!int.TryParse(hfSelectedMessageId.Value, out int messageId)) return;
-
-            bool deleted = DeleteOwnMessage(messageId, ConversationId, SellerId);
-            if (!deleted) lblError.Text = "You can only delete your own messages.";
-
-            OpenConversation(ConversationId);
-        }
-
-        protected void btnSaveEdit_Click(object sender, EventArgs e)
-        {
-            if (ConversationId <= 0 || !SellerOwnsConversation(ConversationId)) return;
-
-            if (!int.TryParse(hfSelectedMessageId.Value, out int messageId)) return;
-
-            string newText = (hfEditText.Value ?? "").Trim();
-            if (newText.Length == 0) { lblError.Text = "Message cannot be empty."; return; }
-            if (newText.Length > 1000) { lblError.Text = "Max 1000 characters."; return; }
-
-            bool updated = UpdateOwnMessage(messageId, ConversationId, SellerId, newText);
-            if (!updated) lblError.Text = "You can only edit your own messages.";
-
-            OpenConversation(ConversationId);
-        }
-
-        private bool UpdateOwnMessage(int messageId, int conversationId, int sellerId, string newText)
-        {
-            using (var conn = new SqlConnection(ConnStr))
+            using (var conn = new SqlConnection(_connStr))
             using (var cmd = new SqlCommand(@"
-UPDATE Messages
-SET MessageText = @Text
-WHERE MessageID = @Mid
-  AND ConversationID = @Cid
-  AND SenderType = 'Seller'
-  AND SenderID = @SellerId;
-SELECT @@ROWCOUNT;
-", conn))
+                UPDATE Messages
+                SET IsRead = 1
+                WHERE ConversationID = @ConversationID
+                  AND SenderType = @OtherSide
+                  AND IsRead = 0;", conn))
             {
-                cmd.Parameters.AddWithValue("@Text", newText);
-                cmd.Parameters.AddWithValue("@Mid", messageId);
-                cmd.Parameters.AddWithValue("@Cid", conversationId);
-                cmd.Parameters.AddWithValue("@SellerId", sellerId);
-
+                cmd.Parameters.AddWithValue("@ConversationID", conversationId);
+                cmd.Parameters.AddWithValue("@OtherSide", other);
                 conn.Open();
-                return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
-            }
-        }
-
-        private bool DeleteOwnMessage(int messageId, int conversationId, int sellerId)
-        {
-            using (var conn = new SqlConnection(ConnStr))
-            using (var cmd = new SqlCommand(@"
-DELETE FROM Messages
-WHERE MessageID = @Mid
-  AND ConversationID = @Cid
-  AND SenderType = 'Seller'
-  AND SenderID = @SellerId;
-SELECT @@ROWCOUNT;
-", conn))
-            {
-                cmd.Parameters.AddWithValue("@Mid", messageId);
-                cmd.Parameters.AddWithValue("@Cid", conversationId);
-                cmd.Parameters.AddWithValue("@SellerId", sellerId);
-
-                conn.Open();
-                return Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+                cmd.ExecuteNonQuery();
             }
         }
     }

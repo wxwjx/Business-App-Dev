@@ -1,26 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using System.Web.UI;
-using System.Web.UI.WebControls;
+using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
 
-namespace FoodSaver
+namespace EcoEats
 {
-    public partial class SellerWasteTracker : Page
+    public partial class SellerWasteTracker : System.Web.UI.Page
     {
-        private class WasteRecord
-        {
-            public DateTime Date { get; set; }
-            public int ItemsRescued { get; set; }
-            public double KgSaved { get; set; }
-            public double Co2eAvoided { get; set; }
-        }
+        private readonly string _connStr = ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            // Match your current login system
-            if (Session["SellerAuthenticated"] as bool? != true)
+            lblError.Text = "";
+
+            if (Session["SellerID"] == null)
             {
                 Response.Redirect("~/SellerLogin.aspx");
                 return;
@@ -28,63 +21,148 @@ namespace FoodSaver
 
             if (!IsPostBack)
             {
-                BindTracker();
+                BindCategories();
+                LoadTracker();
             }
         }
 
-        private void BindTracker()
+        protected void btnApply_Click(object sender, EventArgs e)
         {
-            // Fake assumptions for demo
-            const double co2ePerKgFood = 2.5;  // estimate multiplier
-            const int totalItemsListedLast14Days = 180; // fake denominator for “rescue rate”
-
-            var data = GenerateFakeWasteData(days: 14, co2ePerKgFood: co2ePerKgFood);
-
-            // KPIs
-            double totalKg = data.Sum(x => x.KgSaved);
-            int totalItems = data.Sum(x => x.ItemsRescued);
-            double totalCo2 = data.Sum(x => x.Co2eAvoided);
-
-            // Rescue rate (fake but consistent)
-            double rescueRate = totalItemsListedLast14Days == 0 ? 0 :
-                (double)totalItems / totalItemsListedLast14Days * 100.0;
-
-            lblFoodSaved.Text = totalKg.ToString("0.00");
-            lblMealsRescued.Text = totalItems.ToString();
-            lblCo2Avoided.Text = totalCo2.ToString("0.00");
-            lblRescueRate.Text = rescueRate.ToString("0.0") + "%";
-
-            lblUpdated.Text = "Updated: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm");
-            lblPeriod.Text = "Tracking period: last 14 days (prototype data)";
-
-            gvWaste.DataSource = data.OrderByDescending(x => x.Date).ToList();
-            gvWaste.DataBind();
+            LoadTracker();
         }
 
-        private List<WasteRecord> GenerateFakeWasteData(int days, double co2ePerKgFood)
+        protected void btnReset_Click(object sender, EventArgs e)
         {
-            // Use a seed so it looks stable across refreshes (same fake numbers each run)
-            var rng = new Random(12345);
+            txtFrom.Text = "";
+            txtTo.Text = "";
+            ddlCategory.SelectedIndex = 0;
+            LoadTracker();
+        }
 
-            var list = new List<WasteRecord>();
-            for (int i = 0; i < days; i++)
+        private int GetSellerId() => Convert.ToInt32(Session["SellerID"]);
+
+        private void BindCategories()
+        {
+            ddlCategory.Items.Clear();
+            ddlCategory.Items.Add(new System.Web.UI.WebControls.ListItem("All", ""));
+
+            using (var conn = new SqlConnection(_connStr))
+            using (var cmd = new SqlCommand(@"
+                SELECT DISTINCT ISNULL(Category, 'Uncategorized') AS Category
+                FROM Products
+                WHERE SellerID = @SellerID
+                ORDER BY Category;
+            ", conn))
             {
-                var date = DateTime.Today.AddDays(-i);
+                cmd.Parameters.AddWithValue("@SellerID", GetSellerId());
+                conn.Open();
 
-                // Fake “items rescued” and kg saved
-                int items = rng.Next(6, 18);                 // 6 to 17 items/day
-                double kg = Math.Round(items * rng.NextDouble() * 0.35 + 1.2, 2); // roughly 1.2–7kg/day
-
-                list.Add(new WasteRecord
+                using (var r = cmd.ExecuteReader())
                 {
-                    Date = date,
-                    ItemsRescued = items,
-                    KgSaved = kg,
-                    Co2eAvoided = Math.Round(kg * co2ePerKgFood, 2)
-                });
+                    while (r.Read())
+                    {
+                        ddlCategory.Items.Add(r.GetString(0));
+                    }
+                }
             }
+        }
 
-            return list;
+        private void LoadTracker()
+        {
+            try
+            {
+                int sellerId = GetSellerId();
+
+                DateTime? from = ParseDate(txtFrom.Text);
+                DateTime? to = ParseDate(txtTo.Text);
+                string category = ddlCategory.SelectedValue; // "" means all
+
+                // 1) KPI totals
+                using (var conn = new SqlConnection(_connStr))
+                using (var cmd = new SqlCommand(@"
+                    SELECT
+                        ISNULL(SUM(oi.Quantity), 0) AS ItemsSaved,
+                        ISNULL(SUM(oi.LineTotal), 0) AS Revenue,
+                        ISNULL(SUM(oi.Quantity * ISNULL(p.CO2Saved, 0)), 0) AS CO2Saved
+                    FROM OrderItems oi
+                    INNER JOIN Orders o ON o.OrderID = oi.OrderID
+                    INNER JOIN Products p ON p.ProductID = oi.ProductID
+                    WHERE oi.SellerID = @SellerID
+                      AND o.PayStatus = @PayStatus
+                      AND (@From IS NULL OR o.CreatedAt >= @From)
+                      AND (@To IS NULL OR o.CreatedAt < DATEADD(day, 1, @To))
+                      AND (@Category = '' OR ISNULL(p.Category,'Uncategorized') = @Category);
+                ", conn))
+                {
+                    cmd.Parameters.AddWithValue("@SellerID", sellerId);
+
+                    // ⚠️ change this if your system uses a different value
+                    cmd.Parameters.AddWithValue("@PayStatus", "PAID");
+
+                    cmd.Parameters.AddWithValue("@From", (object)from ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@To", (object)to ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Category", category ?? "");
+
+                    conn.Open();
+                    using (var r = cmd.ExecuteReader())
+                    {
+                        if (r.Read())
+                        {
+                            lblItemsSaved.Text = r["ItemsSaved"].ToString();
+                            lblRevenue.Text = Convert.ToDecimal(r["Revenue"]).ToString("$0.00");
+                            lblCO2.Text = Convert.ToDecimal(r["CO2Saved"]).ToString("0.00");
+                        }
+                    }
+                }
+
+                // 2) Breakdown by product
+                DataTable dt = new DataTable();
+                using (var conn = new SqlConnection(_connStr))
+                using (var cmd = new SqlCommand(@"
+                    SELECT
+                        p.ProductName,
+                        ISNULL(p.Category, 'Uncategorized') AS Category,
+                        SUM(oi.Quantity) AS QtySold,
+                        SUM(oi.LineTotal) AS Revenue,
+                        SUM(oi.Quantity * ISNULL(p.CO2Saved, 0)) AS CO2Saved
+                    FROM OrderItems oi
+                    INNER JOIN Orders o ON o.OrderID = oi.OrderID
+                    INNER JOIN Products p ON p.ProductID = oi.ProductID
+                    WHERE oi.SellerID = @SellerID
+                      AND o.PayStatus = @PayStatus
+                      AND (@From IS NULL OR o.CreatedAt >= @From)
+                      AND (@To IS NULL OR o.CreatedAt < DATEADD(day, 1, @To))
+                      AND (@Category = '' OR ISNULL(p.Category,'Uncategorized') = @Category)
+                    GROUP BY p.ProductName, ISNULL(p.Category, 'Uncategorized')
+                    ORDER BY QtySold DESC;
+                ", conn))
+                {
+                    cmd.Parameters.AddWithValue("@SellerID", sellerId);
+                    cmd.Parameters.AddWithValue("@PayStatus", "PAID");
+                    cmd.Parameters.AddWithValue("@From", (object)from ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@To", (object)to ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Category", category ?? "");
+
+                    using (var da = new SqlDataAdapter(cmd))
+                    {
+                        da.Fill(dt);
+                    }
+                }
+
+                gvBreakdown.DataSource = dt;
+                gvBreakdown.DataBind();
+                pnlEmpty.Visible = (dt.Rows.Count == 0);
+            }
+            catch (Exception ex)
+            {
+                lblError.Text = "Error loading tracker: " + ex.Message;
+            }
+        }
+
+        private DateTime? ParseDate(string input)
+        {
+            if (DateTime.TryParse(input, out var d)) return d.Date;
+            return null;
         }
     }
 }

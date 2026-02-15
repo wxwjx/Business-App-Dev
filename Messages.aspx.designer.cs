@@ -7,21 +7,12 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace FoodSaver
+namespace Business_App_Dev
 {
 
 
     public partial class Messages
     {
-
-        /// <summary>
-        /// lblInfo control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblInfo;
 
         /// <summary>
         /// lblError control.
@@ -33,58 +24,49 @@ namespace FoodSaver
         protected global::System.Web.UI.WebControls.Label lblError;
 
         /// <summary>
-        /// pnlSeller control.
+        /// hfConversationID control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Panel pnlSeller;
+        protected global::System.Web.UI.WebControls.HiddenField hfConversationID;
 
         /// <summary>
-        /// gvInbox control.
+        /// hfEditingMessageID control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.GridView gvInbox;
+        protected global::System.Web.UI.WebControls.HiddenField hfEditingMessageID;
 
         /// <summary>
-        /// ddlUsers control.
+        /// rptInbox control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.DropDownList ddlUsers;
+        protected global::System.Web.UI.WebControls.Repeater rptInbox;
 
         /// <summary>
-        /// btnStartChat control.
+        /// lblChatHeader control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Button btnStartChat;
+        protected global::System.Web.UI.WebControls.Label lblChatHeader;
 
         /// <summary>
-        /// lblChatWith control.
+        /// lblChatSub control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblChatWith;
-
-        /// <summary>
-        /// pnlChat control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Panel pnlChat;
+        protected global::System.Web.UI.WebControls.Label lblChatSub;
 
         /// <summary>
         /// rptMessages control.
@@ -112,59 +94,5 @@ namespace FoodSaver
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Button btnSend;
-
-        /// <summary>
-        /// hfSelectedMessageId control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.HiddenField hfSelectedMessageId;
-
-        /// <summary>
-        /// hfEditText control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.HiddenField hfEditText;
-
-        /// <summary>
-        /// btnCtxDelete control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.LinkButton btnCtxDelete;
-
-        /// <summary>
-        /// btnSaveEdit control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.LinkButton btnSaveEdit;
-
-        /// <summary>
-        /// pnlNoChat control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Panel pnlNoChat;
-
-        /// <summary>
-        /// pnlCustomerPlaceholder control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Panel pnlCustomerPlaceholder;
     }
 }

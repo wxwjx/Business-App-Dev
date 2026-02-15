@@ -1,0 +1,67 @@
+[33m21186b3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain-branch[m[33m, [m[1;31morigin/main-branch[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{Sat Feb 14 12:50:12 2026}: checkout: moving from 5022eea1e421b8c27421d42550047d1a85a2aae9 to main-branch
+[33m5022eea[m HEAD@{Sat Feb 14 12:46:55 2026}: commit: Basic Seller Waste Reduction Tracker
+[33m126dbc3[m HEAD@{Sat Feb 14 10:52:49 2026}: commit: Messages (Update & Delete)
+[33m2b834b0[m HEAD@{Sat Feb 14 01:20:12 2026}: commit: basic messaging (Create and Read)
+[33m3865c2c[m HEAD@{Fri Feb 13 11:54:03 2026}: checkout: moving from 21186b3b01e97be2be60ddfada49dbda00a47b6c to 3865c2c846902b292ff5e56484843ddbef6bc144
+[33m21186b3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain-branch[m[33m, [m[1;31morigin/main-branch[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{Fri Feb 13 11:52:41 2026}: checkout: moving from main-branch to 21186b3b01e97be2be60ddfada49dbda00a47b6c
+[33m21186b3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain-branch[m[33m, [m[1;31morigin/main-branch[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{Fri Feb 13 11:48:34 2026}: pull --ff --recurse-submodules --progress origin: Merge made by the 'ort' strategy.
+[33mc71b007[m HEAD@{Tue Feb 3 17:45:36 2026}: commit: Edited Customer Login to not use password hash for now as it is a bit bothersome, but can add it back later after other stuff is complete
+[33mb40d384[m HEAD@{Tue Feb 3 11:46:47 2026}: pull --ff --recurse-submodules --progress origin: Fast-forward
+[33mbfe15e0[m HEAD@{Tue Jan 27 10:53:21 2026}: pull --ff --recurse-submodules --progress origin: Fast-forward
+[33m8627403[m HEAD@{Wed Jan 21 12:42:28 2026}: checkout: moving from Seller-(Shayn) to main-branch
+[33m3b1fe16[m[33m ([m[1;31morigin/Seller-(Shayn)[m[33m, [m[1;32mSeller-(Shayn)[m[33m)[m HEAD@{Wed Jan 21 12:42:26 2026}: reset: moving to HEAD
+[33m3b1fe16[m[33m ([m[1;31morigin/Seller-(Shayn)[m[33m, [m[1;32mSeller-(Shayn)[m[33m)[m HEAD@{Wed Jan 14 23:38:59 2026}: checkout: moving from Seller to Seller-(Shayn)
+[33mad37b1c[m HEAD@{Wed Jan 14 23:31:55 2026}: checkout: moving from Seller-(Shayn) to Seller
+[33m3b1fe16[m[33m ([m[1;31morigin/Seller-(Shayn)[m[33m, [m[1;32mSeller-(Shayn)[m[33m)[m HEAD@{Wed Jan 14 23:31:50 2026}: checkout: moving from Seller to Seller-(Shayn)
+[33mad37b1c[m HEAD@{Wed Jan 14 23:26:12 2026}: checkout: moving from Seller-(Shayn) to Seller
+[33m3b1fe16[m[33m ([m[1;31morigin/Seller-(Shayn)[m[33m, [m[1;32mSeller-(Shayn)[m[33m)[m HEAD@{Wed Jan 14 23:25:15 2026}: commit: Rate Sellers + View Seller Feedback
+[33me5623f7[m HEAD@{Wed Jan 14 22:19:59 2026}: checkout: moving from main-branch to Seller-(Shayn)
+[33m37da6e7[m HEAD@{Wed Jan 14 22:17:04 2026}: checkout: moving from Seller-(Shayn) to main-branch
+[33me5623f7[m HEAD@{Wed Jan 14 21:58:40 2026}: checkout: moving from main-branch to Seller-(Shayn)
+[33m37da6e7[m HEAD@{Wed Jan 14 21:54:15 2026}: pull --ff --recurse-submodules --progress origin: Fast-forward
+[33m65c0487[m HEAD@{Wed Jan 14 18:21:45 2026}: pull --ff --recurse-submodules --progress origin: Fast-forward
+[33m9f0bd38[m HEAD@{Wed Jan 14 18:21:42 2026}: reset: moving to HEAD
+[33m9f0bd38[m HEAD@{Wed Jan 14 18:16:38 2026}: checkout: moving from Seller-(Shayn) to main-branch
+[33me5623f7[m HEAD@{Wed Jan 14 16:55:06 2026}: commit: Messages
+[33m7b95df3[m HEAD@{Wed Jan 14 13:13:35 2026}: commit: Seller Login/SIgnup for tech Review
+[33m6a00870[m[33m ([m[1;31morigin/shayn-backup[m[33m)[m HEAD@{Tue Jan 13 23:45:08 2026}: checkout: moving from shayn-backup to Seller-(Shayn)
+[33ma6999b7[m[33m ([m[1;32mshayn-backup[m[33m)[m HEAD@{Tue Jan 13 23:44:09 2026}: revert: Revert "seller messages"
+[33m6417341[m HEAD@{Tue Jan 13 23:39:40 2026}: reset: moving to 6417341bf6cc8652dce9f7515b1d3b4b057f5432
+[33m9a9145d[m HEAD@{Tue Jan 13 23:30:32 2026}: checkout: moving from Seller-(Shayn) to shayn-backup
+[33m6a00870[m[33m ([m[1;31morigin/shayn-backup[m[33m)[m HEAD@{Tue Jan 13 23:30:17 2026}: checkout: moving from Seller to Seller-(Shayn)
+[33mc29aad6[m HEAD@{Tue Jan 13 23:30:17 2026}: reset: moving to HEAD
+[33mc29aad6[m HEAD@{Tue Jan 13 23:29:45 2026}: checkout: moving from Seller-(Shayn) to Seller
+[33m6a00870[m[33m ([m[1;31morigin/shayn-backup[m[33m)[m HEAD@{Tue Jan 13 23:26:27 2026}: checkout: moving from 9a9145d1e0e34732b0e3bc4a5253d471d7ab2aac to Seller-(Shayn)
+[33m9a9145d[m HEAD@{Tue Jan 13 23:26:10 2026}: checkout: moving from shayn-backup to 9a9145d1e0e34732b0e3bc4a5253d471d7ab2aac
+[33m9a9145d[m HEAD@{Tue Jan 13 23:24:47 2026}: reset: moving to 9a9145d1e0e34732b0e3bc4a5253d471d7ab2aac
+[33m6a00870[m[33m ([m[1;31morigin/shayn-backup[m[33m)[m HEAD@{Tue Jan 13 23:21:05 2026}: checkout: moving from Seller-(Shayn) to shayn-backup
+[33m6a00870[m[33m ([m[1;31morigin/shayn-backup[m[33m)[m HEAD@{Tue Jan 13 23:08:48 2026}: checkout: moving from Seller to Seller-(Shayn)
+[33mc29aad6[m HEAD@{Tue Jan 13 23:07:48 2026}: checkout: moving from main-branch to Seller
+[33m9f0bd38[m HEAD@{Tue Jan 13 23:01:09 2026}: checkout: moving from Seller-(Shayn) to main-branch
+[33m6a00870[m[33m ([m[1;31morigin/shayn-backup[m[33m)[m HEAD@{Tue Jan 13 22:54:01 2026}: checkout: moving from main-branch to Seller-(Shayn)
+[33m9f0bd38[m HEAD@{Tue Jan 13 22:49:57 2026}: pull --ff --recurse-submodules --progress origin: Fast-forward
+[33mfdac119[m[33m ([m[1;31morigin/Harika-new[m[33m)[m HEAD@{Tue Jan 13 22:49:00 2026}: checkout: moving from main-branch to main-branch
+[33mfdac119[m[33m ([m[1;31morigin/Harika-new[m[33m)[m HEAD@{Tue Jan 13 22:47:53 2026}: checkout: moving from Seller-(Shayn) to main-branch
+[33m6a00870[m[33m ([m[1;31morigin/shayn-backup[m[33m)[m HEAD@{Tue Jan 13 22:45:32 2026}: commit: Guys it is genuinely cooked
+[33m9a9145d[m HEAD@{Tue Jan 13 21:22:47 2026}: checkout: moving from Harika to Seller-(Shayn)
+[33m98adf01[m[33m ([m[1;31morigin/Harika[m[33m, [m[1;32mHarika[m[33m)[m HEAD@{Tue Jan 13 21:15:04 2026}: checkout: moving from Seller-(Shayn) to Harika
+[33m9a9145d[m HEAD@{Tue Jan 13 21:15:03 2026}: reset: moving to HEAD
+[33m9a9145d[m HEAD@{Mon Jan 12 22:44:56 2026}: commit: Made SellPage.Master formatting consistent with Site.Master
+[33ma710742[m HEAD@{Mon Jan 12 22:25:38 2026}: commit: Stripe
+[33ma2aaef0[m HEAD@{Mon Jan 12 22:16:50 2026}: commit: It is what it is
+[33mc29aad6[m HEAD@{Mon Jan 12 22:11:01 2026}: checkout: moving from Seller to Seller-(Shayn)
+[33mc29aad6[m HEAD@{Mon Jan 12 22:08:18 2026}: checkout: moving from chris-new to Seller
+[33mfbd5813[m[33m ([m[1;31morigin/chris-new[m[33m, [m[1;32mchris-new[m[33m)[m HEAD@{Mon Jan 12 21:48:38 2026}: checkout: moving from main-branch to chris-new
+[33mfdac119[m[33m ([m[1;31morigin/Harika-new[m[33m)[m HEAD@{Mon Jan 12 21:48:27 2026}: checkout: moving from Seller to main-branch
+[33mc29aad6[m HEAD@{Mon Jan 12 21:48:10 2026}: checkout: moving from main-branch to Seller
+[33mfdac119[m[33m ([m[1;31morigin/Harika-new[m[33m)[m HEAD@{Mon Jan 12 21:48:09 2026}: reset: moving to HEAD
+[33mfdac119[m[33m ([m[1;31morigin/Harika-new[m[33m)[m HEAD@{Mon Jan 12 21:45:33 2026}: checkout: moving from chris-new to main-branch
+[33m81d1803[m[33m ([m[1;31morigin/Seller-(Chris)[m[33m)[m HEAD@{Mon Jan 12 21:40:47 2026}: checkout: moving from Seller to chris-new
+[33mc29aad6[m HEAD@{Mon Jan 12 21:30:25 2026}: checkout: moving from master to Seller
+[33mefda5a4[m[33m ([m[1;32mmaster[m[33m)[m HEAD@{Mon Jan 12 21:26:13 2026}: checkout: moving from Seller to master
+[33mc29aad6[m HEAD@{Mon Jan 12 13:50:35 2026}: checkout: moving from master-copy to Seller
+[33mf3911ea[m[33m ([m[1;32mmaster-copy[m[33m)[m HEAD@{Mon Jan 12 13:50:00 2026}: checkout: moving from Seller to master-copy
+[33mc29aad6[m HEAD@{Mon Jan 12 13:31:03 2026}: checkout: moving from Seller to Seller
+[33mc29aad6[m HEAD@{Mon Jan 12 13:20:48 2026}: pull --ff --recurse-submodules --progress origin: Fast-forward
+[33m83aecf1[m HEAD@{Mon Jan 12 13:20:42 2026}: reset: moving to HEAD
+[33m83aecf1[m HEAD@{Mon Jan 12 12:01:24 2026}: chec

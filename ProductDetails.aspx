@@ -1,27 +1,21 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true"
+﻿<%@ Page Title="Product Details | EcoEats"
+    Language="C#"
+    MasterPageFile="~/Site.Master"
+    AutoEventWireup="true"
     CodeBehind="ProductDetails.aspx.cs"
     Inherits="Business_App_Dev.ProductDetails" %>
 
-<!DOCTYPE html>
-<html>
-<head runat="server">
-    <title>Product Details | EcoEats</title>
+<asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-    <!-- Only your main CSS -->
-    <link href="<%= ResolveUrl("~/Content/EcoEats.css") %>" rel="stylesheet" />
     <link href="<%= ResolveUrl("~/Content/ProductDetails.css") %>" rel="stylesheet" />
+</asp:Content>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-</head>
-
-<body class="pd-body">
-<form id="form1" runat="server">
+<asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
 
     <div class="pd-container">
-        <a class="pd-back" href="Product.aspx">← Back to Home</a>
+        <a class="pd-back" href="Product.aspx">
+            ← <asp:Label ID="lblBackHome" runat="server" Text="Back to Home" />
+        </a>
 
         <div class="pd-grid">
 
@@ -47,26 +41,41 @@
                 <div class="pd-rating-row">
                     <span class="pd-stars">★★★★★</span>
                     <span class="pd-rating"><asp:Label ID="lblRating" runat="server" /></span>
-                    <span class="pd-reviews">(<asp:Label ID="lblReviews" runat="server" /> reviews)</span>
+                    <span class="pd-reviews">
+                        (<asp:Label ID="lblReviews" runat="server" />
+                        <asp:Label ID="lblReviewsText" runat="server" Text="reviews" />)
+                    </span>
                 </div>
 
                 <div class="pd-info-row">
-                    <span class="pd-info">📍 <asp:Label ID="lblDistance" runat="server" /> km away</span>
-                    <span class="pd-info danger">⏰ Expires in <asp:Label ID="lblExpiry" runat="server" />h</span>
+                    <span class="pd-info">
+                        📍 <asp:Label ID="lblDistance" runat="server" />
+                        <asp:Label ID="lblKmAway" runat="server" Text="km away" />
+                    </span>
+                    <span class="pd-info danger">
+                        ⏰ <asp:Label ID="lblExpiresIn" runat="server" Text="Expires in" />
+                        <asp:Label ID="lblExpiry" runat="server" />h
+                    </span>
                 </div>
 
                 <div class="pd-impact">
                     <div class="pd-impact-icon">🌿</div>
                     <div>
-                        <div class="pd-impact-title">Sustainability Impact</div>
+                        <div class="pd-impact-title">
+                            <asp:Label ID="lblImpactTitle" runat="server" Text="Sustainability Impact" />
+                        </div>
                         <div class="pd-impact-text">
-                            1 meal = <asp:Label ID="lblCO2" runat="server" /> kg CO₂ saved
+                            <asp:Label ID="lblImpactMeal" runat="server" Text="1 meal =" />
+                            <asp:Label ID="lblCO2" runat="server" />
+                            <asp:Label ID="lblImpactCO2" runat="server" Text="kg CO₂ saved" />
                         </div>
                     </div>
                 </div>
 
                 <div class="pd-section">
-                    <div class="pd-section-title">Description</div>
+                    <div class="pd-section-title">
+                        <asp:Label ID="lblDescTitle" runat="server" Text="Description" />
+                    </div>
                     <div class="pd-desc">
                         <asp:Label ID="lblDescription" runat="server" />
                     </div>
@@ -78,7 +87,10 @@
                     <div class="pd-price">
                         <span class="pd-price-now">$<asp:Label ID="lblPriceNow" runat="server" /></span>
                         <span class="pd-price-old">$<asp:Label ID="lblPriceOld" runat="server" /></span>
-                        <span class="pd-save">Save $<asp:Label ID="lblSave" runat="server" /></span>
+                        <span class="pd-save">
+                            <asp:Label ID="lblSaveText" runat="server" Text="Save" /> $
+                            <asp:Label ID="lblSave" runat="server" />
+                        </span>
                     </div>
                 </div>
 
@@ -104,12 +116,14 @@
                 </div>
 
                 <div class="pd-why">
-                    <div class="pd-why-title">Why Choose This?</div>
+                    <div class="pd-why-title">
+                        <asp:Label ID="lblWhyTitle" runat="server" Text="Why Choose This?" />
+                    </div>
                     <ul class="pd-why-list">
-                        <li>✓ Fresh and high quality</li>
-                        <li>✓ Save money on delicious food</li>
-                        <li>✓ Help reduce food waste</li>
-                        <li>✓ Support local businesses</li>
+                        <li>✓ <asp:Label ID="lblWhy1" runat="server" Text="Fresh and high quality" /></li>
+                        <li>✓ <asp:Label ID="lblWhy2" runat="server" Text="Save money on delicious food" /></li>
+                        <li>✓ <asp:Label ID="lblWhy3" runat="server" Text="Help reduce food waste" /></li>
+                        <li>✓ <asp:Label ID="lblWhy4" runat="server" Text="Support local businesses" /></li>
                     </ul>
                 </div>
 
@@ -117,26 +131,29 @@
         </div>
     </div>
 
-    <!-- Cute Toast -->
+    <!-- Toast -->
     <div id="toast" class="toast">
         <span class="toast-icon">🛒</span>
         <div class="toast-text">
-            <div class="toast-title">Added to cart</div>
-            <div class="toast-sub">You can checkout anytime</div>
+            <div class="toast-title">
+                <asp:Label ID="lblToastTitle" runat="server" Text="Added to cart" />
+            </div>
+            <div class="toast-sub">
+                <asp:Label ID="lblToastSub" runat="server" Text="You can checkout anytime" />
+            </div>
         </div>
     </div>
 
-</form>
+</asp:Content>
 
-<script>
-    function showToast() {
-        const t = document.getElementById("toast");
-        t.classList.add("show");
-        clearTimeout(window.toastTimer);
-        window.toastTimer = setTimeout(() => t.classList.remove("show"), 1800);
-        t.onclick = () => t.classList.remove("show");
-    }
-</script>
-
-</body>
-</html>
+<asp:Content ID="ScriptsContent" ContentPlaceHolderID="ScriptsContent" runat="server">
+    <script>
+        function showToast() {
+            const t = document.getElementById("toast");
+            t.classList.add("show");
+            clearTimeout(window.toastTimer);
+            window.toastTimer = setTimeout(() => t.classList.remove("show"), 1800);
+            t.onclick = () => t.classList.remove("show");
+        }
+    </script>
+</asp:Content>

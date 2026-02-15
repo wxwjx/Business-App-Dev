@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Data.SqlClient;
+using System.Web.UI.WebControls;
+using Business_App_Dev.Services;
 
 namespace Business_App_Dev
 {
@@ -11,75 +12,202 @@ namespace Business_App_Dev
         {
             if (!IsPostBack)
             {
-                try
-                {
-                    LoadProducts();
-                }
-                catch (SqlException ex)
-                {
-                    // show error panel (optional)
-                    pnlError.Visible = true;
-                    lblError.Text = "Database error loading products: " + ex.Message;
-                }
-                catch (Exception ex)
-                {
-                    pnlError.Visible = true;
-                    lblError.Text = "Unexpected error loading products: " + ex.Message;
-                }
+                ApplyTranslations();   // UI text (hero/pills)
+                SetActivePillCss();
+                TryLoad();
             }
+        }
+
+        protected void btnRefreshByLoc_Click(object sender, EventArgs e)
+        {
+            TryLoad();
+        }
+
+        // Pills
+        protected void btnAI_Click(object sender, EventArgs e)
+        {
+            hfMode.Value = "AI";
+            hfCategory.Value = "";
+            pnlCategories.Visible = false;
+            SetActivePillCss();
+            TryLoad();
+        }
+
+        protected void btnDeals_Click(object sender, EventArgs e)
+        {
+            hfMode.Value = "DEALS";
+            hfCategory.Value = "";
+            pnlCategories.Visible = false;
+            SetActivePillCss();
+            TryLoad();
+        }
+
+        protected void btnCats_Click(object sender, EventArgs e)
+        {
+            hfMode.Value = "CATS";
+            pnlCategories.Visible = true;
+
+            rptCategories.DataSource = ProductModel.GetCategories();
+            rptCategories.DataBind();
+
+            SetActivePillCss();
+            TryLoad();
+        }
+
+        protected void rptCategories_ItemCommand(object source, RepeaterCommandEventArgs e)
+        {
+            if (e.CommandName == "Pick")
+            {
+                hfCategory.Value = (e.CommandArgument ?? "").ToString();
+                TryLoad();
+            }
+        }
+
+        protected void btnClearCategory_Click(object sender, EventArgs e)
+        {
+            hfCategory.Value = "";
+            TryLoad();
+        }
+
+        private void SetActivePillCss()
+        {
+            btnAI.CssClass = "ee-pill";
+            btnDeals.CssClass = "ee-pill";
+            btnCats.CssClass = "ee-pill";
+
+            string mode = (hfMode.Value ?? "AI").ToUpperInvariant();
+            if (mode == "AI") btnAI.CssClass = "ee-pill active";
+            else if (mode == "DEALS") btnDeals.CssClass = "ee-pill active";
+            else if (mode == "CATS") btnCats.CssClass = "ee-pill active";
+        }
+
+        private void TryLoad()
+        {
+            try
+            {
+                LoadProducts();
+            }
+            catch (SqlException ex)
+            {
+                pnlError.Visible = true;
+                lblError.Text = "Database error loading products: " + ex.Message;
+            }
+            catch (Exception ex)
+            {
+                pnlError.Visible = true;
+                lblError.Text = "Unexpected error loading products: " + ex.Message;
+            }
+        }
+
+        private string GetKeywordFromMaster()
+        {
+            var tb = Master?.FindControl("txtSearch") as TextBox;
+            return (tb?.Text ?? "").Trim();
+        }
+
+        private string GetLang()
+        {
+            return (Session["LANG"] as string) ?? "en";
+        }
+
+        private string TranslateCached(string text, string targetLang, string sourceLang = "en")
+        {
+            text = text ?? "";
+            targetLang = (targetLang ?? "en").Trim().ToLowerInvariant();
+            sourceLang = (sourceLang ?? "en").Trim().ToLowerInvariant();
+
+            if (string.IsNullOrWhiteSpace(text)) return text;
+            if (targetLang == "en" || targetLang == sourceLang) return text;
+
+            string key = $"tr:{sourceLang}->{targetLang}:{text}";
+
+            return TranslationCache.GetOrAdd(key, () =>
+                TranslationService.Translate(text, targetLang, sourceLang), hours: 24);
+        }
+
+        private void ApplyTranslations()
+        {
+            string lang = GetLang();
+            if (lang.Equals("en", StringComparison.OrdinalIgnoreCase)) return;
+
+            lblHeroTitle.Text = TranslateCached(lblHeroTitle.Text, lang, "en");
+            lblHeroSubtitle.Text = TranslateCached(lblHeroSubtitle.Text, lang, "en");
+
+            lblMealsSaved.Text = TranslateCached(lblMealsSaved.Text, lang, "en");
+            lblMoneySaved.Text = TranslateCached(lblMoneySaved.Text, lang, "en");
+            lblCO2Saved.Text = TranslateCached(lblCO2Saved.Text, lang, "en");
+
+            btnAI.Text = TranslateCached("✨ AI Recommended", lang, "en");
+            btnDeals.Text = TranslateCached("🔥 Daily Best Deals", lang, "en");
+            btnCats.Text = TranslateCached("🧭 Explore Categories", lang, "en");
+        }
+
+        private List<ProductModel> TranslateProductsIfNeeded(List<ProductModel> products)
+        {
+            string lang = GetLang();
+            if (lang.Equals("en", StringComparison.OrdinalIgnoreCase)) return products;
+            if (products == null) return products;
+
+            foreach (var p in products)
+            {
+                if (p == null) continue;
+
+                if (!string.IsNullOrWhiteSpace(p.ProductName))
+                    p.ProductName = TranslateCached(p.ProductName, lang, "en");
+
+                if (!string.IsNullOrWhiteSpace(p.Subtitle))
+                    p.Subtitle = TranslateCached(p.Subtitle, lang, "en");
+            }
+
+            return products;
         }
 
         private void LoadProducts()
         {
-            string connStr = ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
-            List<ProductModel> products = new List<ProductModel>();
+            double userLat = 0;
+            double userLng = 0;
 
-            using (SqlConnection conn = new SqlConnection(connStr))
+            bool hasLoc =
+                double.TryParse(hfLat.Value, out userLat) &&
+                double.TryParse(hfLng.Value, out userLng);
+
+            string keyword = GetKeywordFromMaster();
+            string mode = (hfMode.Value ?? "AI").ToUpperInvariant();
+            string category = (hfCategory.Value ?? "").Trim();
+
+            if (mode == "DEALS")
             {
-                string query = @"
-SELECT
-    ProductID, ProductName, Subtitle, ImageUrl,
-    Price, PriceOld, Rating, Reviews, DistanceKm,
-    ExpiryHours, CO2Saved, DiscountPercent, Quantity,
-    Category, CreatedAt
-FROM Products;
-";
+                var products = hasLoc
+                    ? ProductModel.GetDailyBestDealsWithDistance(userLat, userLng, keyword)
+                    : ProductModel.GetDailyBestDeals(keyword);
 
-                using (SqlCommand cmd = new SqlCommand(query, conn))
-                {
-                    conn.Open();
-                    using (SqlDataReader reader = cmd.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            products.Add(new ProductModel
-                            {
-                                ProductID = reader["ProductID"] != DBNull.Value ? Convert.ToInt32(reader["ProductID"]) : 0,
-                                ProductName = reader["ProductName"]?.ToString() ?? "",
-                                Subtitle = reader["Subtitle"] != DBNull.Value ? reader["Subtitle"].ToString() : "",
-                                ImageUrl = reader["ImageUrl"] != DBNull.Value ? reader["ImageUrl"].ToString() : "",
+                products = TranslateProductsIfNeeded(products);
 
-                                // DB column Price -> ProductModel.PriceNow
-                                PriceNow = reader["Price"] != DBNull.Value ? Convert.ToDecimal(reader["Price"]) : 0m,
-                                PriceOld = reader["PriceOld"] != DBNull.Value ? Convert.ToDecimal(reader["PriceOld"]) : 0m,
-
-                                Rating = reader["Rating"] != DBNull.Value ? Convert.ToDouble(reader["Rating"]) : 0,
-                                Reviews = reader["Reviews"] != DBNull.Value ? Convert.ToInt32(reader["Reviews"]) : 0,
-                                DistanceKm = reader["DistanceKm"] != DBNull.Value ? Convert.ToInt32(reader["DistanceKm"]) : 0,
-                                ExpiryHours = reader["ExpiryHours"] != DBNull.Value ? Convert.ToInt32(reader["ExpiryHours"]) : 0,
-                                CO2Saved = reader["CO2Saved"] != DBNull.Value ? Convert.ToDouble(reader["CO2Saved"]) : 0,
-
-                                DiscountPercent = reader["DiscountPercent"] != DBNull.Value ? Convert.ToInt32(reader["DiscountPercent"]) : 0,
-                                Quantity = reader["Quantity"] != DBNull.Value ? Convert.ToInt32(reader["Quantity"]) : 0,
-                                Category = reader["Category"] != DBNull.Value ? reader["Category"].ToString() : "",
-                                CreatedAt = reader["CreatedAt"] != DBNull.Value ? Convert.ToDateTime(reader["CreatedAt"]) : DateTime.Now
-                            });
-                        }
-                    }
-                }
+                ProductRepeater.DataSource = products;
+                ProductRepeater.DataBind();
+                return;
             }
 
-            ProductRepeater.DataSource = products;
+            if (mode == "CATS")
+            {
+                var products = hasLoc
+                    ? ProductModel.GetProductsByCategoryWithDistance(userLat, userLng, category, keyword)
+                    : ProductModel.GetProductsByCategory(category, keyword);
+
+                products = TranslateProductsIfNeeded(products);
+
+                ProductRepeater.DataSource = products;
+                ProductRepeater.DataBind();
+                return;
+            }
+
+            var aiProducts = hasLoc
+                ? ProductModel.GetProductsWithDistanceAndSearch(userLat, userLng, keyword)
+                : ProductModel.GetProductsBySearch(keyword);
+
+            aiProducts = TranslateProductsIfNeeded(aiProducts);
+
+            ProductRepeater.DataSource = aiProducts;
             ProductRepeater.DataBind();
         }
     }
