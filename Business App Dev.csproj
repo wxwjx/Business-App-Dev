@@ -130,8 +130,6 @@
     <Content Include="AddNewProduct.aspx" />
     <Content Include="AdminLogin.aspx" />
     <Content Include="Content\AdminCommon.css" />
-    <Content Include="App_Data\EcoEats.mdf" />
-    <Content Include="App_Data\EcoEats_log.ldf" />
     <Content Include="Cart.aspx" />
     <Content Include="Content\Cart.css" />
     <Content Include="Contact.aspx" />
@@ -447,7 +445,9 @@
       <DependentUpon>ViewSwitcher.ascx</DependentUpon>
     </Compile>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="App_Data\" />
+  </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
     <Content Include="Scripts\jquery-3.7.0.slim.min.map" />
