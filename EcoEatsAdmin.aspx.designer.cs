@@ -33,6 +33,33 @@ namespace Business_App_Dev
         protected global::System.Web.UI.WebControls.Label lblMsg;
 
         /// <summary>
+        /// cblRatings control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.CheckBoxList cblRatings;
+
+        /// <summary>
+        /// btnApplyRatingFilter control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnApplyRatingFilter;
+
+        /// <summary>
+        /// btnClearRatingFilter control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.LinkButton btnClearRatingFilter;
+
+        /// <summary>
         /// btnExportFeedback control.
         /// </summary>
         /// <remarks>

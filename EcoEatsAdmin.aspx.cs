@@ -2,12 +2,13 @@
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
+using System.Net;
+using System.Net.Mail;
 using System.Text;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
-using System.Net;
-using System.Net.Mail;
 
 namespace Business_App_Dev
 {
@@ -184,12 +185,46 @@ namespace Business_App_Dev
         {
             try
             {
+                // Build selected ratings list
+                var selected = cblRatings.Items.Cast<ListItem>()
+                    .Where(i => i.Selected)
+                    .Select(i => i.Value)
+                    .ToList();
+
                 using (SqlConnection conn = new SqlConnection(_connStr))
-                using (SqlCommand cmd = new SqlCommand(@"
-            SELECT FeedbackId, CustomerName, Rating, FeedbackType, FeedbackText, SubmitDate
-            FROM CustomerFeedback
-            ORDER BY SubmitDate DESC, FeedbackId DESC;", conn))
+                using (SqlCommand cmd = new SqlCommand())
                 {
+                    cmd.Connection = conn;
+
+                    // Base query
+                    var sql = new StringBuilder(@"
+                SELECT 
+                    f.FeedbackID,
+                    f.UserID,
+                    u.FullName AS CustomerName,
+                    f.Rating,
+                    f.Tag,
+                    f.Comments,
+                    f.CreatedAt
+                FROM Feedback f
+                INNER JOIN Users u ON f.UserID = u.UserID
+            ");
+
+                    // Apply rating filter if any selected
+                    if (selected.Count > 0)
+                    {
+                        // Create @r0,@r1,... parameters
+                        var placeholders = selected.Select((v, idx) => $"@r{idx}").ToArray();
+                        sql.Append(" WHERE f.Rating IN (" + string.Join(",", placeholders) + ") ");
+
+                        for (int i = 0; i < selected.Count; i++)
+                            cmd.Parameters.AddWithValue($"@r{i}", int.Parse(selected[i]));
+                    }
+
+                    sql.Append(" ORDER BY f.CreatedAt DESC, f.FeedbackID DESC;");
+
+                    cmd.CommandText = sql.ToString();
+
                     conn.Open();
                     DataTable dt = new DataTable();
                     dt.Load(cmd.ExecuteReader());
@@ -197,7 +232,7 @@ namespace Business_App_Dev
                     rptFeedback.DataSource = dt;
                     rptFeedback.DataBind();
 
-                    lblFeedbackMsg.Text = (dt.Rows.Count == 0) ? "No feedback yet." : "";
+                    lblFeedbackMsg.Text = (dt.Rows.Count == 0) ? "No feedback matches your filter." : "";
                 }
             }
             catch (Exception ex)
@@ -205,6 +240,8 @@ namespace Business_App_Dev
                 lblFeedbackMsg.Text = "Error loading feedback: " + ex.Message;
             }
         }
+
+
 
         // ★★★★★ stars HTML
         public IHtmlString GetStars(int rating)
@@ -223,42 +260,50 @@ namespace Business_App_Dev
         }
 
         // Map pill colors
-        public string GetFeedbackPillClass(string type)
+        public string GetFeedbackPillClass(string tag)
         {
-            switch (type?.Trim().ToLower())
+            switch ((tag ?? "").Trim().ToLower())
             {
                 case "positive": return "positive";
-                case "suggestion": return "suggestion";
                 case "negative": return "negative";
+                case "suggestion": return "suggestion";
                 default: return "suggestion";
             }
         }
+
 
         // Optional: Export CSV
         protected void btnExportFeedback_Click(object sender, EventArgs e)
         {
             using (SqlConnection conn = new SqlConnection(_connStr))
             using (SqlCommand cmd = new SqlCommand(@"
-        SELECT CustomerName, Rating, FeedbackType, FeedbackText, SubmitDate
-        FROM CustomerFeedback
-        ORDER BY SubmitDate DESC, FeedbackId DESC;", conn))
+        SELECT 
+            u.FullName AS CustomerName,
+            f.Rating,
+            f.Tag,
+            f.Comments,
+            f.CreatedAt
+        FROM Feedback f
+        INNER JOIN Users u ON f.UserID = u.UserID
+        ORDER BY f.CreatedAt DESC, f.FeedbackID DESC;", conn))
             {
                 conn.Open();
+
                 DataTable dt = new DataTable();
                 dt.Load(cmd.ExecuteReader());
 
                 StringBuilder csv = new StringBuilder();
-                csv.AppendLine("CustomerName,Rating,FeedbackType,FeedbackText,SubmitDate");
+                csv.AppendLine("CustomerName,Rating,Tag,Comments,CreatedAt");
 
                 foreach (DataRow row in dt.Rows)
                 {
                     string name = row["CustomerName"].ToString().Replace("\"", "\"\"");
-                    string type = row["FeedbackType"].ToString().Replace("\"", "\"\"");
-                    string text = row["FeedbackText"].ToString().Replace("\"", "\"\"");
+                    string tag = row["Tag"].ToString().Replace("\"", "\"\"");
+                    string comments = row["Comments"].ToString().Replace("\"", "\"\"");
                     string rating = row["Rating"].ToString();
-                    string date = Convert.ToDateTime(row["SubmitDate"]).ToString("yyyy-MM-dd");
+                    string date = Convert.ToDateTime(row["CreatedAt"]).ToString("yyyy-MM-dd HH:mm:ss");
 
-                    csv.AppendLine($"\"{name}\",{rating},\"{type}\",\"{text}\",\"{date}\"");
+                    csv.AppendLine($"\"{name}\",{rating},\"{tag}\",\"{comments}\",\"{date}\"");
                 }
 
                 Response.Clear();
@@ -268,6 +313,7 @@ namespace Business_App_Dev
                 Response.End();
             }
         }
+
         private void LoadChats()
         {
             using (SqlConnection conn = new SqlConnection(_connStr))
@@ -386,6 +432,30 @@ namespace Business_App_Dev
 
             return smtp;
         }
+        public bool HasTag(object tagObj)
+        {
+            return !string.IsNullOrWhiteSpace(Convert.ToString(tagObj));
+        }
+
+        public string GetRatingPillClass(int rating)
+        {
+            if (rating <= 2) return "bad";      // red
+            if (rating == 3) return "mid";      // orange
+            return "good";                      // green (4-5)
+        }
+        protected void btnApplyRatingFilter_Click(object sender, EventArgs e)
+        {
+            LoadFeedback(); // it will read selected ratings
+        }
+
+        protected void btnClearRatingFilter_Click(object sender, EventArgs e)
+        {
+            foreach (ListItem item in cblRatings.Items)
+                item.Selected = false;
+
+            LoadFeedback();
+        }
+
 
     }
 }

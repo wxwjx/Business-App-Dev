@@ -304,3 +304,182 @@
     gap: 10px;
     margin-top: 10px;
 }
+/* Feedback tag pill (color follows rating) */
+.eco-feedback-pill {
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 13px;
+    display: inline-block;
+}
+
+    .eco-feedback-pill.good {
+        background: #1f7a2e; /* green */
+        color: #fff;
+    }
+
+    .eco-feedback-pill.mid {
+        background: #f5a623; /* orange */
+        color: #111;
+    }
+
+    .eco-feedback-pill.bad {
+        background: #d92d20; /* red */
+        color: #fff;
+    }
+/* Header right-side actions */
+.eco-feedback-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+/* Rating filter block */
+.eco-rating-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border: 1px solid #e6e6e6;
+    border-radius: 999px;
+    background: #fff;
+}
+
+.eco-filter-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #111;
+}
+
+/* Make CheckBoxList look like compact chips */
+.eco-rating-checks input[type="checkbox"] {
+    display: none;
+}
+
+.eco-rating-checks label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid #e6e6e6;
+    background: #f8faf8;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    color: #111;
+    margin-right: 6px;
+}
+
+/* checked state (works because label follows input in WebForms output) */
+.eco-rating-checks input[type="checkbox"]:checked + label {
+    background: #2e7d32;
+    border-color: #2e7d32;
+    color: #fff;
+}
+
+/* Apply button */
+.eco-filter-btn {
+    border: 1px solid #dfe7df;
+    background: #111;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+    .eco-filter-btn:hover {
+        opacity: 0.92;
+    }
+
+/* Clear link */
+.eco-filter-clear {
+    font-weight: 800;
+    font-size: 13px;
+    color: #6b7280;
+    text-decoration: none;
+    padding: 6px 8px;
+    border-radius: 999px;
+}
+
+    .eco-filter-clear:hover {
+        background: #f3f5f4;
+        color: #111;
+    }
+/* Approve processing/disabled state */
+.eco-btn.eco-btn-disabled {
+    opacity: 0.75;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Make approve look darker when disabled */
+.eco-approve.eco-btn-disabled {
+    background: #1b5e20; /* darker green */
+    border-color: #1b5e20;
+    color: #fff;
+}
+
+/* Processing message next to buttons */
+.eco-processing {
+    display: inline-block;
+    margin-left: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #1b5e20;
+    background: #e8f5e9;
+    border: 1px solid #c8e6c9;
+    padding: 6px 10px;
+    border-radius: 999px;
+    vertical-align: middle;
+}
+/* Disabled state */
+.eco-btn.eco-btn-disabled {
+    opacity: 0.75;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.eco-approve.eco-btn-disabled {
+    background: #1b5e20;
+    border-color: #1b5e20;
+    color: #fff;
+}
+
+/* Full-page overlay */
+.eco-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.25);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.eco-overlay-card {
+    background: #fff;
+    border: 1px solid #e6e6e6;
+    border-radius: 18px;
+    padding: 18px 20px;
+    min-width: 280px;
+    text-align: center;
+    box-shadow: 0 18px 50px rgba(0,0,0,.18);
+}
+
+.eco-overlay-title {
+    font-weight: 900;
+    font-size: 15px;
+    color: #111;
+}
+
+.eco-overlay-sub {
+    margin-top: 6px;
+    font-size: 13px;
+    color: #6b7280;
+}
