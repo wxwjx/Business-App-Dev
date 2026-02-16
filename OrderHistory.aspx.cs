@@ -84,16 +84,21 @@ namespace Business_App_Dev
 
         private void BindOrders(int userId)
         {
+            // Requires dbo.Orders columns:
+            // SellerID, OrderStatus, UpdatedAt
             string sql = @"
 SELECT
-    OrderID,
-    StripeSessionId,
-    TotalAmount,
-    PayStatus,
-    CreatedAt
-FROM dbo.Orders
-WHERE UserID = @UserID
-ORDER BY CreatedAt DESC;";
+    o.OrderID,
+    o.SellerID,
+    o.StripeSessionId,
+    o.TotalAmount,
+    o.PayStatus,
+    o.OrderStatus,
+    o.CreatedAt,
+    o.UpdatedAt
+FROM dbo.Orders o
+WHERE o.UserID = @UserID
+ORDER BY o.CreatedAt DESC;";
 
             using (SqlConnection con = new SqlConnection(ConnStr()))
             using (SqlCommand cmd = new SqlCommand(sql, con))
@@ -125,6 +130,53 @@ ORDER BY CreatedAt DESC;";
                 e.Item.ItemType != ListItemType.AlternatingItem)
                 return;
 
+            var row = e.Item.DataItem as DataRowView;
+
+            string orderStatus = (row?["OrderStatus"] ?? "").ToString();
+            string orderId = (row?["OrderID"] ?? "").ToString();
+            string sellerId = (row?["SellerID"] ?? "").ToString();
+
+            bool isCompleted = orderStatus.Equals("Completed", StringComparison.OrdinalIgnoreCase);
+            bool isCancelled = orderStatus.Equals("Cancelled", StringComparison.OrdinalIgnoreCase);
+
+            bool canChat = !isCompleted && !isCancelled;
+            bool canRate = isCompleted;
+
+            // If sellerId missing, hide both buttons to avoid broken links
+            bool hasSellerId = !string.IsNullOrWhiteSpace(sellerId);
+
+            var lnkChatSeller = e.Item.FindControl("lnkChatSeller") as HyperLink;
+            var lnkRateOrder = e.Item.FindControl("lnkRateOrder") as HyperLink;
+            var pnlStuck = e.Item.FindControl("pnlStuck") as Panel;
+
+            if (lnkChatSeller != null)
+            {
+                lnkChatSeller.Visible = canChat && hasSellerId;
+                lnkChatSeller.Text = "Chat Seller";
+                lnkChatSeller.NavigateUrl = $"Chat.aspx?orderId={orderId}&sellerId={sellerId}";
+            }
+
+            if (lnkRateOrder != null)
+            {
+                lnkRateOrder.Visible = canRate && hasSellerId;
+                lnkRateOrder.Text = "Rate Order";
+                lnkRateOrder.NavigateUrl = $"SellerFeedback.aspx?orderId={orderId}&sellerId={sellerId}";
+            }
+
+            // Optional: stuck hint (60 mins since UpdatedAt)
+            if (pnlStuck != null)
+            {
+                pnlStuck.Visible = false;
+
+                if (canChat && row != null && row["UpdatedAt"] != DBNull.Value)
+                {
+                    DateTime updatedAt = Convert.ToDateTime(row["UpdatedAt"]);
+                    bool isStuck = (DateTime.Now - updatedAt).TotalMinutes >= 60;
+                    pnlStuck.Visible = isStuck;
+                }
+            }
+
+            // ---- Translation logic ----
             string lang = GetLang();
             if (lang.Equals("en", StringComparison.OrdinalIgnoreCase)) return;
 
@@ -139,6 +191,15 @@ ORDER BY CreatedAt DESC;";
 
             var lblPayStatusRow = e.Item.FindControl("lblPayStatusRow") as Label;
             if (lblPayStatusRow != null) lblPayStatusRow.Text = T(lblPayStatusRow.Text);
+
+            var lblOrderStatusRow = e.Item.FindControl("lblOrderStatusRow") as Label;
+            if (lblOrderStatusRow != null) lblOrderStatusRow.Text = T(lblOrderStatusRow.Text);
+
+            if (lnkChatSeller != null) lnkChatSeller.Text = T(lnkChatSeller.Text);
+            if (lnkRateOrder != null) lnkRateOrder.Text = T(lnkRateOrder.Text);
+
+            var lblStuckText = e.Item.FindControl("lblStuckText") as Label;
+            if (lblStuckText != null) lblStuckText.Text = T(lblStuckText.Text);
         }
 
         private void ShowError(string msg)

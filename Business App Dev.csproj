@@ -207,6 +207,7 @@
     <Content Include="About.aspx" />
     <Content Include="AddNewProduct.aspx" />
     <Content Include="Content\EcoEatsRegister.css" />
+    <Content Include="Content\OrderView.css" />
     <Content Include="Content\SellerPending.css" />
     <Content Include="ForgotPassword.aspx" />
     <Content Include="login.aspx" />
@@ -243,11 +244,12 @@
     <Content Include="Content\orders.css" />
     <Content Include="Inventory.aspx" />
     <Content Include="Landing.aspx" />
+    <Content Include="Content\OrderHistory.css" />
+    <Content Include="OrderView.aspx" />
     <Content Include="RegisterCustomer.aspx" />
     <Content Include="Content\LoginSite.css" />
     <Content Include="Messages.aspx" />
     <Content Include="OrderHistory.aspx" />
-    <Content Include="Content\OrderHistory.css" />
     <Content Include="OrderSuccess.aspx" />
     <Content Include="Product.aspx" />
     <Content Include="ProductDetails.aspx" />
@@ -415,6 +417,13 @@
     </Compile>
     <Compile Include="Landing.aspx.designer.cs">
       <DependentUpon>Landing.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="OrderView.aspx.cs">
+      <DependentUpon>OrderView.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="OrderView.aspx.designer.cs">
+      <DependentUpon>OrderView.aspx</DependentUpon>
     </Compile>
     <Compile Include="RegisterCustomer.aspx.cs">
       <DependentUpon>RegisterCustomer.aspx</DependentUpon>

@@ -11,97 +11,133 @@ namespace Business_App_Dev
 {
 
 
-    public partial class EcoEatsAdmin
+    public partial class OrderView
     {
 
         /// <summary>
-        /// rptApps control.
+        /// pnlError control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Repeater rptApps;
+        protected global::System.Web.UI.WebControls.Panel pnlError;
 
         /// <summary>
-        /// lblMsg control.
+        /// lblError control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblMsg;
+        protected global::System.Web.UI.WebControls.Label lblError;
 
         /// <summary>
-        /// cblRatings control.
+        /// pnlMain control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.CheckBoxList cblRatings;
+        protected global::System.Web.UI.WebControls.Panel pnlMain;
 
         /// <summary>
-        /// btnApplyRatingFilter control.
+        /// lblOrderId control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Button btnApplyRatingFilter;
+        protected global::System.Web.UI.WebControls.Label lblOrderId;
 
         /// <summary>
-        /// btnClearRatingFilter control.
+        /// lblCreatedAt control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.LinkButton btnClearRatingFilter;
+        protected global::System.Web.UI.WebControls.Label lblCreatedAt;
 
         /// <summary>
-        /// btnExportFeedback control.
+        /// lblPayStatus control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.LinkButton btnExportFeedback;
+        protected global::System.Web.UI.WebControls.Label lblPayStatus;
 
         /// <summary>
-        /// rptFeedback control.
+        /// lblOrderStatus control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Repeater rptFeedback;
+        protected global::System.Web.UI.WebControls.Label lblOrderStatus;
 
         /// <summary>
-        /// lblFeedbackMsg control.
+        /// lblTotal control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblFeedbackMsg;
+        protected global::System.Web.UI.WebControls.Label lblTotal;
 
         /// <summary>
-        /// rptChats control.
+        /// lnkChatSeller control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Repeater rptChats;
+        protected global::System.Web.UI.WebControls.HyperLink lnkChatSeller;
 
         /// <summary>
-        /// lblChatMsg control.
+        /// lnkRateOrder control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblChatMsg;
+        protected global::System.Web.UI.WebControls.HyperLink lnkRateOrder;
+
+        /// <summary>
+        /// refPill control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Panel refPill;
+
+        /// <summary>
+        /// lblStripeSessionId control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblStripeSessionId;
+
+        /// <summary>
+        /// pnlNoItems control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Panel pnlNoItems;
+
+        /// <summary>
+        /// rptItems control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Repeater rptItems;
     }
 }

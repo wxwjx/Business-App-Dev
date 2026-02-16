@@ -2,6 +2,7 @@
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.Web;
 
 namespace Business_App_Dev
 {
@@ -34,10 +35,10 @@ namespace Business_App_Dev
 
                 // 3) Avg Rating + Total Reviews
                 object avgObj = ExecScalar(conn,
-                    "SELECT AVG(CAST(Rating AS FLOAT)) FROM CustomerFeedback");
+                    "SELECT AVG(CAST(Rating AS FLOAT)) FROM Feedback");
 
                 object countObj = ExecScalar(conn,
-                    "SELECT COUNT(*) FROM CustomerFeedback");
+                    "SELECT COUNT(*) FROM Feedback");
 
                 double avgRating = (avgObj == DBNull.Value || avgObj == null) ? 0.0 : Convert.ToDouble(avgObj);
                 int reviewCount = (countObj == DBNull.Value || countObj == null) ? 0 : Convert.ToInt32(countObj);
@@ -75,19 +76,29 @@ namespace Business_App_Dev
         }
         protected void btnLogout_Click(object sender, EventArgs e)
         {
-            // Clear all session data
             Session.Clear();
             Session.Abandon();
 
-            // Optional: clear authentication cookie if used
+            // clear session cookie
             if (Request.Cookies["ASP.NET_SessionId"] != null)
             {
-                Response.Cookies["ASP.NET_SessionId"].Expires = DateTime.Now.AddDays(-1);
+                var s = new HttpCookie("ASP.NET_SessionId", "");
+                s.Expires = DateTime.Now.AddDays(-1);
+                Response.Cookies.Add(s);
             }
 
-            // Redirect to login page
-            Response.Redirect("~/Login.aspx");
+            // if you use FormsAuthentication anywhere, also clear it
+            System.Web.Security.FormsAuthentication.SignOut();
+            if (Request.Cookies[System.Web.Security.FormsAuthentication.FormsCookieName] != null)
+            {
+                var auth = new HttpCookie(System.Web.Security.FormsAuthentication.FormsCookieName, "");
+                auth.Expires = DateTime.Now.AddDays(-1);
+                Response.Cookies.Add(auth);
+            }
+
+            Response.Redirect("~/Login.aspx", true);
         }
+
 
     }
 }
