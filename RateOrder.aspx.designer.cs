@@ -15,6 +15,15 @@ namespace Business_App_Dev
     {
 
         /// <summary>
+        /// pnlMsg control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Panel pnlMsg;
+
+        /// <summary>
         /// lblMessage control.
         /// </summary>
         /// <remarks>
@@ -33,13 +42,13 @@ namespace Business_App_Dev
         protected global::System.Web.UI.WebControls.Panel pnlForm;
 
         /// <summary>
-        /// ddlRating control.
+        /// hfRating control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.DropDownList ddlRating;
+        protected global::System.Web.UI.WebControls.HiddenField hfRating;
 
         /// <summary>
         /// txtComment control.
@@ -49,6 +58,15 @@ namespace Business_App_Dev
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.TextBox txtComment;
+
+        /// <summary>
+        /// lnkBack control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HyperLink lnkBack;
 
         /// <summary>
         /// btnSubmit control.

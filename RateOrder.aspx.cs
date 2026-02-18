@@ -49,41 +49,57 @@ namespace Business_App_Dev
                     pnlForm.Visible = false;
                 }
             }
+            lnkBack.NavigateUrl = $"OrderView.aspx?orderId={orderId}";
         }
 
         protected void btnSubmit_Click(object sender, EventArgs e)
         {
             int orderId = Convert.ToInt32(Request.QueryString["orderId"]);
             int userId = Convert.ToInt32(Session["UserID"]);
-            int rating = Convert.ToInt32(ddlRating.SelectedValue);
-            string comment = txtComment.Text.Trim();
+
+            int rating = 5;
+            int.TryParse(hfRating.Value, out rating);
+            rating = Math.Max(1, Math.Min(5, rating));
+
+            string comment = (txtComment.Text ?? "").Trim();
 
             using (SqlConnection con = new SqlConnection(ConnStr))
             using (SqlCommand cmd = new SqlCommand(@"
-                INSERT INTO SellerFeedback (OrderID, SellerID, UserID, Rating, Comment)
-                SELECT o.OrderID, o.SellerID, o.UserID, @Rating, @Comment
-                FROM Orders o
-                WHERE o.OrderID=@OID AND o.UserID=@UID;", con))
+        -- prevent duplicates safely
+        IF EXISTS (SELECT 1 FROM dbo.SellerFeedback WHERE OrderID = @OID)
+        BEGIN
+            SELECT -1;
+            RETURN;
+        END
+
+        INSERT INTO dbo.SellerFeedback (OrderID, SellerID, UserID, Rating, Comment)
+        SELECT o.OrderID, o.SellerID, o.UserID, @Rating, @Comment
+        FROM dbo.Orders o
+        WHERE o.OrderID = @OID AND o.UserID = @UID;
+
+        SELECT 1;
+    ", con))
             {
                 cmd.Parameters.AddWithValue("@OID", orderId);
                 cmd.Parameters.AddWithValue("@UID", userId);
                 cmd.Parameters.AddWithValue("@Rating", rating);
-                cmd.Parameters.AddWithValue("@Comment", comment);
+                cmd.Parameters.AddWithValue("@Comment", (object)comment ?? DBNull.Value);
 
-                try
-                {
-                    con.Open();
-                    cmd.ExecuteNonQuery();
+                con.Open();
+                int result = Convert.ToInt32(cmd.ExecuteScalar());
 
-                    lblMessage.CssClass = "text-success";
-                    lblMessage.Text = "Thank you for your feedback!";
-                    pnlForm.Visible = false;
-                }
-                catch (SqlException)
+                if (result == 1)
                 {
-                    lblMessage.Text = "You have already submitted feedback for this order.";
-                    pnlForm.Visible = false;
+                    // ✅ best UX: go back to order view
+                    Response.Redirect($"OrderView.aspx?orderId={orderId}&rated=1");
+                    return;
                 }
+
+                // result == -1 OR insert failed (0 rows) -> show message on same page
+                pnlMsg.Visible = true;
+                lblMessage.CssClass = "text-danger";
+                lblMessage.Text = "You have already submitted feedback for this order.";
+                pnlForm.Visible = false;
             }
         }
     }

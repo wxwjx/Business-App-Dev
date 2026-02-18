@@ -39,6 +39,43 @@
         .ee-action:hover{opacity:1;text-decoration:underline;}
 
         .ee-error{color:#b91c1c;font-weight:700;margin:8px 0;}
+        /* --- Right-click menu for my messages --- */
+        .ee-bubble {
+            position: relative;
+        }
+        /* needed for absolute menu positioning */
+
+        .ee-actions-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 6px;
+            background: #fff;
+            border: 1px solid #e6e8ee;
+            border-radius: 12px;
+            padding: 6px;
+            box-shadow: 0 10px 25px rgba(15,23,42,.12);
+            z-index: 9999;
+            min-width: 120px;
+            display: none; /* hidden by default */
+        }
+
+            .ee-actions-menu .ee-action {
+                display: block;
+                width: 100%;
+                text-align: left;
+                padding: 8px 10px;
+                border-radius: 10px;
+                opacity: .9;
+                text-decoration: none;
+            }
+
+                .ee-actions-menu .ee-action:hover {
+                    background: #f3f5fb;
+                    opacity: 1;
+                    text-decoration: none;
+                }
+
     </style>
 </asp:Content>
 
@@ -103,7 +140,7 @@
                         OnItemDataBound="rptMessages_ItemDataBound">
                         <ItemTemplate>
                             <div class='ee-row <%# (bool)Eval("IsMe") ? "me" : "" %>'>
-                                <div class="ee-bubble">
+                                <div class='ee-bubble <%# (bool)Eval("IsMe") ? "is-me" : "" %>'>
 
                                     <!-- VIEW -->
                                     <asp:Panel ID="pnlView" runat="server">
@@ -113,13 +150,17 @@
                                             <span><%# Eval("SentAt", "{0:dd MMM, HH:mm}") %></span>
                                             <span class="spacer"></span>
 
-                                            <asp:Panel ID="pnlActions" runat="server">
+                                            <asp:Panel ID="pnlActions" runat="server"
+                                                CssClass="ee-actions-menu"
+                                                Visible='<%# (bool)Eval("IsMe") %>'>
                                                 <asp:LinkButton runat="server" CssClass="ee-action"
                                                     CommandName="Edit" CommandArgument='<%# Eval("MessageID") %>'>Edit</asp:LinkButton>
+
                                                 <asp:LinkButton runat="server" CssClass="ee-action"
                                                     CommandName="Delete" CommandArgument='<%# Eval("MessageID") %>'
                                                     OnClientClick="return confirm('Delete this message?');">Delete</asp:LinkButton>
                                             </asp:Panel>
+
                                         </div>
                                     </asp:Panel>
 
@@ -141,14 +182,48 @@
                     </asp:Repeater>
                 </div>
 
-                <div class="ee-compose">
+                <asp:Panel ID="pnlCompose" runat="server" CssClass="ee-compose" DefaultButton="btnSend">
                     <asp:TextBox ID="txtMessage" runat="server" CssClass="ee-input" placeholder="Type a message..." />
                     <asp:Button ID="btnSend" runat="server" Text="Send" CssClass="ee-btn ee-btn-primary"
                         OnClick="btnSend_Click" CausesValidation="false" />
-                </div>
+                </asp:Panel>
+
             </div>
         </div>
     </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
 
+            function closeAllMenus() {
+                document.querySelectorAll(".ee-actions-menu").forEach(m => m.style.display = "none");
+            }
+
+            // Right-click on MY bubble opens menu
+            document.addEventListener("contextmenu", function (e) {
+                const bubble = e.target.closest(".ee-bubble.is-me");
+                if (!bubble) return; // allow normal right click elsewhere
+
+                const menu = bubble.querySelector(".ee-actions-menu");
+                if (!menu) return;
+
+                e.preventDefault();
+                closeAllMenus();
+                menu.style.display = "block";
+            });
+
+            // Click anywhere closes menus
+            document.addEventListener("click", function (e) {
+                // If clicking inside the menu, let the LinkButton click proceed
+                if (e.target.closest(".ee-actions-menu")) return;
+                closeAllMenus();
+            });
+
+            // ESC closes
+            document.addEventListener("keydown", function (e) {
+                if (e.key === "Escape") closeAllMenus();
+            });
+
+        });
+    </script>
 </asp:Content>
 

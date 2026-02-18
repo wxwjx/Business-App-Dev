@@ -106,10 +106,6 @@
                                         Text="View details" />
                                 </a>
 
-                                <asp:HyperLink ID="lnkChatSeller" runat="server"
-                                    CssClass="oh-btn oh-btn-secondary"
-                                    Visible="false" />
-
                                 <asp:HyperLink ID="lnkRateOrder" runat="server"
                                     CssClass="oh-btn oh-btn-secondary"
                                     Visible="false" />
@@ -134,7 +130,7 @@
                             <div class="oh-alert-text">
                                 <asp:Label ID="lblStuckText"
                                     runat="server"
-                                    Text="Chat the seller to confirm the latest status." />
+                                    Text="Check the order details for the latest status." />
                             </div>
                         </div>
                     </asp:Panel>

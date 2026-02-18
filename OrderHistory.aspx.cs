@@ -144,17 +144,8 @@ ORDER BY o.CreatedAt DESC;";
 
             // If sellerId missing, hide both buttons to avoid broken links
             bool hasSellerId = !string.IsNullOrWhiteSpace(sellerId);
-
-            var lnkChatSeller = e.Item.FindControl("lnkChatSeller") as HyperLink;
             var lnkRateOrder = e.Item.FindControl("lnkRateOrder") as HyperLink;
             var pnlStuck = e.Item.FindControl("pnlStuck") as Panel;
-
-            if (lnkChatSeller != null)
-            {
-                lnkChatSeller.Visible = canChat && hasSellerId;
-                lnkChatSeller.Text = "Chat Seller";
-                lnkChatSeller.NavigateUrl = $"Chat.aspx?orderId={orderId}&sellerId={sellerId}";
-            }
 
             if (lnkRateOrder != null)
             {
@@ -195,7 +186,6 @@ ORDER BY o.CreatedAt DESC;";
             var lblOrderStatusRow = e.Item.FindControl("lblOrderStatusRow") as Label;
             if (lblOrderStatusRow != null) lblOrderStatusRow.Text = T(lblOrderStatusRow.Text);
 
-            if (lnkChatSeller != null) lnkChatSeller.Text = T(lnkChatSeller.Text);
             if (lnkRateOrder != null) lnkRateOrder.Text = T(lnkRateOrder.Text);
 
             var lblStuckText = e.Item.FindControl("lblStuckText") as Label;

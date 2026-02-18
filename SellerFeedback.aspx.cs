@@ -2,6 +2,7 @@
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
 
 namespace Business_App_Dev
 {
@@ -26,17 +27,38 @@ namespace Business_App_Dev
 
         private void BindFeedback()
         {
+            int sellerId = Convert.ToInt32(Session["SellerID"]);
+
             using (SqlConnection con = new SqlConnection(ConnStr))
             using (SqlCommand cmd = new SqlCommand(@"
-                SELECT OrderID, Rating, Comment, CreatedAt
-                FROM SellerFeedback
-                WHERE SellerID=@SID
-                ORDER BY CreatedAt DESC;", con))
+        SELECT OrderID, Rating, Comment, CreatedAt
+        FROM dbo.SellerFeedback
+        WHERE SellerID = @SID
+        ORDER BY CreatedAt DESC;
+    ", con))
             {
-                cmd.Parameters.AddWithValue("@SID", Session["SellerID"]);
+                cmd.Parameters.AddWithValue("@SID", sellerId);
 
                 DataTable dt = new DataTable();
                 new SqlDataAdapter(cmd).Fill(dt);
+
+                // Empty state
+                pnlEmpty.Visible = dt.Rows.Count == 0;
+
+                // Summary
+                if (dt.Rows.Count > 0)
+                {
+                    double avg = dt.AsEnumerable().Average(r => Convert.ToDouble(r["Rating"]));
+                    lblAvgRating.Text = avg.ToString("0.0");
+                    lblTotalReviews.Text = dt.Rows.Count.ToString();
+                    lblLatestDate.Text = Convert.ToDateTime(dt.Rows[0]["CreatedAt"]).ToString("dd MMM yyyy");
+                }
+                else
+                {
+                    lblAvgRating.Text = "-";
+                    lblTotalReviews.Text = "0";
+                    lblLatestDate.Text = "-";
+                }
 
                 rptFeedback.DataSource = dt;
                 rptFeedback.DataBind();
