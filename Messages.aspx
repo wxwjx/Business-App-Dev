@@ -64,9 +64,12 @@
                 <div class="ee-inbox-list">
                     <asp:Repeater ID="rptInbox" runat="server" OnItemCommand="rptInbox_ItemCommand">
                         <ItemTemplate>
-                            <asp:LinkButton runat="server" CssClass="ee-inbox-item"
+                            <asp:LinkButton runat="server" ID="lnkOpen" CssClass="ee-inbox-item"
                                 CommandName="Open"
-                                CommandArgument='<%# Eval("ConversationID") %>'>
+                                CommandArgument='<%# Eval("ConversationID") %>'
+                                CausesValidation="false"
+                                UseSubmitBehavior="false">
+
                                 <div>
                                     <div class="ee-inbox-name"><%# Eval("ShopName") %></div>
                                     <div class="ee-inbox-preview"><%# Eval("LastPreview") %></div>

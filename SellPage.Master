@@ -51,8 +51,7 @@
                 <a href="SellerWasteTracker.aspx">Waste Tracker</a>
                 <a href="Inventory.aspx">Inventory</a>
                 <a href="SellerOrders.aspx">Orders</a>
-                <a href="SellerReviews.aspx">Reviews</a>
-                <a href="SellerMessages.aspx">Messages</a>
+                <a href="SellerFeedback.aspx">Feedback</a>
                 <a href="SellerProfile.aspx">Store Profile</a>
             </nav>
 

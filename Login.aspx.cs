@@ -165,6 +165,7 @@ namespace Business_App_Dev
                 }
 
                 Session["UserId"] = userId;
+                Session["UserID"] = userId;       // ✅ for pages that read UserID
                 Session["UserEmail"] = userEmail;   // store real email from DB
                 Session["UserRole"] = "Customer";
                 Response.Redirect("Product.aspx");
@@ -188,7 +189,8 @@ namespace Business_App_Dev
                 }
 
                 Session["SellerId"] = sellerId;
-                Session["UserEmail"] = sellerEmail; // store real email
+                Session["SellerID"] = sellerId;   // ✅ for pages that read SellerID
+                Session["UserEmail"] = sellerEmail;
                 Session["UserRole"] = "Seller";
                 Response.Redirect("SellerDashboard.aspx");
                 return;
@@ -283,7 +285,8 @@ namespace Business_App_Dev
         // Seller login (email OR phone)
         // Requires SellerApplications.PhoneNumber column
         // -------------------------
-        private bool TryLoginSeller(string email, string phone, string password, out int sellerId, out string status, out string sellerEmail)
+        private bool TryLoginSeller(string email, string phone, string password,
+    out int sellerId, out string status, out string sellerEmail)
         {
             sellerId = 0;
             status = "";
@@ -291,12 +294,20 @@ namespace Business_App_Dev
 
             using (SqlConnection conn = new SqlConnection(_connStr))
             using (SqlCommand cmd = new SqlCommand(@"
-                SELECT TOP 1 Id, Email, PasswordHash, Status
-                FROM SellerApplications
-                WHERE
-                    (@Email IS NOT NULL AND LOWER(LTRIM(RTRIM(Email))) = LOWER(LTRIM(RTRIM(@Email))))
-                 OR (@Phone IS NOT NULL AND LTRIM(RTRIM(PhoneNumber)) = LTRIM(RTRIM(@Phone)))
-            ", conn))
+        SELECT TOP 1
+            s.SellerID,              -- ✅ real seller id
+            sa.Email,
+            sa.PasswordHash,
+            sa.Status
+        FROM dbo.SellerApplications sa
+        INNER JOIN dbo.Seller s
+            ON LOWER(LTRIM(RTRIM(s.Email))) = LOWER(LTRIM(RTRIM(sa.Email)))
+        WHERE
+            (
+                (@Email IS NOT NULL AND LOWER(LTRIM(RTRIM(sa.Email))) = LOWER(LTRIM(RTRIM(@Email))))
+             OR (@Phone IS NOT NULL AND LTRIM(RTRIM(sa.PhoneNumber)) = LTRIM(RTRIM(@Phone)))
+            );
+    ", conn))
             {
                 cmd.Parameters.AddWithValue("@Email", (object)email ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@Phone", (object)phone ?? DBNull.Value);
@@ -308,7 +319,7 @@ namespace Business_App_Dev
                     if (!r.Read())
                         return false;
 
-                    sellerId = Convert.ToInt32(r["Id"]);
+                    sellerId = Convert.ToInt32(r["SellerID"]);              // ✅ Seller table ID
                     sellerEmail = (r["Email"]?.ToString() ?? "").Trim();
                     status = (r["Status"]?.ToString() ?? "").Trim();
                     string stored = (r["PasswordHash"]?.ToString() ?? "").Trim();
