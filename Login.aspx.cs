@@ -295,12 +295,12 @@ namespace Business_App_Dev
             using (SqlConnection conn = new SqlConnection(_connStr))
             using (SqlCommand cmd = new SqlCommand(@"
         SELECT TOP 1
-            s.SellerID,              -- ✅ real seller id
+            s.SellerID,
             sa.Email,
             sa.PasswordHash,
             sa.Status
         FROM dbo.SellerApplications sa
-        INNER JOIN dbo.Seller s
+        LEFT JOIN dbo.Seller s
             ON LOWER(LTRIM(RTRIM(s.Email))) = LOWER(LTRIM(RTRIM(sa.Email)))
         WHERE
             (
@@ -319,23 +319,33 @@ namespace Business_App_Dev
                     if (!r.Read())
                         return false;
 
-                    sellerId = Convert.ToInt32(r["SellerID"]);              // ✅ Seller table ID
-                    sellerEmail = (r["Email"]?.ToString() ?? "").Trim();
                     status = (r["Status"]?.ToString() ?? "").Trim();
+                    sellerEmail = (r["Email"]?.ToString() ?? "").Trim();
                     string stored = (r["PasswordHash"]?.ToString() ?? "").Trim();
 
-                    // Not approved
-                    if (!status.Equals("Approved", StringComparison.OrdinalIgnoreCase))
-                        return false;
-
-                    // Invalid hash
+                    // validate hash
                     if (!stored.StartsWith("pbkdf2$"))
                         return false;
 
-                    return VerifyPbkdf2(password, stored);
+                    // verify password FIRST
+                    if (!VerifyPbkdf2(password, stored))
+                        return false;
+
+                    // if not approved -> return false but status is known
+                    if (!status.Equals("Approved", StringComparison.OrdinalIgnoreCase))
+                        return false;
+
+                    // approved but missing Seller row = error
+                    if (r["SellerID"] == DBNull.Value)
+                        return false;
+
+                    sellerId = Convert.ToInt32(r["SellerID"]);
+                    return true;
                 }
             }
         }
+
+
 
         // -------------------------
         // PBKDF2 verify helpers
