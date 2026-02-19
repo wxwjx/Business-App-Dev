@@ -51,6 +51,42 @@ namespace Business_App_Dev
         protected global::System.Web.UI.ScriptManager sm1;
 
         /// <summary>
+        /// lblBellCount control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblBellCount;
+
+        /// <summary>
+        /// btnBellMarkAll control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.LinkButton btnBellMarkAll;
+
+        /// <summary>
+        /// rptBell control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Repeater rptBell;
+
+        /// <summary>
+        /// lblBellEmpty control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblBellEmpty;
+
+        /// <summary>
         /// upKpi control.
         /// </summary>
         /// <remarks>

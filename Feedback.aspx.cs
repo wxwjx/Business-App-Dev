@@ -95,8 +95,16 @@ namespace Business_App_Dev
 
                         cmd.ExecuteNonQuery();
                     }
+                    NotificationHelper.Add(
+                        "Feedback",
+                        "New feedback received",
+                        "A customer submitted feedback.",
+                        "feedback",
+                        null
+                    );
 
                     lblFormMessage.Text = "Feedback submitted. Thank you!";
+
                 }
                 else
                 {

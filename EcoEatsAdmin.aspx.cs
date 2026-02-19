@@ -7,7 +7,6 @@ using System.Net;
 using System.Net.Mail;
 using System.Text;
 using System.Web;
-using System.Web.UI;
 using System.Web.UI.WebControls;
 
 namespace Business_App_Dev
@@ -66,12 +65,14 @@ namespace Business_App_Dev
                 ApproveSeller(appId);
                 lblMsg.Text = "✅ Seller application approved.";
                 ShowToast("Seller approved & email sent");
+                InsertNotification("Seller approved", $"Application #{appId} approved.");
             }
             else if (e.CommandName == "REJECT")
             {
                 UpdateStatus(appId, "REJECTED");
                 lblMsg.Text = "❌ Seller application rejected.";
                 ShowToast("Application rejected", "error");
+                InsertNotification("Seller rejected", $"Application #{appId} rejected.");
             }
 
             LoadPendingApplications();
@@ -150,6 +151,7 @@ namespace Business_App_Dev
                 cmd.ExecuteNonQuery();
             }
         }
+
 
         private void SendSellerApprovedEmail(string toEmail, string shopName)
         {
@@ -455,8 +457,19 @@ namespace Business_App_Dev
 
             LoadFeedback();
         }
-
-
+        private void InsertNotification(string title, string message)
+        {
+            using (SqlConnection conn = new SqlConnection(_connStr))
+            using (SqlCommand cmd = new SqlCommand(@"
+        INSERT INTO AdminNotifications (Type, Title, Message)
+        VALUES ('System', @t, @m)", conn))
+            {
+                cmd.Parameters.AddWithValue("@t", title);
+                cmd.Parameters.AddWithValue("@m", message);
+                conn.Open();
+                cmd.ExecuteNonQuery();
+            }
+        }
     }
 }
 
