@@ -321,6 +321,7 @@
     <Content Include="SignUp.aspx" />
     <Content Include="Site.Master" />
     <Content Include="Content\Verify2FA.css" />
+    <Content Include="StoreDetails.aspx" />
     <Content Include="Verify2FA.aspx" />
     <Content Include="ViewSwitcher.ascx" />
     <Content Include="Web.config" />
@@ -554,6 +555,13 @@
     </Compile>
     <Compile Include="Site.Mobile.Master.designer.cs">
       <DependentUpon>Site.Mobile.Master</DependentUpon>
+    </Compile>
+    <Compile Include="StoreDetails.aspx.cs">
+      <DependentUpon>StoreDetails.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="StoreDetails.aspx.designer.cs">
+      <DependentUpon>StoreDetails.aspx</DependentUpon>
     </Compile>
     <Compile Include="Verify2FA.aspx.cs">
       <DependentUpon>Verify2FA.aspx</DependentUpon>
