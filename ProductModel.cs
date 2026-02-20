@@ -30,6 +30,13 @@ namespace Business_App_Dev
             ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
 
         // ====== Helper: Map SQL row → ProductModel ======
+
+     
+            
+                
+            
+
+        
         private static ProductModel ReadProduct(SqlDataReader r)
         {
             return new ProductModel
@@ -64,6 +71,8 @@ namespace Business_App_Dev
         // =========================================================
         // BACKWARD COMPAT (so your other pages won't break)
         // =========================================================
+
+       
 
         public static List<ProductModel> GetProductBySeller(int SellerId)
 

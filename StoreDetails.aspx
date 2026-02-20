@@ -1,315 +1,320 @@
-﻿<%@ Page Title="" Language="C#" MasterPageFile="~/SellPage.Master" AutoEventWireup="true" CodeBehind="StoreDetails.aspx.cs" Inherits="Business_App_Dev.StoreDetails" %>
-<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
-<!-- If you prefer, move CSS into EcoEats.css instead of inline -->
+﻿<%@ Page Title="Store Details"
+    Language="C#"
+    MasterPageFile="~/SellPage.master"
+    AutoEventWireup="true"
+    CodeBehind="StoreDetails.aspx.cs"
+    Inherits="Business_App_Dev.StoreDetails" %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+
     <style>
-        /* ===== Store Details Page (Front-end only) ===== */
-        .sd-wrap { padding: 18px 0 40px; }
-        .sd-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 18px; align-items: start; }
+        .sd-container { max-width: 1100px; margin: 30px auto; padding: 0 10px; }
+        .sd-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .sd-grid { display: grid; grid-template-columns: 1fr 320px; gap: 18px; align-items: start; }
+        @media (max-width: 992px) { .sd-grid { grid-template-columns: 1fr; } }
 
-        .sd-card {
-            background: #fff;
-            border: 1px solid rgba(0,0,0,0.08);
-            border-radius: 18px;
-            padding: 18px;
-            box-shadow: 0 10px 26px rgba(0,0,0,0.04);
-        }
+        .sd-card { background: #fff; padding: 25px; border-radius: 16px; box-shadow: 0 6px 18px rgba(0,0,0,0.06); }
+        .sd-field { margin-bottom: 18px; }
+        .sd-field label { font-weight: 700; display: block; margin-bottom: 6px; color: #2c3e50; }
+        .sd-value { color: #555; font-size: 15px; line-height: 1.5; white-space: normal; }
 
-        .sd-card h2 {
-            margin: 0 0 14px;
-            font-size: 18px;
-            font-weight: 800;
-            letter-spacing: -0.2px;
-        }
+        .sd-input, .sd-textarea { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #ddd; font-size: 14px; background: #fff; }
+        .sd-textarea { resize: vertical; }
 
-        .sd-muted { color: rgba(0,0,0,0.55); font-size: 13px; margin-top: -6px; margin-bottom: 14px; }
+        .sd-actions { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .sd-btn { padding: 10px 18px; border-radius: 10px; border: none; cursor: pointer; font-weight: 700; }
+        .sd-edit-btn { background: #27ae60; color: #fff; }
+        .sd-save-btn { background: #2ecc71; color: #fff; }
+        .sd-cancel-btn { background: #bdc3c7; color: #1f2d3d; }
 
-        .sd-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .sd-row-1 { display: grid; grid-template-columns: 1fr; gap: 12px; }
-        .sd-field { margin-bottom: 12px; }
+        .sd-side-card-title { font-weight: 800; font-size: 18px; margin: 0 0 12px 0; color: #1f2d3d; }
+        .sd-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+        .sd-tag { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 999px; border: 1px solid #e5e7eb; background: #fff; color: #111827; font-size: 13px; font-weight: 700; white-space: nowrap; }
 
-        .sd-label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 13px; }
-        .sd-input, .sd-textarea, .sd-select {
-            width: 100%;
-            border: 1px solid rgba(0,0,0,0.10);
-            background: rgba(0,0,0,0.02);
-            border-radius: 14px;
-            padding: 12px 12px;
-            outline: none;
-            font-size: 14px;
-        }
-        .sd-textarea { min-height: 120px; resize: vertical; }
+        .sd-pill-list { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; }
+        .sd-pill-list label { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 999px; border: 1px solid #e5e7eb; background: #fff; cursor: pointer; user-select: none; font-size: 13px; font-weight: 700; color: #111827; }
+        .sd-pill-list input[type="checkbox"] { width: 16px; height: 16px; accent-color: #27ae60; }
 
-        .sd-input:focus, .sd-textarea:focus, .sd-select:focus {
-            border-color: rgba(0,0,0,0.22);
-            background: #fff;
-        }
+        .sd-note { margin-top: 12px; color: #6b7280; font-size: 13px; }
 
-        .sd-inline {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .sd-chipbox {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .sd-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 10px;
-            border: 1px solid rgba(0,0,0,0.10);
-            background: #fff;
-            border-radius: 999px;
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .sd-chip input { accent-color: #2f8f46; }
-
-        .sd-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-top: 10px;
-        }
-
-        .sd-btn {
-            border: none;
-            border-radius: 14px;
-            padding: 11px 14px;
-            font-weight: 800;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .sd-btn-primary { background: #1f7a3b; color: #fff; }
-        .sd-btn-ghost { background: rgba(0,0,0,0.06); color: #111; }
-
-        .sd-hours {
-            width: 100%;
-            border-collapse: collapse;
-            overflow: hidden;
-            border-radius: 14px;
-            border: 1px solid rgba(0,0,0,0.08);
-            background: #fff;
-        }
-        .sd-hours th, .sd-hours td {
-            padding: 12px 12px;
-            border-bottom: 1px solid rgba(0,0,0,0.06);
-            text-align: left;
-            font-size: 14px;
-        }
-        .sd-hours th { background: rgba(0,0,0,0.03); font-size: 12px; text-transform: uppercase; letter-spacing: .6px; }
-        .sd-hours tr:last-child td { border-bottom: none; }
-
-        .sd-time { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .sd-toggle {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 12px;
-            border-radius: 14px;
-            border: 1px solid rgba(0,0,0,0.08);
-            background: rgba(0,0,0,0.02);
-        }
-
-        .sd-sidecard .sd-linkbtn {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            width: 100%;
-            border: 1px solid rgba(0,0,0,0.10);
-            background: #fff;
-            padding: 12px 12px;
-            border-radius: 14px;
-            text-decoration: none;
-            font-weight: 800;
-            color: #111;
-        }
-
-        .sd-sidecard .sd-linkbtn:hover { background: rgba(0,0,0,0.02); }
-
-        .sd-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-            font-weight: 800;
-            padding: 8px 10px;
-            border-radius: 999px;
-            background: rgba(31,122,59,0.10);
-            color: #1f7a3b;
-            border: 1px solid rgba(31,122,59,0.20);
-        }
-
-        /* Responsive */
-        @media (max-width: 980px) {
-            .sd-grid { grid-template-columns: 1fr; }
-        }
-        @media (max-width: 560px) {
-            .sd-row { grid-template-columns: 1fr; }
-            .sd-actions { flex-direction: column; }
-            .sd-btn { width: 100%; }
-        }
+        .sd-hours-row { display: grid; grid-template-columns: 70px 120px 1fr; gap: 10px; align-items: center; margin-bottom: 10px; }
+        .sd-day { font-weight: 700; color: #2c3e50; }
+        .sd-hours-timewrap { display: flex; gap: 10px; }
+        .sd-hours-time { min-width: 140px; }
+        #viewSection, #editSection { grid-column: 1; }
+        .sd-sidebar { grid-column: 2; }
     </style>
-</asp:Content>
 
-<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <div class="sd-container">
 
-    <div class="sd-wrap">
-        <div class="sd-grid">
+        <asp:HiddenField ID="hfEditMode" runat="server" Value="0" />
 
-            <!-- LEFT: Store details form -->
-            <section class="sd-card">
-                <h2>Store Details</h2>
-                <div class="sd-muted">Update your store profile so customers can find you easily.</div>
+        <div class="sd-header">
+            <h2 style="margin:0;">Store Details</h2>
 
-                <div class="sd-row">
-                    <div class="sd-field">
-                        <label class="sd-label">Store Name</label>
-                        <asp:TextBox ID="tbStoreName" runat="server" CssClass="sd-input" placeholder="e.g., Pho House" />
-                    </div>
+           <div class="sd-header">
+    <h2 style="margin:0;">Store Details</h2>
 
-                    <div class="sd-field">
-                        <label class="sd-label">Contact Number</label>
-                        <asp:TextBox ID="tbPhone" runat="server" CssClass="sd-input" placeholder="+65 9123 4567" />
-                    </div>
-                </div>
+    <asp:Button ID="btnEdit"
+        runat="server"
+        Text="Edit"
+        CssClass="sd-btn sd-edit-btn"
+        OnClientClick="toggleEdit(true); return false;" />
+</div>  <%-- ✅ CLOSE sd-header --%>
 
-                <div class="sd-row-1">
-                    <div class="sd-field">
-                        <label class="sd-label">Store Address</label>
-                        <asp:TextBox ID="tbAddress" runat="server" CssClass="sd-input"
-                            placeholder="e.g., 123 Food Street, #01-45, Singapore 123456" />
-                    </div>
+<div class="sd-grid">
 
-                    <div class="sd-field">
-                        <label class="sd-label">Store Description</label>
-                        <asp:TextBox ID="tbDescription" runat="server" CssClass="sd-textarea" TextMode="MultiLine"
-                            placeholder="Tell customers what you sell and what makes your store special…" />
-                    </div>
+            <!-- ================= LEFT ================= -->
+
+            <!-- VIEW MODE -->
+            <div id="viewSection" ClientIDMode="Static" class="sd-card" runat="server">
+
+                <div class="sd-field">
+                    <label>Store Name</label>
+                    <asp:Label ID="lblStoreName" runat="server" CssClass="sd-value" />
                 </div>
 
                 <div class="sd-field">
-                    <label class="sd-label">Categories</label>
-                    <div class="sd-chipbox">
-                        <!-- Front-end only: swap to DB-driven later -->
-                        <label class="sd-chip"><input type="checkbox" /> Asian Cuisine</label>
-                        <label class="sd-chip"><input type="checkbox" /> Vietnamese</label>
-                        <label class="sd-chip"><input type="checkbox" /> Healthy</label>
-                        <label class="sd-chip"><input type="checkbox" /> Fresh</label>
-                        <label class="sd-chip"><input type="checkbox" /> Halal</label>
-                        <label class="sd-chip"><input type="checkbox" /> Vegetarian</label>
-                    </div>
+                    <label>Phone</label>
+                    <asp:Label ID="lblPhone" runat="server" CssClass="sd-value" />
                 </div>
 
                 <div class="sd-field">
-                    <label class="sd-label">Store Availability</label>
-                    <div class="sd-toggle">
-                        <asp:CheckBox ID="cbStoreOpen" runat="server" />
-                        <div>
-                            <div style="font-weight:800;">Accepting Orders</div>
-                            <div class="sd-muted" style="margin:4px 0 0;">Turn off if you are temporarily unavailable.</div>
-                        </div>
+                    <label>Email</label>
+                    <asp:Label ID="lblEmail" runat="server" CssClass="sd-value" />
+                </div>
+
+                <div class="sd-field">
+                    <label>Store Address</label>
+                    <asp:Label ID="lblAddress" runat="server" CssClass="sd-value" />
+                </div>
+
+                <div class="sd-field">
+                    <label>Description</label>
+                    <asp:Label ID="lblDescription" runat="server" CssClass="sd-value" />
+                </div>
+
+                <div class="sd-field">
+                    <label>Business Hours</label>
+                    <asp:Label ID="lblHours" runat="server" CssClass="sd-value" />
+                </div>
+
+            </div>
+
+            <!-- EDIT MODE -->
+            <div id="editSection" ClientIDMode="Static" style="display:none" runat="server" class="sd-card">
+
+                <div class="sd-field">
+                    <label>Store Name</label>
+                    <asp:TextBox ID="tbStoreName" runat="server" CssClass="sd-input" />
+                </div>
+
+                <div class="sd-field">
+                    <label>Phone</label>
+                    <asp:TextBox ID="tbPhone" runat="server" CssClass="sd-input" />
+                </div>
+
+                <div class="sd-field">
+                    <label>Email</label>
+                    <asp:TextBox ID="tbEmail" runat="server" CssClass="sd-input" TextMode="Email" />
+                </div>
+
+                <div class="sd-field">
+                    <label>Store Address</label>
+                    <asp:TextBox ID="tbAddress" runat="server" CssClass="sd-input" />
+                </div>
+
+                <div class="sd-field">
+                    <label>Description</label>
+                    <asp:TextBox ID="tbDescription" runat="server" TextMode="MultiLine" Rows="4" CssClass="sd-textarea" />
+                </div>
+
+                <div class="sd-field">
+                    <label>Operating Hours</label>
+
+                    <!-- DEFAULT -->
+                    <div class="sd-hours-row">
+                        <div class="sd-day">Default</div>
+                        <div></div>
+                        <span class="sd-hours-timewrap">
+                            <asp:TextBox ID="tbDefaultFrom" runat="server" CssClass="sd-input sd-hours-time" TextMode="Time" />
+                            <asp:TextBox ID="tbDefaultTo" runat="server" CssClass="sd-input sd-hours-time" TextMode="Time" />
+                        </span>
+                    </div>
+
+                    <!-- Day rows -->
+                    <div class="sd-hours-row">
+                        <div class="sd-day">Mon</div>
+                        <asp:DropDownList ID="ddlMonMode" runat="server" CssClass="sd-input" onchange="toggleDay('Mon')">
+                            <asp:ListItem Text="Default" Value="Default" />
+                            <asp:ListItem Text="Closed" Value="Closed" />
+                            <asp:ListItem Text="Custom" Value="Custom" />
+                        </asp:DropDownList>
+                        <span id="wrapMon" class="sd-hours-timewrap">
+                            <asp:TextBox ID="tbMonFrom" runat="server" CssClass="sd-input sd-hours-time" TextMode="Time" />
+                            <asp:TextBox ID="tbMonTo" runat="server" CssClass="sd-input sd-hours-time" TextMode="Time" />
+                        </span>
+                    </div>
+
+                    <div class="sd-hours-row">
+                        <div class="sd-day">Tue</div>
+                        <asp:DropDownList ID="ddlTueMode" runat="server" CssClass="sd-input" onchange="toggleDay('Tue')">
+                            <asp:ListItem Text="Default" Value="Default" />
+                            <asp:ListItem Text="Closed" Value="Closed" />
+                            <asp:ListItem Text="Custom" Value="Custom" />
+                        </asp:DropDownList>
+                        <span id="wrapTue" class="sd-hours-timewrap">
+                            <asp:TextBox ID="tbTueFrom" runat="server" CssClass="sd-input sd-hours-time" TextMode="Time" />
+                            <asp:TextBox ID="tbTueTo" runat="server" CssClass="sd-input sd-hours-time" TextMode="Time" />
+                        </span>
+                    </div>
+
+                    <div class="sd-hours-row">
+                        <div class="sd-day">Wed</div>
+                        <asp:DropDownList ID="ddlWedMode" runat="server" CssClass="sd-input" onchange="toggleDay('Wed')">
+                            <asp:ListItem Text="Default" Value="Default" />
+                            <asp:ListItem Text="Closed" Value="Closed" />
+                            <asp:ListItem Text="Custom" Value="Custom" />
+                        </asp:DropDownList>
+                        <span id="wrapWed" class="sd-hours-timewrap">
+                            <asp:TextBox ID="tbWedFrom" runat="server" CssClass="sd-input sd-hours-time" TextMode="Time" />
+                            <asp:TextBox ID="tbWedTo" runat="server" CssClass="sd-input sd-hours-time" TextMode="Time" />
+                        </span>
+                    </div>
+
+                    <div class="sd-hours-row">
+                        <div class="sd-day">Thu</div>
+                        <asp:DropDownList ID="ddlThuMode" runat="server" CssClass="sd-input" onchange="toggleDay('Thu')">
+                            <asp:ListItem Text="Default" Value="Default" />
+                            <asp:ListItem Text="Closed" Value="Closed" />
+                            <asp:ListItem Text="Custom" Value="Custom" />
+                        </asp:DropDownList>
+                        <span id="wrapThu" class="sd-hours-timewrap">
+                            <asp:TextBox ID="tbThuFrom" runat="server" CssClass="sd-input sd-hours-time" TextMode="Time" />
+                            <asp:TextBox ID="tbThuTo" runat="server" CssClass="sd-input sd-hours-time" TextMode="Time" />
+                        </span>
+                    </div>
+
+                    <div class="sd-hours-row">
+                        <div class="sd-day">Fri</div>
+                        <asp:DropDownList ID="ddlFriMode" runat="server" CssClass="sd-input" onchange="toggleDay('Fri')">
+                            <asp:ListItem Text="Default" Value="Default" />
+                            <asp:ListItem Text="Closed" Value="Closed" />
+                            <asp:ListItem Text="Custom" Value="Custom" />
+                        </asp:DropDownList>
+                        <span id="wrapFri" class="sd-hours-timewrap">
+                            <asp:TextBox ID="tbFriFrom" runat="server" CssClass="sd-input sd-hours-time" TextMode="Time" />
+                            <asp:TextBox ID="tbFriTo" runat="server" CssClass="sd-input sd-hours-time" TextMode="Time" />
+                        </span>
+                    </div>
+
+                    <div class="sd-hours-row">
+                        <div class="sd-day">Sat</div>
+                        <asp:DropDownList ID="ddlSatMode" runat="server" CssClass="sd-input" onchange="toggleDay('Sat')">
+                            <asp:ListItem Text="Default" Value="Default" />
+                            <asp:ListItem Text="Closed" Value="Closed" />
+                            <asp:ListItem Text="Custom" Value="Custom" />
+                        </asp:DropDownList>
+                        <span id="wrapSat" class="sd-hours-timewrap">
+                            <asp:TextBox ID="tbSatFrom" runat="server" CssClass="sd-input sd-hours-time" TextMode="Time" />
+                            <asp:TextBox ID="tbSatTo" runat="server" CssClass="sd-input sd-hours-time" TextMode="Time" />
+                        </span>
+                    </div>
+
+                    <div class="sd-hours-row">
+                        <div class="sd-day">Sun</div>
+                        <asp:DropDownList ID="ddlSunMode" runat="server" CssClass="sd-input" onchange="toggleDay('Sun')">
+                            <asp:ListItem Text="Default" Value="Default" />
+                            <asp:ListItem Text="Closed" Value="Closed" />
+                            <asp:ListItem Text="Custom" Value="Custom" />
+                        </asp:DropDownList>
+                        <span id="wrapSun" class="sd-hours-timewrap">
+                            <asp:TextBox ID="tbSunFrom" runat="server" CssClass="sd-input sd-hours-time" TextMode="Time" />
+                            <asp:TextBox ID="tbSunTo" runat="server" CssClass="sd-input sd-hours-time" TextMode="Time" />
+                        </span>
+                    </div>
+
+                    <div class="sd-note">
+                        Tip: Set Default once, then only change days that are Closed or Custom.
                     </div>
                 </div>
 
                 <div class="sd-actions">
-                    <asp:Button ID="btnCancel" runat="server" CssClass="sd-btn sd-btn-ghost" Text="Cancel"
-                        CausesValidation="false" PostBackUrl="~/SellerDashboard.aspx" />
-                    <asp:Button ID="btnSave" runat="server" CssClass="sd-btn sd-btn-primary" Text="Save Changes"
-                        CausesValidation="false" />
-                </div>
-            </section>
-
-            <!-- RIGHT: Quick actions card (NO stats / NO impact) -->
-            <aside class="sd-card sd-sidecard">
-                <h2>Quick Actions</h2>
-                <div class="sd-muted">Jump to frequently used pages.</div>
-
-                <div style="display:flex; flex-direction:column; gap:10px;">
-                    <a class="sd-linkbtn" href="SellerDashboard.aspx">← Back to Dashboard</a>
-                    <a class="sd-linkbtn" href="Inventory.aspx">📦 Manage Inventory</a>
-                    <a class="sd-linkbtn" href="SellerMessages.aspx">💬 View Messages</a>
+                    <asp:Button ID="btnSave" runat="server" Text="Save Changes" CssClass="sd-btn sd-save-btn" OnClick="btnSave_Click" />
+                    <asp:Button ID="btnCancel" runat="server" Text="Cancel" CssClass="sd-btn sd-cancel-btn" OnClick="btnCancel_Click" />
                 </div>
 
-                <div style="margin-top:14px;">
-                    <span class="sd-badge">Tip: Keep your hours updated</span>
+            </div>
+
+            <!-- ================= RIGHT ================= -->
+            <div class="sd-sidebar">
+
+                <div id="categoryViewCard" ClientIDMode="Static" class="sd-card" runat="server">
+                    <div class="sd-side-card-title">Categories</div>
+                    <div class="sd-tags">
+                        <asp:Repeater ID="rptCategories" runat="server">
+                            <ItemTemplate>
+                                <span class="sd-tag"><%# Container.DataItem %></span>
+                            </ItemTemplate>
+                        </asp:Repeater>
+                    </div>
                 </div>
-            </aside>
 
-            <!-- FULL WIDTH: Business Hours -->
-            <section class="sd-card" style="grid-column: 1 / -1;">
-                <h2>Business Hours</h2>
-                <div class="sd-muted">Set your opening hours so customers know when to order.</div>
-
-                <table class="sd-hours">
-                    <thead>
-                        <tr>
-                            <th style="width: 28%;">Day</th>
-                            <th>Opening</th>
-                            <th>Closing</th>
-                            <th style="width: 18%;">Closed</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Monday</strong></td>
-                            <td><input class="sd-input" placeholder="11:00 AM" /></td>
-                            <td><input class="sd-input" placeholder="9:00 PM" /></td>
-                            <td><input type="checkbox" /></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Tuesday</strong></td>
-                            <td><input class="sd-input" placeholder="11:00 AM" /></td>
-                            <td><input class="sd-input" placeholder="9:00 PM" /></td>
-                            <td><input type="checkbox" /></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Wednesday</strong></td>
-                            <td><input class="sd-input" placeholder="11:00 AM" /></td>
-                            <td><input class="sd-input" placeholder="9:00 PM" /></td>
-                            <td><input type="checkbox" /></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Thursday</strong></td>
-                            <td><input class="sd-input" placeholder="11:00 AM" /></td>
-                            <td><input class="sd-input" placeholder="9:00 PM" /></td>
-                            <td><input type="checkbox" /></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Friday</strong></td>
-                            <td><input class="sd-input" placeholder="11:00 AM" /></td>
-                            <td><input class="sd-input" placeholder="9:00 PM" /></td>
-                            <td><input type="checkbox" /></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Saturday</strong></td>
-                            <td><input class="sd-input" placeholder="10:00 AM" /></td>
-                            <td><input class="sd-input" placeholder="10:00 PM" /></td>
-                            <td><input type="checkbox" /></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Sunday</strong></td>
-                            <td><input class="sd-input" placeholder="10:00 AM" /></td>
-                            <td><input class="sd-input" placeholder="8:00 PM" /></td>
-                            <td><input type="checkbox" /></td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <div class="sd-actions">
-                    <asp:Button ID="btnHoursCancel" runat="server" CssClass="sd-btn sd-btn-ghost" Text="Reset"
-                        CausesValidation="false" />
-                    <asp:Button ID="btnHoursSave" runat="server" CssClass="sd-btn sd-btn-primary" Text="Save Hours"
-                        CausesValidation="false" />
+                <div id="categoryEditCard" ClientIDMode="Static" class="sd-card" style="display:none;" runat="server">
+                    <div class="sd-side-card-title">Categories</div>
+                    <div class="sd-pill-list">
+                        <asp:CheckBoxList ID="cblCategories" runat="server" RepeatLayout="Flow" />
+                    </div>
                 </div>
-            </section>
+
+            </div>
 
         </div>
     </div>
- </asp:Content>
+
+    <script>
+        function toggleDay(dayKey) {
+            var ddlId = {
+                "Mon": "<%= ddlMonMode.ClientID %>",
+            "Tue": "<%= ddlTueMode.ClientID %>",
+            "Wed": "<%= ddlWedMode.ClientID %>",
+            "Thu": "<%= ddlThuMode.ClientID %>",
+            "Fri": "<%= ddlFriMode.ClientID %>",
+            "Sat": "<%= ddlSatMode.ClientID %>",
+                "Sun": "<%= ddlSunMode.ClientID %>"
+            }[dayKey];
+
+            var ddl = document.getElementById(ddlId);
+            var wrap = document.getElementById("wrap" + dayKey);
+            if (!ddl || !wrap) return;
+
+            wrap.style.display = (ddl.value === "Custom") ? "flex" : "none";
+        }
+
+        function toggleEdit(toEdit) {
+            var view = document.getElementById("viewSection");
+            var edit = document.getElementById("editSection");
+
+            var catView = document.getElementById("categoryViewCard");
+            var catEdit = document.getElementById("categoryEditCard");
+
+            var hf = document.getElementById("<%= hfEditMode.ClientID %>");
+
+            if (toEdit) {
+                edit.style.display = "block";
+                view.style.display = "none";
+                catEdit.style.display = "block";
+                catView.style.display = "none";
+                hf.value = "1";
+                ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].forEach(toggleDay);
+            } else {
+                edit.style.display = "none";
+                view.style.display = "block";
+                catEdit.style.display = "none";
+                catView.style.display = "block";
+                hf.value = "0";
+            }
+        }
+    </script>
+
+</asp:Content>

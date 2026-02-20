@@ -206,6 +206,10 @@
     <Content Include=".gitignore" />
     <Content Include="About.aspx" />
     <Content Include="AddNewProduct.aspx" />
+    <Content Include="App_Data\EcoEats.mdf" />
+    <Content Include="App_Data\EcoEats_log.ldf">
+      <DependentUpon>EcoEats.mdf</DependentUpon>
+    </Content>
     <Content Include="Content\EcoEatsRegister.css" />
     <Content Include="Content\OrderView.css" />
     <Content Include="Content\SellerPending.css" />
@@ -578,9 +582,7 @@
       <DependentUpon>ViewSwitcher.ascx</DependentUpon>
     </Compile>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="App_Data\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="packages.config" />
     <Content Include="Scripts\jquery-3.7.0.slim.min.map" />
