@@ -5,6 +5,81 @@
 <!DOCTYPE html>
 <html lang="en">
 <head runat="server">
+    <style>
+        /* ===== Seller topbar layout: two rows ===== */
+.ee-topbar .ee-toprow{
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+
+.ee-topbar .ee-search{
+  flex:1;
+  min-width:220px;
+}
+
+.ee-topbar .ee-navrow{
+  margin-top:10px;
+}
+
+/* ===== Nav UI: pill style + wrapping ===== */
+.ee-nav.seller.ee-nav-pills{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;               /* wraps nicely on smaller screens */
+  padding:8px;
+  border-radius:14px;
+  background: rgba(0,0,0,0.04); /* soft container */
+}
+
+.ee-nav.seller.ee-nav-pills a{
+  display:inline-flex;
+  align-items:center;
+  padding:8px 12px;
+  border-radius:999px;
+  text-decoration:none;
+  font-weight:600;
+  font-size:14px;
+  white-space:nowrap;
+  transition: transform .08s ease, background-color .15s ease;
+  background: rgba(255,255,255,0.8);
+}
+
+.ee-nav.seller.ee-nav-pills a:hover{
+  transform: translateY(-1px);
+  background: rgba(255,255,255,1);
+}
+
+/* highlight active page automatically */
+.ee-nav.seller.ee-nav-pills a.active{
+  background: rgba(255,255,255,1);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+
+/* ===== Responsive: smaller screens ===== */
+@media (max-width: 900px){
+  .ee-topbar .ee-toprow{
+    flex-wrap:wrap;
+  }
+
+  .ee-actions{
+    margin-left:auto;
+  }
+
+  .ee-topbar .ee-search{
+    order: 3;
+    flex-basis: 100%;
+  }
+}
+
+@media (max-width: 520px){
+  .ee-nav.seller.ee-nav-pills a{
+    font-size:13px;
+    padding:7px 10px;
+  }
+}
+
+    </style>
     <meta charset="utf-8" />
     <title><%: Page.Title %> - EcoEats Seller</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -27,7 +102,7 @@
     <header class="ee-topbar">
         <div class="ee-container ee-topbar-inner seller">
 
-            <!-- Brand -->
+        <div class="ee-toprow"><!-- Brand -->
             <div class="ee-brand">
                 <div class="ee-logo">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -39,6 +114,7 @@
                     <div class="ee-seller-badge">Seller Portal</div>
                 </div>
             </div>
+           </div>
 
             <!-- Search -->
             <div class="ee-search">
@@ -51,15 +127,16 @@
                 <a href="SellerWasteTracker.aspx">Waste Tracker</a>
                 <a href="Inventory.aspx">Inventory</a>
                 <a href="SellerOrders.aspx">Orders</a>
-                <a href="SellerFeedback.aspx">Feedback</a>
-                <a href="SellerProfile.aspx">Store Profile</a>
+                <a href="SellerReviews.aspx">Reviews</a>
+                <a href="SellerMessages.aspx">Messages</a>
+                <a href="StoreDetails.aspx">Store Profile</a>
             </nav>
 
             <!-- Actions -->
             <div class="ee-actions">
                 <a class="ee-icon-btn" href="SellerMessages.aspx" title="Messages">💬</a>
                 <a class="ee-icon-btn" href="Inventory.aspx" title="Inventory">📦</a>
-                <a class="ee-icon-btn" href="SellerProfile.aspx" title="Account">👤</a>
+                <a class="ee-icon-btn" href="StoreDetails.aspx" title="Account">👤</a>
             </div>
 
         </div>

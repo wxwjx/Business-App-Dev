@@ -206,16 +206,16 @@
     <Content Include=".gitignore" />
     <Content Include="About.aspx" />
     <Content Include="AddNewProduct.aspx" />
+    <Content Include="App_Data\EcoEats.mdf" />
+    <Content Include="App_Data\EcoEats_log.ldf">
+      <DependentUpon>EcoEats.mdf</DependentUpon>
+    </Content>
     <Content Include="Content\EcoEatsRegister.css" />
     <Content Include="Content\OrderView.css" />
     <Content Include="Content\SellerPending.css" />
     <Content Include="ForgotPassword.aspx" />
     <Content Include="login.aspx" />
     <Content Include="Content\AdminCommon.css" />
-    <Content Include="App_Data\EcoEats.mdf" />
-    <Content Include="App_Data\EcoEats_log.ldf">
-      <DependentUpon>EcoEats.mdf</DependentUpon>
-    </Content>
     <Content Include="Cart.aspx" />
     <Content Include="Content\Cart.css" />
     <Content Include="Contact.aspx" />
@@ -328,6 +328,7 @@
     <Content Include="SignUp.aspx" />
     <Content Include="Site.Master" />
     <Content Include="Content\Verify2FA.css" />
+    <Content Include="StoreDetails.aspx" />
     <Content Include="Verify2FA.aspx" />
     <Content Include="ViewSwitcher.ascx" />
     <Content Include="Web.config" />
@@ -580,6 +581,13 @@
     </Compile>
     <Compile Include="Site.Mobile.Master.designer.cs">
       <DependentUpon>Site.Mobile.Master</DependentUpon>
+    </Compile>
+    <Compile Include="StoreDetails.aspx.cs">
+      <DependentUpon>StoreDetails.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="StoreDetails.aspx.designer.cs">
+      <DependentUpon>StoreDetails.aspx</DependentUpon>
     </Compile>
     <Compile Include="Verify2FA.aspx.cs">
       <DependentUpon>Verify2FA.aspx</DependentUpon>

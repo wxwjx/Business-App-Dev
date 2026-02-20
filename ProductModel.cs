@@ -30,6 +30,13 @@ namespace Business_App_Dev
             ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
 
         // ====== Helper: Map SQL row → ProductModel ======
+
+     
+            
+                
+            
+
+        
         private static ProductModel ReadProduct(SqlDataReader r)
         {
             return new ProductModel
@@ -58,9 +65,58 @@ namespace Business_App_Dev
             };
         }
 
+
+
+
         // =========================================================
         // BACKWARD COMPAT (so your other pages won't break)
         // =========================================================
+
+       
+
+        public static List<ProductModel> GetProductBySeller(int SellerId)
+
+        {
+            var list = new List<ProductModel>();
+
+            using (SqlConnection conn = new SqlConnection(ConnStr))
+            using (SqlCommand cmd = new SqlCommand(@"SELECT * FROM Products WHERE SellerID = @SellerID", conn))
+
+            {
+                cmd.Parameters.AddWithValue("@SellerID", SellerId);
+                conn.Open();
+
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        list.Add(new ProductModel
+                        {
+                            ProductID = (int)reader["ProductID"],
+                            ProductName = reader["ProductName"].ToString(),
+                            Subtitle = reader["Subtitle"] != DBNull.Value ? reader["Subtitle"].ToString() : "",
+                            ImageUrl = reader["ImageUrl"] != DBNull.Value ? reader["ImageUrl"].ToString() : "",
+                            PriceNow = reader["Price"] != DBNull.Value ? Convert.ToDecimal(reader["Price"]) : 0m,
+                            PriceOld = reader["PriceOld"] != DBNull.Value ? Convert.ToDecimal(reader["PriceOld"]) : 0m,
+                            Rating = reader["Rating"] != DBNull.Value ? Convert.ToDouble(reader["Rating"]) : 0.0,
+                            Reviews = reader["Reviews"] != DBNull.Value ? Convert.ToInt32(reader["Reviews"]) : 0,
+                            DistanceKm = reader["DistanceKm"] != DBNull.Value ? Convert.ToInt32(reader["DistanceKm"]) : 0,
+                            ExpiryHours = reader["ExpiryHours"] != DBNull.Value ? Convert.ToInt32(reader["ExpiryHours"]) : 0,
+                            CO2Saved = reader["CO2Saved"] != DBNull.Value ? Convert.ToDouble(reader["CO2Saved"]) : 0.0,
+                            DiscountPercent = reader["DiscountPercent"] != DBNull.Value ? Convert.ToInt32(reader["DiscountPercent"]) : 0,
+                            Quantity = reader["Quantity"] != DBNull.Value ? Convert.ToInt32(reader["Quantity"]) : 0,
+                            Category = reader["Category"] != DBNull.Value ? reader["Category"].ToString() : "",
+                            CreatedAt = reader["CreatedAt"] != DBNull.Value ? Convert.ToDateTime(reader["CreatedAt"]) : DateTime.Now,
+                            SellerID = reader["SellerID"] != DBNull.Value ? Convert.ToInt32(reader["SellerID"]) : 0
+                        });
+                    }
+                }
+            }
+
+            return list;
+
+        }
+
         public static List<ProductModel> GetAllProducts()
         {
             return GetProductsBySearch("");

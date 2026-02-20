@@ -1,0 +1,2 @@
+﻿ALTER TABLE dbo.Seller
+ALTER COLUMN PickupWindow NVARCHAR(500) NULL;

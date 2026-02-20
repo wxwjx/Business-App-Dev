@@ -10,16 +10,34 @@ namespace Business_App_Dev
     {
         protected void Page_Load(object sender, EventArgs e)
         {
+            if (Session["UserRole"]?.ToString() != "Seller" || Session["SellerId"] == null)
+            {
+                Response.Redirect("~/Login.aspx?role=Seller");
+                return;
+            }
+
+
             if (!IsPostBack)
+            {
                 BindGrid();
+            }
+
+
         }
 
         private void BindGrid()
         {
-            // Only ProductModel (no Product.cs)
-            List<ProductModel> productList = ProductModel.GetAllProducts();
+            int sellerId = Convert.ToInt32(Session["SellerId"]); // logged-in seller
+            List<ProductModel> productList = ProductModel.GetProductBySeller(sellerId);
+
             gvProducts.DataSource = productList;
             gvProducts.DataBind();
+            // Only ProductModel (no Product.cs)
+            //List<ProductModel> productList = ProductModel.GetAllProducts();
+            //gvProducts.DataSource = productList;
+            //gvProducts.DataBind();
+
+
         }
 
         protected void gvProducts_RowEditing(object sender, GridViewEditEventArgs e)
