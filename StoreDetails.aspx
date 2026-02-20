@@ -7,7 +7,7 @@
 
 <asp:Content ID="Content1" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
 
-   <style>
+    <style>
         .sd-container { max-width: 1100px; margin: 30px auto; padding: 0 10px; }
 
         /* ✅ single header row */
@@ -31,7 +31,6 @@
         .sd-save-btn { background: #2ecc71; color: #fff; }
         .sd-cancel-btn { background: #bdc3c7; color: #1f2d3d; }
 
-     
         .sd-pill-list label { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 999px; border: 1px solid #e5e7eb; background: #fff; cursor: pointer; user-select: none; font-size: 13px; font-weight: 700; color: #111827; }
         .sd-pill-list input[type="checkbox"] { width: 16px; height: 16px; accent-color: #27ae60; }
 
@@ -45,8 +44,46 @@
         /* Optional: keep explicit grid positions */
         #viewSection, #editSection { grid-column: 1; }
         .sd-sidebar { grid-column: 2; }
-        @media (max-width: 992px) {
-            .sd-sidebar { grid-column: 1; }
+        @media (max-width: 992px) { .sd-sidebar { grid-column: 1; } }
+
+        /* ===== Logout Modal ===== */
+        .sd-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .sd-modal {
+            width: min(520px, 92vw);
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 22px 70px rgba(0,0,0,0.25);
+            overflow: hidden;
+        }
+        .sd-modal-head {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            padding: 14px 16px;
+            border-bottom: 1px solid #eee;
+        }
+        .sd-modal-title { font-weight: 800; color:#111827; }
+        .sd-modal-x {
+            background: transparent;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        .sd-modal-body { padding: 16px; color:#374151; }
+        .sd-modal-actions {
+            display:flex;
+            justify-content:flex-end;
+            gap:10px;
+            padding: 14px 16px;
+            border-top: 1px solid #eee;
         }
     </style>
 
@@ -54,17 +91,37 @@
 
         <asp:HiddenField ID="hfEditMode" runat="server" Value="0" />
 
+        <!-- Hidden server-side logout trigger (modal confirm will click this) -->
+        <asp:Button ID="btnLogoutTrigger" runat="server"
+            Text=""
+            Style="display:none;"
+            OnClick="btnLogout_Click"
+            CausesValidation="false"
+            UseSubmitBehavior="false" />
+
+        <!-- Header -->
         <div class="sd-header">
             <h2 style="margin:0;">Store Details</h2>
 
-    <asp:Button ID="btnEdit"
-        runat="server"
-        Text="Edit"
-        CssClass="sd-btn sd-edit-btn"
-        OnClientClick="toggleEdit(true); return false;" />
-</div>  
+            <div style="display:flex; gap:10px; align-items:center;">
+                <asp:Button ID="btnEdit"
+                    runat="server"
+                    Text="Edit"
+                    CssClass="sd-btn sd-edit-btn"
+                    OnClientClick="toggleEdit(true); return false;"
+                    CausesValidation="false"
+                    UseSubmitBehavior="false" />
 
-<div class="sd-grid">
+                <asp:Button ID="btnLogout" runat="server"
+                    Text="Log Out"
+                    CssClass="sd-btn sd-cancel-btn"
+                    OnClientClick="openLogoutModal(); return false;"
+                    CausesValidation="false"
+                    UseSubmitBehavior="false" />
+            </div>
+        </div>
+
+        <div class="sd-grid">
 
             <!-- ================= LEFT ================= -->
 
@@ -248,8 +305,25 @@
 
             </div>
 
-           
+        </div>
+    </div>
 
+    <!-- ===== Logout Modal ===== -->
+    <div id="sdLogoutModal" class="sd-modal-overlay" style="display:none;">
+        <div class="sd-modal">
+            <div class="sd-modal-head">
+                <div class="sd-modal-title">Log out</div>
+                <button type="button" class="sd-modal-x" onclick="closeLogoutModal()">✕</button>
+            </div>
+
+            <div class="sd-modal-body">
+                Do you really want to log out?
+            </div>
+
+            <div class="sd-modal-actions">
+                <button type="button" class="sd-btn sd-cancel-btn" onclick="closeLogoutModal()">Cancel</button>
+                <button type="button" class="sd-btn sd-save-btn" onclick="submitLogout()">Log out</button>
+            </div>
         </div>
     </div>
 
@@ -257,11 +331,11 @@
         function toggleDay(dayKey) {
             var ddlId = {
                 "Mon": "<%= ddlMonMode.ClientID %>",
-            "Tue": "<%= ddlTueMode.ClientID %>",
-            "Wed": "<%= ddlWedMode.ClientID %>",
-            "Thu": "<%= ddlThuMode.ClientID %>",
-            "Fri": "<%= ddlFriMode.ClientID %>",
-            "Sat": "<%= ddlSatMode.ClientID %>",
+                "Tue": "<%= ddlTueMode.ClientID %>",
+                "Wed": "<%= ddlWedMode.ClientID %>",
+                "Thu": "<%= ddlThuMode.ClientID %>",
+                "Fri": "<%= ddlFriMode.ClientID %>",
+                "Sat": "<%= ddlSatMode.ClientID %>",
                 "Sun": "<%= ddlSunMode.ClientID %>"
             }[dayKey];
 
@@ -275,8 +349,6 @@
         function toggleEdit(toEdit) {
             var view = document.getElementById("viewSection");
             var edit = document.getElementById("editSection");
-
-      
             var hf = document.getElementById("<%= hfEditMode.ClientID %>");
 
             if (toEdit) {
@@ -290,6 +362,29 @@
                 hf.value = "0";
             }
         }
+
+        // ===== Logout modal =====
+        function openLogoutModal() {
+            document.getElementById("sdLogoutModal").style.display = "flex";
+        }
+
+        function closeLogoutModal() {
+            document.getElementById("sdLogoutModal").style.display = "none";
+        }
+
+        // Click hidden ASP.NET button to ensure server event always fires
+        function submitLogout() {
+            closeLogoutModal();
+            document.getElementById("<%= btnLogoutTrigger.ClientID %>").click();
+        }
+
+        document.addEventListener("click", function (e) {
+            if (e.target && e.target.id === "sdLogoutModal") closeLogoutModal();
+        });
+
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") closeLogoutModal();
+        });
     </script>
 
 </asp:Content>

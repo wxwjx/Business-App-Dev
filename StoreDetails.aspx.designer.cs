@@ -24,6 +24,15 @@ namespace Business_App_Dev
         protected global::System.Web.UI.WebControls.HiddenField hfEditMode;
 
         /// <summary>
+        /// btnLogoutTrigger control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnLogoutTrigger;
+
+        /// <summary>
         /// btnEdit control.
         /// </summary>
         /// <remarks>
@@ -31,6 +40,15 @@ namespace Business_App_Dev
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Button btnEdit;
+
+        /// <summary>
+        /// btnLogout control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnLogout;
 
         /// <summary>
         /// viewSection control.
