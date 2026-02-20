@@ -35,8 +35,14 @@ namespace Business_App_Dev
 
         private void LoadStore(int sellerId)
         {
+
             var store = GetStoreDetails(sellerId);
             if (store == null) return;
+
+            hfLat.Value = store.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            hfLng.Value = store.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            hfAddr.Value = store.Address;        // used for geocode fallback
+            hfShopName.Value = store.ShopName;
 
             lblStoreName.Text = store.ShopName;
             lblPhone.Text = store.Phone;

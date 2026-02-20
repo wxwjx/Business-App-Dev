@@ -89,7 +89,23 @@
                 <div class="sd-field">
                     <label>Store Address</label>
                     <asp:Label ID="lblAddress" runat="server" CssClass="sd-value" />
-                </div>
+                </div>    
+                
+                <div class="sd-field">
+                <label>Location</label>
+
+                <!-- show small text (optional) -->
+                <div class="sd-value" id="locText" style="margin-bottom:10px;"></div>
+
+                <!-- map container -->
+                <div id="map" style="width:100%; height:280px; border-radius:14px; overflow:hidden; border:1px solid #eee;"></div>
+
+                <!-- pass values from server to JS -->
+                <asp:HiddenField ID="hfLat" runat="server" ClientIDMode="Static" />
+                <asp:HiddenField ID="hfLng" runat="server" ClientIDMode="Static" />
+                <asp:HiddenField ID="hfAddr" runat="server" ClientIDMode="Static" />
+                <asp:HiddenField ID="hfShopName" runat="server" ClientIDMode="Static" />
+            </div>
 
                 <div class="sd-field">
                     <label>Description</label>
@@ -290,6 +306,62 @@
                 hf.value = "0";
             }
         }
+
+
+        let map, marker;
+
+        function initMap() {
+            const latStr = document.getElementById("hfLat")?.value || "";
+            const lngStr = document.getElementById("hfLng")?.value || "";
+            const addr = document.getElementById("hfAddr")?.value || "";
+            const shop = document.getElementById("hfShopName")?.value || "Store";
+
+            const locText = document.getElementById("locText");
+
+            // Default (Singapore center) if nothing
+            const sg = { lat: 1.3521, lng: 103.8198 };
+
+            // If DB has lat/lng
+            const lat = parseFloat(latStr);
+            const lng = parseFloat(lngStr);
+            const hasLatLng = !isNaN(lat) && !isNaN(lng) && Math.abs(lat) > 0.0001 && Math.abs(lng) > 0.0001;
+
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: hasLatLng ? { lat, lng } : sg,
+                zoom: hasLatLng ? 16 : 12,
+                mapTypeControl: false,
+                streetViewControl: false
+            });
+
+            marker = new google.maps.Marker({
+                map: map,
+                position: hasLatLng ? { lat, lng } : sg,
+                title: shop
+            });
+
+            if (locText) {
+                locText.innerHTML = hasLatLng
+                    ? `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`
+                    : (addr ? addr : "Location not set");
+            }
+
+            // Optional fallback: geocode address if no lat/lng
+            if (!hasLatLng && addr) {
+                const geocoder = new google.maps.Geocoder();
+                geocoder.geocode({ address: addr }, (results, status) => {
+                    if (status === "OK" && results[0]) {
+                        const p = results[0].geometry.location;
+                        map.setCenter(p);
+                        map.setZoom(16);
+                        marker.setPosition(p);
+                    }
+                });
+            }
+        }
     </script>
+
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCS1t5r-1IlT_qqHoUT2HuUhM9S0DjIczo&callback=initMap&libraries=places">
+</script>
 
 </asp:Content>

@@ -78,6 +78,42 @@ namespace Business_App_Dev
         protected global::System.Web.UI.WebControls.Label lblAddress;
 
         /// <summary>
+        /// hfLat control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HiddenField hfLat;
+
+        /// <summary>
+        /// hfLng control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HiddenField hfLng;
+
+        /// <summary>
+        /// hfAddr control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HiddenField hfAddr;
+
+        /// <summary>
+        /// hfShopName control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HiddenField hfShopName;
+
+        /// <summary>
         /// lblDescription control.
         /// </summary>
         /// <remarks>
