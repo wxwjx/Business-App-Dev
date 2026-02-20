@@ -19,7 +19,7 @@
 <form id="form1" runat="server">
     
     <!-- ✅ STEP 1: required for server-side scripts -->
-    <asp:ScriptManager ID="sm1" runat="server" />
+    <asp:ScriptManager ID="sm1" runat="server" EnablePageMethods="true" />
 
 
     <!-- Top brand bar -->
@@ -200,6 +200,8 @@
                 <button type="button" class="admin-tab active" data-tab="approvals">Seller Approvals</button>
                 <button type="button" class="admin-tab" data-tab="feedback">Feedback Analytics</button>
                 <button type="button" class="admin-tab" data-tab="chat">Chat Escalations</button>
+                <button type="button" class="admin-tab" data-tab="analytics">Analytics</button>
+
 
             </nav>
 
@@ -256,8 +258,11 @@
 
             function activate(name) {
                 tabs.forEach(t => t.classList.toggle("active", t.dataset.tab === name));
-                panels.forEach(p => p.classList.toggle("active", p.dataset.tab === name));
+                panels.forEach(p => p.classList.toggle("active", p.dataset.tab === name));  
                 if (hf) hf.value = name;
+                if (name === "analytics" && typeof loadGrowthCharts === "function") {
+                    setTimeout(loadGrowthCharts, 50);
+                }
             }
 
             tabs.forEach(t => t.addEventListener("click", (e) => {
@@ -331,23 +336,11 @@
             }
             return true; // allow postback to update database
         }
-        function removeBellItem(btn) {
-            const card = btn.closest(".eco-bell-item");
-            if (card) {
-                card.style.transition = "0.2s ease";
-                card.style.opacity = "0";
-                card.style.transform = "translateX(15px)";
-                setTimeout(() => {
-                    card.remove();
-                }, 200);
-            }
-            return true; // still allow postback
-        }
 
 
     </script>
     <asp:Timer ID="kpiTimer" runat="server" Interval="2000"
-    OnTick="kpiTimer_Tick" />
+    OnTick="kpiTimer_Tick" Enabled="True" />
 
 
 </form>

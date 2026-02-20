@@ -9,6 +9,7 @@ using System.Text;
 using System.Web;
 using System.Web.UI.WebControls;
 
+
 namespace Business_App_Dev
 {
     public partial class EcoEatsAdmin : System.Web.UI.Page
@@ -18,9 +19,11 @@ namespace Business_App_Dev
 
         protected void Page_Load(object sender, EventArgs e)
         {
+
             if (Session["UserRole"] == null || Session["UserRole"].ToString() != "Admin")
             {
                 Response.Redirect("~/login.aspx");
+                return;
             }
             if (!IsPostBack)
             {
@@ -140,9 +143,11 @@ namespace Business_App_Dev
         {
             using (SqlConnection conn = new SqlConnection(_connStr))
             using (SqlCommand cmd = new SqlCommand(@"
-                UPDATE SellerApplications
-                SET Status = @Status
-                WHERE Id = @Id;", conn))
+        UPDATE SellerApplications
+        SET Status = @Status,
+            ApprovedAt = CASE WHEN @Status = 'APPROVED' THEN ISNULL(ApprovedAt, GETDATE()) ELSE ApprovedAt END,
+            RejectedAt = CASE WHEN @Status = 'REJECTED' THEN ISNULL(RejectedAt, GETDATE()) ELSE RejectedAt END
+        WHERE Id = @Id;", conn))
             {
                 cmd.Parameters.AddWithValue("@Status", status);
                 cmd.Parameters.AddWithValue("@Id", id);
@@ -470,6 +475,7 @@ namespace Business_App_Dev
                 cmd.ExecuteNonQuery();
             }
         }
+
     }
 }
 
