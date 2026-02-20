@@ -136,7 +136,7 @@
             <div class="ee-actions">
                 <a class="ee-icon-btn" href="SellerMessages.aspx" title="Messages">💬</a>
                 <a class="ee-icon-btn" href="Inventory.aspx" title="Inventory">📦</a>
-                <a class="ee-icon-btn" href="SellerProfile.aspx" title="Account">👤</a>
+                <a class="ee-icon-btn" href="StoreDetails.aspx" title="Account">👤</a>
             </div>
 
         </div>
