@@ -6,6 +6,7 @@ using System.Linq;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using System.Web.Security;
 
 namespace Business_App_Dev
 {
@@ -365,6 +366,35 @@ namespace Business_App_Dev
             public string PickupWindow { get; set; } = "";
             public string Email { get; set; } = "";
             public DateTime CreatedAt { get; set; }
+        }
+
+        protected void btnLogout_Click(object sender, EventArgs e)
+        {
+            // Clear session
+            Session.Clear();
+            Session.Abandon();
+
+            // Sign out forms auth (if used)
+            FormsAuthentication.SignOut();
+
+            // Expire auth cookie
+            if (Request.Cookies[FormsAuthentication.FormsCookieName] != null)
+            {
+                var auth = new HttpCookie(FormsAuthentication.FormsCookieName, "");
+                auth.Expires = DateTime.Now.AddDays(-1);
+                Response.Cookies.Add(auth);
+            }
+
+            // Expire session cookie
+            if (Request.Cookies["ASP.NET_SessionId"] != null)
+            {
+                var s = new HttpCookie("ASP.NET_SessionId", "");
+                s.Expires = DateTime.Now.AddDays(-1);
+                Response.Cookies.Add(s);
+            }
+
+            // Redirect to seller login
+            Response.Redirect("~/login.aspx?role=Seller", true);
         }
 
     }

@@ -232,6 +232,58 @@
             
         </div>
     </section>
+
+    <section class="admin-panel" data-tab="analytics">
+          <div class="eco-cardbox">
+            <div class="eco-cardbox-title">Growth Analytics</div>
+
+            <div class="ana-toolbar">
+              <label class="ana-label">Range</label>
+              <select id="ddlRange" class="ana-select" onchange="loadGrowthCharts()">
+                <option value="3">Last 3 months</option>
+                <option value="6" selected>Last 6 months</option>
+                <option value="12">Last 12 months</option>
+              </select>
+            </div>
+
+            <div class="ana-grid">
+
+              <!-- USERS CARD -->
+                <div class="ana-chart-card">
+                  <div class="ana-chart-head">
+                    <div class="ana-chart-title">User Analytics</div>
+
+                    <select id="ddlUserView" class="ana-select ana-select--pill" onchange="loadGrowthCharts()">
+                      <option value="growth">Growth</option>
+                      <option value="premium" selected>Premium Split</option>
+                    </select>
+                  </div>
+
+                  <div class="ana-chart-box">
+                    <canvas id="usersChart"></canvas>
+                    <canvas id="usersPie" style="display:none;"></canvas>
+                  </div>
+                </div>
+
+                <!-- SELLERS CARD -->
+                <div class="ana-chart-card">
+                  <div class="ana-chart-head">
+                    <div class="ana-chart-title">Seller Analytics</div>
+
+                    <select id="ddlSellerView" class="ana-select ana-select--pill" onchange="loadGrowthCharts()">
+                      <option value="approved" selected>Approved</option>
+                      <option value="rejected">Rejected</option>
+                    </select>
+                  </div>
+
+                  <div class="ana-chart-box">
+                    <canvas id="sellersChart"></canvas>
+                  </div>
+                </div>
+
+            </div>
+         </div>
+        </section>
     <div id="ecoRejectModal" class="ee-modal-overlay" style="display:none;">
         <div class="ee-modal">
             <div class="ee-modal-head">
@@ -251,7 +303,7 @@
             </div>
         </div>
     </div>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
 <script>
     function lockApprove(btn, message) {
@@ -320,6 +372,164 @@
     document.addEventListener("keydown", function (e) {
         if (e.key === "Escape") closeRejectModal();
     });
+
+    let usersChart = null;
+    let sellersChart = null;
+    let usersPie = null;
+
+    // ---------- helpers ----------
+    function setHidden(el, hidden) {
+        if (!el) return;
+        el.classList.toggle("ana-hidden", !!hidden);
+    }
+
+    function resetCanvas(canvasId) {
+        const old = document.getElementById(canvasId);
+        if (!old) return null;
+
+        const parent = old.parentNode;
+        const fresh = old.cloneNode(true);   // keep same id
+        parent.replaceChild(fresh, old);
+        return fresh;
+    }
+
+    function renderDualLineChart(canvasId, labels, seriesA, seriesB, oldChart, labelA, labelB) {
+        if (oldChart) oldChart.destroy();
+
+        const canvas = resetCanvas(canvasId);
+        if (!canvas) return null;
+
+        return new Chart(canvas.getContext("2d"), {
+            type: "line",
+            data: {
+                labels,
+                datasets: [
+                    { label: labelA, data: seriesA, tension: 0.35, pointRadius: 3, borderWidth: 2, fill: false },
+                    { label: labelB, data: seriesB, tension: 0.35, pointRadius: 3, borderWidth: 3, fill: true }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                plugins: { legend: { display: true } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    }
+
+    function renderPieChart(canvasId, labels, values, oldChart) {
+        if (oldChart) oldChart.destroy();
+
+        const canvas = resetCanvas(canvasId);
+        if (!canvas) return null;
+
+        return new Chart(canvas.getContext("2d"), {
+            type: "pie",
+            data: { labels, datasets: [{ data: values }] },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                plugins: { legend: { display: true } }
+            }
+        });
+    }
+
+    // ---------- main loader ----------
+    async function loadGrowthCharts() {
+        try {
+            const months = parseInt(document.getElementById("ddlRange")?.value || "6", 10);
+            const userView = document.getElementById("ddlUserView")?.value || "growth";
+            const sellerView = document.getElementById("ddlSellerView")?.value || "approved";
+
+            const res = await fetch('<%= ResolveUrl("~/Services/AdminAnalytics.asmx/GetGrowthData") %>', {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { "Content-Type": "application/json; charset=utf-8" },
+                body: JSON.stringify({ months })
+            });
+
+            const json = await res.json();
+            const data = json.d || {};
+
+            const usersCanvas = document.getElementById("usersChart");
+            const pieCanvas = document.getElementById("usersPie");
+
+            // ✅ IMPORTANT: don't use display none/block (causes shifting)
+            // We use .ana-hidden which keeps layout stable.
+
+            // ---------- USERS ----------
+            if (userView === "premium") {
+                setHidden(usersCanvas, true);
+                setHidden(pieCanvas, false);
+                showCanvas(pieCanvas, usersCanvas);
+
+                if (usersChart) { usersChart.destroy(); usersChart = null; }
+
+                usersPie = renderPieChart(
+                    "usersPie",
+                    ["Premium", "Non-Premium"],
+                    [data.premiumUsers || 0, data.nonPremiumUsers || 0],
+                    usersPie
+                );
+            } else {
+                setHidden(usersCanvas, false);
+                setHidden(pieCanvas, true);
+                showCanvas(usersCanvas, pieCanvas);
+
+                if (usersPie) { usersPie.destroy(); usersPie = null; }
+
+                usersChart = renderDualLineChart(
+                    "usersChart",
+                    data.labels || [],
+                    data.monthlyUsers || [],
+                    data.cumulativeUsers || [],
+                    usersChart,
+                    "New Users",
+                    "Total Users"
+                );
+            }
+
+            // ---------- SELLERS ----------
+            if (sellerView === "rejected") {
+                sellersChart = renderDualLineChart(
+                    "sellersChart",
+                    data.labels || [],
+                    data.monthlyRejectedSellers || [],
+                    data.cumulativeRejectedSellers || [],
+                    sellersChart,
+                    "Rejected (Monthly)",
+                    "Rejected (Total)"
+                );
+            } else {
+                sellersChart = renderDualLineChart(
+                    "sellersChart",
+                    data.labels || [],
+                    data.monthlyApprovedSellers || [],
+                    data.cumulativeApprovedSellers || [],
+                    sellersChart,
+                    "Approved (Monthly)",
+                    "Approved (Total)"
+                );
+            }
+
+            // Give layout a moment, then force resize (no animation)
+            setTimeout(() => {
+                if (usersChart) usersChart.resize();
+                if (usersPie) usersPie.resize();
+                if (sellersChart) sellersChart.resize();
+            }, 120);
+
+        } catch (err) {
+            console.error("loadGrowthCharts error:", err);
+        }
+    }
+
+    function showCanvas(front, back) {
+        if (front) front.style.zIndex = "2";
+        if (back) back.style.zIndex = "1";
+    }
 </script>
 
 

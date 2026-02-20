@@ -250,6 +250,7 @@
     <Content Include="Landing.aspx" />
     <Content Include="Content\OrderHistory.css" />
     <Content Include="OrderView.aspx" />
+    <Content Include="RateOrder.aspx" />
     <Content Include="RegisterCustomer.aspx" />
     <Content Include="Content\LoginSite.css" />
     <Content Include="Messages.aspx" />
@@ -319,9 +320,11 @@
     <Content Include="Scripts\WebForms\WebUIValidation.js" />
     <Content Include="SellerDashboard.aspx" />
     <Content Include="RegisterSeller.aspx" />
+    <Content Include="SellerFeedback.aspx" />
     <Content Include="SellerMessages.aspx" />
     <Content Include="SellerPending.aspx" />
     <Content Include="SellerWasteTracker.aspx" />
+    <Content Include="Services\AdminAnalytics.asmx" />
     <Content Include="SignUp.aspx" />
     <Content Include="Site.Master" />
     <Content Include="Content\Verify2FA.css" />
@@ -347,6 +350,7 @@
     <Compile Include="Admin.Master.designer.cs">
       <DependentUpon>Admin.Master</DependentUpon>
     </Compile>
+    <Compile Include="App_Code\NotificationHelper.cs" />
     <Compile Include="ForgotPassword.aspx.cs">
       <DependentUpon>ForgotPassword.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -430,6 +434,13 @@
     <Compile Include="OrderView.aspx.designer.cs">
       <DependentUpon>OrderView.aspx</DependentUpon>
     </Compile>
+    <Compile Include="RateOrder.aspx.cs">
+      <DependentUpon>RateOrder.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="RateOrder.aspx.designer.cs">
+      <DependentUpon>RateOrder.aspx</DependentUpon>
+    </Compile>
     <Compile Include="RegisterCustomer.aspx.cs">
       <DependentUpon>RegisterCustomer.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -509,6 +520,13 @@
     <Compile Include="RegisterSeller.aspx.designer.cs">
       <DependentUpon>RegisterSeller.aspx</DependentUpon>
     </Compile>
+    <Compile Include="SellerFeedback.aspx.cs">
+      <DependentUpon>SellerFeedback.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SellerFeedback.aspx.designer.cs">
+      <DependentUpon>SellerFeedback.aspx</DependentUpon>
+    </Compile>
     <Compile Include="SellerMessages.aspx.cs">
       <DependentUpon>SellerMessages.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -536,6 +554,10 @@
     </Compile>
     <Compile Include="SellPage.Master.designer.cs">
       <DependentUpon>SellPage.Master</DependentUpon>
+    </Compile>
+    <Compile Include="Services\AdminAnalytics.asmx.cs">
+      <DependentUpon>AdminAnalytics.asmx</DependentUpon>
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="Services\TranslationCache.cs" />
     <Compile Include="Services\TranslationService.cs" />

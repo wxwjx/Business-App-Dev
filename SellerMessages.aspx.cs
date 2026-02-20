@@ -79,6 +79,7 @@ namespace Business_App_Dev
 
         protected void rptInbox_ItemCommand(object source, RepeaterCommandEventArgs e)
         {
+
             if (e.CommandName != "Open") return;
 
             hfEditingMessageID.Value = "";

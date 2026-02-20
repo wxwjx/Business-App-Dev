@@ -80,7 +80,11 @@ WHERE o.OrderID = @OrderID AND o.UserID = @UserID;";
 
                     pnlMain.Visible = true;
 
-                    string sellerId = rdr["SellerID"]?.ToString() ?? "";
+                    // --- Read sellerId safely (Orders has SellerID) ---
+                    if (rdr["SellerID"] == null || rdr["SellerID"] == DBNull.Value)
+                        throw new Exception("Order has no seller associated.");
+
+                    int sellerId = Convert.ToInt32(rdr["SellerID"]);
 
                     lblOrderId.Text = rdr["OrderID"].ToString();
                     lblCreatedAt.Text = Convert
@@ -97,12 +101,14 @@ WHERE o.OrderID = @OrderID AND o.UserID = @UserID;";
 
                     refPill.Attributes["data-ref"] = lblStripeSessionId.Text;
 
-                    // Just navigate to friend pages
-                    lnkChatSeller.NavigateUrl =
-                        $"Chat.aspx?orderId={orderId}&sellerId={sellerId}";
+                    // ✅ FIX: Your Messages.aspx opens by ?cid= (conversationId), not sellerId
+                    int conversationId = GetOrCreateConversationId(userId, sellerId);
 
-                    lnkRateOrder.NavigateUrl =
-                        $"RateOrder.aspx?orderId={orderId}";
+                    // Go to customer messaging page
+                    lnkChatSeller.NavigateUrl = $"Messages.aspx?cid={conversationId}";
+
+                    // Keep rating link as-is (you’ll implement later)
+                    lnkRateOrder.NavigateUrl = $"RateOrder.aspx?orderId={orderId}";
                 }
             }
         }
@@ -138,6 +144,55 @@ WHERE oi.OrderID = @OrderID AND o.UserID = @UserID;";
 
                     rptItems.DataSource = dt;
                     rptItems.DataBind();
+                }
+            }
+        }
+
+        // ✅ Finds existing conversation for (UserID, SellerID), else creates it.
+        // Uses your UX_Conversations_User_Seller unique index for safety.
+        private int GetOrCreateConversationId(int userId, int sellerId)
+        {
+            using (SqlConnection con = new SqlConnection(ConnStr()))
+            {
+                con.Open();
+
+                // 1) Find existing
+                using (SqlCommand find = new SqlCommand(@"
+SELECT ConversationID
+FROM dbo.Conversations
+WHERE UserID = @UID AND SellerID = @SID;", con))
+                {
+                    find.Parameters.AddWithValue("@UID", userId);
+                    find.Parameters.AddWithValue("@SID", sellerId);
+
+                    object existing = find.ExecuteScalar();
+                    if (existing != null && existing != DBNull.Value)
+                        return Convert.ToInt32(existing);
+                }
+
+                // 2) Create new (handles duplicate insert race via TRY/CATCH)
+                using (SqlCommand create = new SqlCommand(@"
+BEGIN TRY
+    INSERT INTO dbo.Conversations (UserID, SellerID)
+    VALUES (@UID, @SID);
+END TRY
+BEGIN CATCH
+    -- If another request created it first, ignore duplicate key errors
+    IF ERROR_NUMBER() NOT IN (2601, 2627) THROW;
+END CATCH;
+
+SELECT ConversationID
+FROM dbo.Conversations
+WHERE UserID = @UID AND SellerID = @SID;", con))
+                {
+                    create.Parameters.AddWithValue("@UID", userId);
+                    create.Parameters.AddWithValue("@SID", sellerId);
+
+                    object cid = create.ExecuteScalar();
+                    if (cid == null || cid == DBNull.Value)
+                        throw new Exception("Unable to open conversation.");
+
+                    return Convert.ToInt32(cid);
                 }
             }
         }

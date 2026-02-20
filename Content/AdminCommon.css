@@ -453,3 +453,200 @@
         background: #0c7f47;
     }
 
+.admin-head-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.admin-head-right {
+    position: relative;
+}
+
+.eco-bell-btn {
+    position: relative;
+    border: 0;
+    background: #ffffff;
+    border-radius: 14px;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 10px 12px;
+    box-shadow: 0 8px 22px rgba(0,0,0,.10);
+    transition: .2s ease;
+}
+
+    .eco-bell-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 30px rgba(0,0,0,.15);
+    }
+
+.eco-bell-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 6px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    background: #ff3b3b;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.eco-bell-popup {
+    position: absolute;
+    right: 0;
+    top: 55px;
+    width: 380px;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.20);
+    border: 1px solid rgba(0,0,0,.08);
+    z-index: 9999;
+    overflow: hidden;
+    animation: bellPop .15s ease;
+}
+
+@keyframes bellPop {
+    from {
+        opacity: 0;
+        transform: translateY(-8px) scale(.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.eco-bell-popup-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(0,0,0,.08);
+    background: #f9fbff;
+}
+
+.eco-bell-title {
+    font-weight: 900;
+    font-size: 15px;
+}
+
+.eco-bell-markall {
+    font-size: 12px;
+    font-weight: 700;
+    color: #2b6cff;
+    text-decoration: none;
+}
+
+    .eco-bell-markall:hover {
+        text-decoration: underline;
+    }
+
+.eco-bell-list {
+    max-height: 360px;
+    overflow: auto;
+    padding: 14px;
+    background: #fff;
+}
+
+.eco-bell-item {
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(0,0,0,.08);
+    margin-bottom: 12px;
+    background: #fff;
+    transition: .15s ease;
+}
+
+    .eco-bell-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 30px rgba(0,0,0,.10);
+    }
+
+    .eco-bell-item.unread {
+        border-color: rgba(43,108,255,.35);
+        background: linear-gradient(180deg, rgba(43,108,255,.06), rgba(255,255,255,1));
+    }
+
+.eco-bell-item-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+}
+
+.eco-bell-item-title {
+    font-weight: 900;
+    font-size: 14px;
+    color: #111;
+}
+
+.eco-bell-item-time {
+    font-size: 12px;
+    opacity: .65;
+    white-space: nowrap;
+}
+
+.eco-bell-item-msg {
+    margin-top: 6px;
+    font-size: 13px;
+    opacity: .9;
+    line-height: 1.4;
+}
+
+.eco-bell-btnsmall {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    background: #e8f2ff;
+    color: #2b6cff;
+    border: 0;
+    cursor: pointer;
+    text-decoration: none;
+    transition: .15s ease;
+}
+
+    .eco-bell-btnsmall:hover {
+        background: #2b6cff;
+        color: #fff;
+    }
+
+.eco-bell-empty {
+    padding: 18px;
+    text-align: center;
+    opacity: .6;
+    font-weight: 600;
+}
+
+.admin-topbar {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 18px 26px;
+}
+
+.admin-head-row {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.admin-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.admin-title {
+    text-align: left;
+}
