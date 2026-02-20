@@ -86,32 +86,33 @@ namespace Business_App_Dev
             {
                 conn.Open();
 
-                // 1️⃣ Get application data
+                // 1️⃣ Get application data (include phone)
                 SqlCommand get = new SqlCommand(@"
-            SELECT BusinessName, Address, Email
+            SELECT BusinessName, Address, Email, PhoneNumber
             FROM SellerApplications
             WHERE Id = @Id
         ", conn);
 
                 get.Parameters.AddWithValue("@Id", applicationId);
 
-                string shopName, address, email;
+                string shopName, address, email, phone;
 
                 using (var r = get.ExecuteReader())
                 {
                     if (!r.Read())
                         return;
 
-                    shopName = r["BusinessName"].ToString();
-                    address = r["Address"].ToString();
-                    email = r["Email"].ToString();
+                    shopName = r["BusinessName"]?.ToString() ?? "";
+                    address = r["Address"]?.ToString() ?? "";
+                    email = r["Email"]?.ToString() ?? "";
+                    phone = r["PhoneNumber"]?.ToString() ?? "";
                 }
 
                 // 2️⃣ Prevent duplicate seller insert
                 SqlCommand check = new SqlCommand(@"
             SELECT COUNT(1)
             FROM Seller
-            WHERE LOWER(Email) = LOWER(@Email)
+            WHERE LOWER(LTRIM(RTRIM(Email))) = LOWER(LTRIM(RTRIM(@Email)))
         ", conn);
 
                 check.Parameters.AddWithValue("@Email", email);
@@ -119,21 +120,21 @@ namespace Business_App_Dev
                 if (Convert.ToInt32(check.ExecuteScalar()) > 0)
                     return;
 
-                // 3️⃣ Insert into Seller table
+                // 3️⃣ Insert into Seller table (include phone)
                 SqlCommand insert = new SqlCommand(@"
-            INSERT INTO Seller (ShopName, Address, Email, CreatedAt)
-            VALUES (@ShopName, @Address, @Email, GETDATE())
+            INSERT INTO Seller (ShopName, Address, Email, Phone, CreatedAt)
+            VALUES (@ShopName, @Address, @Email, @Phone, GETDATE())
         ", conn);
 
                 insert.Parameters.AddWithValue("@ShopName", shopName);
                 insert.Parameters.AddWithValue("@Address", address);
                 insert.Parameters.AddWithValue("@Email", email);
+                insert.Parameters.AddWithValue("@Phone", string.IsNullOrWhiteSpace(phone) ? (object)DBNull.Value : phone);
 
                 insert.ExecuteNonQuery();
 
-                // 4️⃣ Update application status
+                // 4️⃣ Update application status + send email
                 UpdateStatus(applicationId, "APPROVED");
-                // 4️⃣ SEND EMAIL ✅
                 SendSellerApprovedEmail(email, shopName);
             }
         }
