@@ -7,9 +7,13 @@
 
 <asp:Content ID="Content1" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
 
-    <style>
+   <style>
         .sd-container { max-width: 1100px; margin: 30px auto; padding: 0 10px; }
-        .sd-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+
+        /* ✅ single header row */
+        .sd-header { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; }
+        .sd-header h2 { margin:0; }
+
         .sd-grid { display: grid; grid-template-columns: 1fr 320px; gap: 18px; align-items: start; }
         @media (max-width: 992px) { .sd-grid { grid-template-columns: 1fr; } }
 
@@ -27,11 +31,7 @@
         .sd-save-btn { background: #2ecc71; color: #fff; }
         .sd-cancel-btn { background: #bdc3c7; color: #1f2d3d; }
 
-        .sd-side-card-title { font-weight: 800; font-size: 18px; margin: 0 0 12px 0; color: #1f2d3d; }
-        .sd-tags { display: flex; flex-wrap: wrap; gap: 10px; }
-        .sd-tag { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 999px; border: 1px solid #e5e7eb; background: #fff; color: #111827; font-size: 13px; font-weight: 700; white-space: nowrap; }
-
-        .sd-pill-list { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; }
+     
         .sd-pill-list label { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 999px; border: 1px solid #e5e7eb; background: #fff; cursor: pointer; user-select: none; font-size: 13px; font-weight: 700; color: #111827; }
         .sd-pill-list input[type="checkbox"] { width: 16px; height: 16px; accent-color: #27ae60; }
 
@@ -41,8 +41,13 @@
         .sd-day { font-weight: 700; color: #2c3e50; }
         .sd-hours-timewrap { display: flex; gap: 10px; }
         .sd-hours-time { min-width: 140px; }
+
+        /* Optional: keep explicit grid positions */
         #viewSection, #editSection { grid-column: 1; }
         .sd-sidebar { grid-column: 2; }
+        @media (max-width: 992px) {
+            .sd-sidebar { grid-column: 1; }
+        }
     </style>
 
     <div class="sd-container">
@@ -52,15 +57,12 @@
         <div class="sd-header">
             <h2 style="margin:0;">Store Details</h2>
 
-           <div class="sd-header">
-    <h2 style="margin:0;">Store Details</h2>
-
     <asp:Button ID="btnEdit"
         runat="server"
         Text="Edit"
         CssClass="sd-btn sd-edit-btn"
         OnClientClick="toggleEdit(true); return false;" />
-</div>  <%-- ✅ CLOSE sd-header --%>
+</div>  
 
 <div class="sd-grid">
 
@@ -246,28 +248,7 @@
 
             </div>
 
-            <!-- ================= RIGHT ================= -->
-            <div class="sd-sidebar">
-
-                <div id="categoryViewCard" ClientIDMode="Static" class="sd-card" runat="server">
-                    <div class="sd-side-card-title">Categories</div>
-                    <div class="sd-tags">
-                        <asp:Repeater ID="rptCategories" runat="server">
-                            <ItemTemplate>
-                                <span class="sd-tag"><%# Container.DataItem %></span>
-                            </ItemTemplate>
-                        </asp:Repeater>
-                    </div>
-                </div>
-
-                <div id="categoryEditCard" ClientIDMode="Static" class="sd-card" style="display:none;" runat="server">
-                    <div class="sd-side-card-title">Categories</div>
-                    <div class="sd-pill-list">
-                        <asp:CheckBoxList ID="cblCategories" runat="server" RepeatLayout="Flow" />
-                    </div>
-                </div>
-
-            </div>
+           
 
         </div>
     </div>
@@ -295,23 +276,17 @@
             var view = document.getElementById("viewSection");
             var edit = document.getElementById("editSection");
 
-            var catView = document.getElementById("categoryViewCard");
-            var catEdit = document.getElementById("categoryEditCard");
-
+      
             var hf = document.getElementById("<%= hfEditMode.ClientID %>");
 
             if (toEdit) {
                 edit.style.display = "block";
                 view.style.display = "none";
-                catEdit.style.display = "block";
-                catView.style.display = "none";
                 hf.value = "1";
                 ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].forEach(toggleDay);
             } else {
                 edit.style.display = "none";
                 view.style.display = "block";
-                catEdit.style.display = "none";
-                catView.style.display = "block";
                 hf.value = "0";
             }
         }

@@ -195,6 +195,9 @@ namespace Business_App_Dev
             // Reload latest data & go back to VIEW mode
             LoadStore(sellerId);
             hfEditMode.Value = "0";
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "backToView",
+                "toggleEdit(false);", true);
+            hfEditMode.Value = "0";
 
 
         }
@@ -205,6 +208,9 @@ namespace Business_App_Dev
 
             // Reload DB values (discard textbox changes)
             LoadStore(sellerId);
+            hfEditMode.Value = "0";
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "backToView",
+                "toggleEdit(false);", true);
 
             // Back to VIEW mode
             hfEditMode.Value = "0";
