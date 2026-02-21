@@ -1,1 +1,1 @@
-﻿ALTER TABLE Orders ADD RejectReason NVARCHAR(255) NULL;
+﻿Select * FROM dbo.Seller;

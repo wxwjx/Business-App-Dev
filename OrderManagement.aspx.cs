@@ -42,13 +42,22 @@ namespace Business_App_Dev
 
             // If your date column is OrderDate instead of CreatedAt, change it here.
             string sql = @"
-            SELECT OrderID, CreatedAt, TotalAmount,
-                   OrderStatus AS Status,
-                   RejectReason
-            FROM Orders
-            WHERE SellerID = @SellerID
-              AND OrderStatus = @OrderStatus
-            ORDER BY CreatedAt DESC;";
+                SELECT 
+                    o.OrderID,
+                    o.CreatedAt,
+                    o.TotalAmount,
+                    o.OrderStatus AS Status,
+                    o.RejectReason,
+                    ItemsText = ISNULL(STUFF((
+                        SELECT ', ' + oi.ProductName + ' x' + CAST(oi.Quantity AS varchar(10))
+                        FROM dbo.OrderItems oi
+                        WHERE oi.OrderID = o.OrderID
+                        FOR XML PATH(''), TYPE
+                    ).value('.', 'nvarchar(max)'), 1, 2, ''), '—')
+                FROM dbo.Orders o
+                WHERE o.SellerID = @SellerID
+                  AND o.OrderStatus = @OrderStatus
+                ORDER BY o.CreatedAt DESC;";
 
             var dt = new DataTable();
 

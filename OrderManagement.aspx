@@ -95,6 +95,13 @@
                     <asp:BoundField DataField="CreatedAt" HeaderText="Time" DataFormatString="{0:dd MMM yyyy, HH:mm}" />
                     <asp:BoundField DataField="TotalAmount" HeaderText="Total" DataFormatString="{0:C}" />
 
+                    <asp:TemplateField HeaderText="Items">
+                    <ItemTemplate>
+                        <span class="muted"><%# Eval("ItemsText") %></span>
+                    </ItemTemplate>
+                </asp:TemplateField>
+
+
                     <asp:TemplateField HeaderText="Status">
                         <ItemTemplate>
                             <span class='badge <%# Eval("StatusCss") %>'><%# Eval("Status") %></span>
