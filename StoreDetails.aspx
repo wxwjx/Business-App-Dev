@@ -10,7 +10,6 @@
     <style>
         .sd-container { max-width: 1100px; margin: 30px auto; padding: 0 10px; }
 
-        /* ✅ single header row */
         .sd-header { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; }
         .sd-header h2 { margin:0; }
 
@@ -31,9 +30,6 @@
         .sd-save-btn { background: #2ecc71; color: #fff; }
         .sd-cancel-btn { background: #bdc3c7; color: #1f2d3d; }
 
-        .sd-pill-list label { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 999px; border: 1px solid #e5e7eb; background: #fff; cursor: pointer; user-select: none; font-size: 13px; font-weight: 700; color: #111827; }
-        .sd-pill-list input[type="checkbox"] { width: 16px; height: 16px; accent-color: #27ae60; }
-
         .sd-note { margin-top: 12px; color: #6b7280; font-size: 13px; }
 
         .sd-hours-row { display: grid; grid-template-columns: 70px 120px 1fr; gap: 10px; align-items: center; margin-bottom: 10px; }
@@ -41,10 +37,9 @@
         .sd-hours-timewrap { display: flex; gap: 10px; }
         .sd-hours-time { min-width: 140px; }
 
-        /* Optional: keep explicit grid positions */
-        #viewSection, #editSection { grid-column: 1; }
-        .sd-sidebar { grid-column: 2; }
-        @media (max-width: 992px) { .sd-sidebar { grid-column: 1; } }
+        .sd-msg { margin: 0 0 14px; padding: 10px 12px; border-radius: 12px; border: 1px solid #e5e7eb; display:block; }
+        .sd-msg.ok { background: rgba(46,125,50,.10); border-color: rgba(46,125,50,.25); }
+        .sd-msg.bad { background: rgba(244,67,54,.08); border-color: rgba(244,67,54,.25); }
 
         /* ===== Logout Modal ===== */
         .sd-modal-overlay {
@@ -89,9 +84,19 @@
 
     <div class="sd-container">
 
-        <asp:HiddenField ID="hfEditMode" runat="server" Value="0" />
+        <asp:Label ID="lblMsg" runat="server" CssClass="sd-msg" />
 
-        <!-- Hidden server-side logout trigger (modal confirm will click this) -->
+        <!-- state -->
+        <asp:HiddenField ID="hfEditMode" runat="server" Value="0" />
+        <asp:HiddenField ID="hfOldEmail" runat="server" />
+
+        <!-- hidden lat/lng for saving -->
+        <asp:HiddenField ID="hfLat" runat="server" ClientIDMode="Static" />
+        <asp:HiddenField ID="hfLng" runat="server" ClientIDMode="Static" />
+        <asp:HiddenField ID="hfAddr" runat="server" ClientIDMode="Static" />
+        <asp:HiddenField ID="hfShopName" runat="server" ClientIDMode="Static" />
+
+        <!-- Hidden server-side logout trigger -->
         <asp:Button ID="btnLogoutTrigger" runat="server"
             Text=""
             Style="display:none;"
@@ -101,7 +106,7 @@
 
         <!-- Header -->
         <div class="sd-header">
-            <h2 style="margin:0;">Store Details</h2>
+            <h2>Store Details</h2>
 
             <div style="display:flex; gap:10px; align-items:center;">
                 <asp:Button ID="btnEdit"
@@ -122,8 +127,6 @@
         </div>
 
         <div class="sd-grid">
-
-            <!-- ================= LEFT ================= -->
 
             <!-- VIEW MODE -->
             <div id="viewSection" ClientIDMode="Static" class="sd-card" runat="server">
@@ -146,23 +149,13 @@
                 <div class="sd-field">
                     <label>Store Address</label>
                     <asp:Label ID="lblAddress" runat="server" CssClass="sd-value" />
-                </div>    
-                
+                </div>
+
                 <div class="sd-field">
-                <label>Location</label>
-
-                <!-- show small text (optional) -->
-                <div class="sd-value" id="locText" style="margin-bottom:10px;"></div>
-
-                <!-- map container -->
-                <div id="map" style="width:100%; height:280px; border-radius:14px; overflow:hidden; border:1px solid #eee;"></div>
-
-                <!-- pass values from server to JS -->
-                <asp:HiddenField ID="hfLat" runat="server" ClientIDMode="Static" />
-                <asp:HiddenField ID="hfLng" runat="server" ClientIDMode="Static" />
-                <asp:HiddenField ID="hfAddr" runat="server" ClientIDMode="Static" />
-                <asp:HiddenField ID="hfShopName" runat="server" ClientIDMode="Static" />
-            </div>
+                    <label>Location</label>
+                    <div class="sd-value" id="locText" style="margin-bottom:10px;"></div>
+                    <div id="map" style="width:100%; height:280px; border-radius:14px; overflow:hidden; border:1px solid #eee;"></div>
+                </div>
 
                 <div class="sd-field">
                     <label>Description</label>
@@ -185,18 +178,28 @@
                 </div>
 
                 <div class="sd-field">
-                    <label>Phone</label>
-                    <asp:TextBox ID="tbPhone" runat="server" CssClass="sd-input" />
-                </div>
-
-                <div class="sd-field">
                     <label>Email</label>
                     <asp:TextBox ID="tbEmail" runat="server" CssClass="sd-input" TextMode="Email" />
                 </div>
 
                 <div class="sd-field">
-                    <label>Store Address</label>
-                    <asp:TextBox ID="tbAddress" runat="server" CssClass="sd-input" />
+                    <label>Phone</label>
+                    <asp:TextBox ID="tbPhone" runat="server" CssClass="sd-input" />
+                </div>
+
+                <div class="sd-field">
+                    <label>Postal Code (6 digits)</label>
+                    <asp:TextBox ID="tbPostal" runat="server" CssClass="sd-input" />
+                </div>
+
+                <div class="sd-field">
+                    <label>Address Line</label>
+                    <asp:TextBox ID="tbAddrLine" runat="server" CssClass="sd-input" />
+                </div>
+
+                <div class="sd-field">
+                    <label>Unit (optional e.g. #16-1046)</label>
+                    <asp:TextBox ID="tbUnit" runat="server" CssClass="sd-input" />
                 </div>
 
                 <div class="sd-field">
@@ -315,8 +318,16 @@
                 </div>
 
                 <div class="sd-actions">
-                    <asp:Button ID="btnSave" runat="server" Text="Save Changes" CssClass="sd-btn sd-save-btn" OnClick="btnSave_Click" />
-                    <asp:Button ID="btnCancel" runat="server" Text="Cancel" CssClass="sd-btn sd-cancel-btn" OnClick="btnCancel_Click" />
+                    <asp:Button ID="btnSave" runat="server"
+                        Text="Save Changes"
+                        CssClass="sd-btn sd-save-btn"
+                        OnClientClick="return geocodeBeforeSave();"
+                        OnClick="btnSave_Click" />
+
+                    <asp:Button ID="btnCancel" runat="server"
+                        Text="Cancel"
+                        CssClass="sd-btn sd-cancel-btn"
+                        OnClick="btnCancel_Click" />
                 </div>
 
             </div>
@@ -344,6 +355,7 @@
     </div>
 
     <script>
+        // ===== hours UI =====
         function toggleDay(dayKey) {
             var ddlId = {
                 "Mon": "<%= ddlMonMode.ClientID %>",
@@ -362,6 +374,7 @@
             wrap.style.display = (ddl.value === "Custom") ? "flex" : "none";
         }
 
+        // ===== view/edit toggle =====
         function toggleEdit(toEdit) {
             var view = document.getElementById("viewSection");
             var edit = document.getElementById("editSection");
@@ -379,22 +392,61 @@
             }
         }
 
-        // ===== Logout modal =====
-        function openLogoutModal() {
-            document.getElementById("sdLogoutModal").style.display = "flex";
-        }
-
-        function closeLogoutModal() {
-            document.getElementById("sdLogoutModal").style.display = "none";
-        }
-
-        // Click hidden ASP.NET button to ensure server event always fires
+        // ===== logout modal =====
+        function openLogoutModal() { document.getElementById("sdLogoutModal").style.display = "flex"; }
+        function closeLogoutModal() { document.getElementById("sdLogoutModal").style.display = "none"; }
         function submitLogout() {
             closeLogoutModal();
             document.getElementById("<%= btnLogoutTrigger.ClientID %>").click();
         }
 
+        // ===== Google geocode BEFORE server save =====
+        let geocodeInProgress = false;
 
+        function geocodeBeforeSave() {
+            if (geocodeInProgress) return false;
+            geocodeInProgress = true;
+
+            if (!window.google || !google.maps || !google.maps.Geocoder) {
+                alert("Google Maps not loaded yet. Please wait 1–2 seconds and try again.");
+                geocodeInProgress = false;
+                return false;
+            }
+
+            var addrLine = document.getElementById("<%= tbAddrLine.ClientID %>")?.value || "";
+            var unit = document.getElementById("<%= tbUnit.ClientID %>")?.value || "";
+            var postal = document.getElementById("<%= tbPostal.ClientID %>")?.value || "";
+
+            var query = (addrLine + " " + unit + " Singapore " + postal).replace(/\s+/g, " ").trim();
+
+            if (!addrLine.trim() || !postal.trim()) {
+                alert("Please enter Address Line and Postal Code.");
+                geocodeInProgress = false;
+                return false;
+            }
+
+            var geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ address: query }, function (results, status) {
+                if (status === "OK" && results && results[0]) {
+                    var loc = results[0].geometry.location;
+                    document.getElementById("hfLat").value = loc.lat();
+                    document.getElementById("hfLng").value = loc.lng();
+
+                    // optional: store formatted address for display on reload
+                    document.getElementById("hfAddr").value = results[0].formatted_address || query;
+
+                    // submit server event
+                    __doPostBack("<%= btnSave.UniqueID %>", "");
+                } else {
+                    alert("Address not found. Please check street + postal.\nStatus: " + status);
+                    geocodeInProgress = false;
+                }
+            });
+
+            return false; // prevent normal postback
+        }
+
+        // ===== Map =====
         let map, marker;
 
         function initMap() {
@@ -404,11 +456,8 @@
             const shop = document.getElementById("hfShopName")?.value || "Store";
 
             const locText = document.getElementById("locText");
-
-            // Default (Singapore center) if nothing
             const sg = { lat: 1.3521, lng: 103.8198 };
 
-            // If DB has lat/lng
             const lat = parseFloat(latStr);
             const lng = parseFloat(lngStr);
             const hasLatLng = !isNaN(lat) && !isNaN(lng) && Math.abs(lat) > 0.0001 && Math.abs(lng) > 0.0001;
@@ -432,23 +481,16 @@
                     : (addr ? addr : "Location not set");
             }
 
-            // Optional fallback: geocode address if no lat/lng
-            if (!hasLatLng && addr) {
-                const geocoder = new google.maps.Geocoder();
-                geocoder.geocode({ address: addr }, (results, status) => {
-                    if (status === "OK" && results[0]) {
-                        const p = results[0].geometry.location;
-                        map.setCenter(p);
-                        map.setZoom(16);
-                        marker.setPosition(p);
-                    }
-                });
-            }
+            // restore edit mode after postback if needed
+            try {
+                var hf = document.getElementById("<%= hfEditMode.ClientID %>");
+                if (hf && hf.value === "1") toggleEdit(true);
+            } catch (e) { }
         }
     </script>
 
     <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCS1t5r-1IlT_qqHoUT2HuUhM9S0DjIczo&callback=initMap&libraries=places">
-</script>
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAMaJDgeFHFRzCGTOW1m_TAXJhtzQ1pK4w&callback=initMap">
+    </script>
 
 </asp:Content>
