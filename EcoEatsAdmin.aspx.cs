@@ -2,10 +2,13 @@
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
+using System.Net;
+using System.Net.Mail;
 using System.Text;
 using System.Web;
-using System.Web.UI;
 using System.Web.UI.WebControls;
+
 
 namespace Business_App_Dev
 {
@@ -16,9 +19,11 @@ namespace Business_App_Dev
 
         protected void Page_Load(object sender, EventArgs e)
         {
+
             if (Session["UserRole"] == null || Session["UserRole"].ToString() != "Admin")
             {
                 Response.Redirect("~/login.aspx");
+                return;
             }
             if (!IsPostBack)
             {
@@ -60,27 +65,90 @@ namespace Business_App_Dev
 
             if (e.CommandName == "APPROVE")
             {
-                UpdateStatus(appId, "APPROVED");
+                ApproveSeller(appId);
                 lblMsg.Text = "✅ Seller application approved.";
-                ShowToast("Approve Granted");
+                ShowToast("Seller approved & email sent");
+                InsertNotification("Seller approved", $"Application #{appId} approved.");
             }
             else if (e.CommandName == "REJECT")
             {
                 UpdateStatus(appId, "REJECTED");
                 lblMsg.Text = "❌ Seller application rejected.";
-                ShowToast("Application Rejected!", "error");
+                ShowToast("Application rejected", "error");
+                InsertNotification("Seller rejected", $"Application #{appId} rejected.");
             }
 
             LoadPendingApplications();
         }
+        private void ApproveSeller(int applicationId)
+        {
+            using (SqlConnection conn = new SqlConnection(_connStr))
+            {
+                conn.Open();
+
+                // 1️⃣ Get application data (include phone)
+                SqlCommand get = new SqlCommand(@"
+            SELECT BusinessName, Address, Email, PhoneNumber
+            FROM SellerApplications
+            WHERE Id = @Id
+        ", conn);
+
+                get.Parameters.AddWithValue("@Id", applicationId);
+
+                string shopName, address, email, phone;
+
+                using (var r = get.ExecuteReader())
+                {
+                    if (!r.Read())
+                        return;
+
+                    shopName = r["BusinessName"]?.ToString() ?? "";
+                    address = r["Address"]?.ToString() ?? "";
+                    email = r["Email"]?.ToString() ?? "";
+                    phone = r["PhoneNumber"]?.ToString() ?? "";
+                }
+
+                // 2️⃣ Prevent duplicate seller insert
+                SqlCommand check = new SqlCommand(@"
+            SELECT COUNT(1)
+            FROM Seller
+            WHERE LOWER(LTRIM(RTRIM(Email))) = LOWER(LTRIM(RTRIM(@Email)))
+        ", conn);
+
+                check.Parameters.AddWithValue("@Email", email);
+
+                if (Convert.ToInt32(check.ExecuteScalar()) > 0)
+                    return;
+
+                // 3️⃣ Insert into Seller table (include phone)
+                SqlCommand insert = new SqlCommand(@"
+            INSERT INTO Seller (ShopName, Address, Email, Phone, CreatedAt)
+            VALUES (@ShopName, @Address, @Email, @Phone, GETDATE())
+        ", conn);
+
+                insert.Parameters.AddWithValue("@ShopName", shopName);
+                insert.Parameters.AddWithValue("@Address", address);
+                insert.Parameters.AddWithValue("@Email", email);
+                insert.Parameters.AddWithValue("@Phone", string.IsNullOrWhiteSpace(phone) ? (object)DBNull.Value : phone);
+
+                insert.ExecuteNonQuery();
+
+                // 4️⃣ Update application status + send email
+                UpdateStatus(applicationId, "APPROVED");
+                SendSellerApprovedEmail(email, shopName);
+            }
+        }
+
 
         private void UpdateStatus(int id, string status)
         {
             using (SqlConnection conn = new SqlConnection(_connStr))
             using (SqlCommand cmd = new SqlCommand(@"
-                UPDATE SellerApplications
-                SET Status = @Status
-                WHERE Id = @Id;", conn))
+        UPDATE SellerApplications
+        SET Status = @Status,
+            ApprovedAt = CASE WHEN @Status = 'APPROVED' THEN ISNULL(ApprovedAt, GETDATE()) ELSE ApprovedAt END,
+            RejectedAt = CASE WHEN @Status = 'REJECTED' THEN ISNULL(RejectedAt, GETDATE()) ELSE RejectedAt END
+        WHERE Id = @Id;", conn))
             {
                 cmd.Parameters.AddWithValue("@Status", status);
                 cmd.Parameters.AddWithValue("@Id", id);
@@ -89,16 +157,82 @@ namespace Business_App_Dev
                 cmd.ExecuteNonQuery();
             }
         }
+
+
+        private void SendSellerApprovedEmail(string toEmail, string shopName)
+        {
+            var msg = new MailMessage();
+            msg.To.Add(toEmail);
+            msg.Subject = "EcoEats Seller Application Approved 🎉";
+            msg.Body = $@"
+                Hello {shopName},
+
+                Great news! 🎉
+
+                Your seller application on EcoEats has been APPROVED.
+
+                You can now log in and start listing surplus food items on our platform.
+
+                Thank you for helping reduce food waste 🌱
+
+                Best regards,
+                EcoEats Team
+";
+
+            msg.IsBodyHtml = false;
+            msg.From = new MailAddress("kwayongle54@gmail.com", "EcoEats");
+
+            using (var smtp = CreateSmtpClient())
+            {
+                smtp.Send(msg);
+            }
+
+        }
+
         private void LoadFeedback()
         {
             try
             {
+                // Build selected ratings list
+                var selected = cblRatings.Items.Cast<ListItem>()
+                    .Where(i => i.Selected)
+                    .Select(i => i.Value)
+                    .ToList();
+
                 using (SqlConnection conn = new SqlConnection(_connStr))
-                using (SqlCommand cmd = new SqlCommand(@"
-            SELECT FeedbackId, CustomerName, Rating, FeedbackType, FeedbackText, SubmitDate
-            FROM CustomerFeedback
-            ORDER BY SubmitDate DESC, FeedbackId DESC;", conn))
+                using (SqlCommand cmd = new SqlCommand())
                 {
+                    cmd.Connection = conn;
+
+                    // Base query
+                    var sql = new StringBuilder(@"
+                SELECT 
+                    f.FeedbackID,
+                    f.UserID,
+                    u.FullName AS CustomerName,
+                    f.Rating,
+                    f.Tag,
+                    f.Comments,
+                    f.CreatedAt
+                FROM Feedback f
+                INNER JOIN Users u ON f.UserID = u.UserID
+            ");
+
+                    // Apply rating filter if any selected
+                    if (selected.Count > 0)
+                    {
+                        // Create @r0,@r1,... parameters
+                        var placeholders = selected.Select((v, idx) => $"@r{idx}").ToArray();
+                        sql.Append(" WHERE f.Rating IN (" + string.Join(",", placeholders) + ") ");
+
+                        for (int i = 0; i < selected.Count; i++)
+                            cmd.Parameters.AddWithValue($"@r{i}", int.Parse(selected[i]));
+                    }
+
+                    sql.Append(" ORDER BY f.CreatedAt DESC, f.FeedbackID DESC;");
+
+                    cmd.CommandText = sql.ToString();
+
                     conn.Open();
                     DataTable dt = new DataTable();
                     dt.Load(cmd.ExecuteReader());
@@ -106,7 +240,7 @@ namespace Business_App_Dev
                     rptFeedback.DataSource = dt;
                     rptFeedback.DataBind();
 
-                    lblFeedbackMsg.Text = (dt.Rows.Count == 0) ? "No feedback yet." : "";
+                    lblFeedbackMsg.Text = (dt.Rows.Count == 0) ? "No feedback matches your filter." : "";
                 }
             }
             catch (Exception ex)
@@ -114,6 +248,8 @@ namespace Business_App_Dev
                 lblFeedbackMsg.Text = "Error loading feedback: " + ex.Message;
             }
         }
+
+
 
         // ★★★★★ stars HTML
         public IHtmlString GetStars(int rating)
@@ -132,42 +268,50 @@ namespace Business_App_Dev
         }
 
         // Map pill colors
-        public string GetFeedbackPillClass(string type)
+        public string GetFeedbackPillClass(string tag)
         {
-            switch (type?.Trim().ToLower())
+            switch ((tag ?? "").Trim().ToLower())
             {
                 case "positive": return "positive";
-                case "suggestion": return "suggestion";
                 case "negative": return "negative";
+                case "suggestion": return "suggestion";
                 default: return "suggestion";
             }
         }
+
 
         // Optional: Export CSV
         protected void btnExportFeedback_Click(object sender, EventArgs e)
         {
             using (SqlConnection conn = new SqlConnection(_connStr))
             using (SqlCommand cmd = new SqlCommand(@"
-        SELECT CustomerName, Rating, FeedbackType, FeedbackText, SubmitDate
-        FROM CustomerFeedback
-        ORDER BY SubmitDate DESC, FeedbackId DESC;", conn))
+        SELECT 
+            u.FullName AS CustomerName,
+            f.Rating,
+            f.Tag,
+            f.Comments,
+            f.CreatedAt
+        FROM Feedback f
+        INNER JOIN Users u ON f.UserID = u.UserID
+        ORDER BY f.CreatedAt DESC, f.FeedbackID DESC;", conn))
             {
                 conn.Open();
+
                 DataTable dt = new DataTable();
                 dt.Load(cmd.ExecuteReader());
 
                 StringBuilder csv = new StringBuilder();
-                csv.AppendLine("CustomerName,Rating,FeedbackType,FeedbackText,SubmitDate");
+                csv.AppendLine("CustomerName,Rating,Tag,Comments,CreatedAt");
 
                 foreach (DataRow row in dt.Rows)
                 {
                     string name = row["CustomerName"].ToString().Replace("\"", "\"\"");
-                    string type = row["FeedbackType"].ToString().Replace("\"", "\"\"");
-                    string text = row["FeedbackText"].ToString().Replace("\"", "\"\"");
+                    string tag = row["Tag"].ToString().Replace("\"", "\"\"");
+                    string comments = row["Comments"].ToString().Replace("\"", "\"\"");
                     string rating = row["Rating"].ToString();
-                    string date = Convert.ToDateTime(row["SubmitDate"]).ToString("yyyy-MM-dd");
+                    string date = Convert.ToDateTime(row["CreatedAt"]).ToString("yyyy-MM-dd HH:mm:ss");
 
-                    csv.AppendLine($"\"{name}\",{rating},\"{type}\",\"{text}\",\"{date}\"");
+                    csv.AppendLine($"\"{name}\",{rating},\"{tag}\",\"{comments}\",\"{date}\"");
                 }
 
                 Response.Clear();
@@ -177,6 +321,7 @@ namespace Business_App_Dev
                 Response.End();
             }
         }
+
         private void LoadChats()
         {
             using (SqlConnection conn = new SqlConnection(_connStr))
@@ -279,6 +424,60 @@ namespace Business_App_Dev
             return Convert.ToInt32(idObj) == ActiveReplyId.Value;
         }
 
+        private SmtpClient CreateSmtpClient()
+        {
+            string appPassword = Environment.GetEnvironmentVariable("EMAIL_APP_PASSWORD");
+
+            if (string.IsNullOrWhiteSpace(appPassword))
+                throw new Exception("EMAIL_APP_PASSWORD is missing. Set it using setx.");
+
+            var smtp = new SmtpClient("smtp.gmail.com", 587)
+            {
+                EnableSsl = true,
+                UseDefaultCredentials = false,
+                Credentials = new NetworkCredential("kwayongle54@gmail.com", appPassword)
+            };
+
+            return smtp;
+        }
+        public bool HasTag(object tagObj)
+        {
+            return !string.IsNullOrWhiteSpace(Convert.ToString(tagObj));
+        }
+
+        public string GetRatingPillClass(int rating)
+        {
+            if (rating <= 2) return "bad";      // red
+            if (rating == 3) return "mid";      // orange
+            return "good";                      // green (4-5)
+        }
+        protected void btnApplyRatingFilter_Click(object sender, EventArgs e)
+        {
+            LoadFeedback(); // it will read selected ratings
+        }
+
+        protected void btnClearRatingFilter_Click(object sender, EventArgs e)
+        {
+            foreach (ListItem item in cblRatings.Items)
+                item.Selected = false;
+
+            LoadFeedback();
+        }
+        private void InsertNotification(string title, string message)
+        {
+            using (SqlConnection conn = new SqlConnection(_connStr))
+            using (SqlCommand cmd = new SqlCommand(@"
+        INSERT INTO AdminNotifications (Type, Title, Message)
+        VALUES ('System', @t, @m)", conn))
+            {
+                cmd.Parameters.AddWithValue("@t", title);
+                cmd.Parameters.AddWithValue("@m", message);
+                conn.Open();
+                cmd.ExecuteNonQuery();
+            }
+        }
+
     }
 }
 
+// test admin branch

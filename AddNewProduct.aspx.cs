@@ -7,6 +7,11 @@ namespace Business_App_Dev
     {
         protected void Page_Load(object sender, EventArgs e)
         {
+            if (Session["UserRole"]?.ToString() != "Seller" || Session["SellerId"] == null)
+            {
+                Response.Redirect("~/Login.aspx?role=Seller");
+                return;
+            }
         }
 
         protected void btn_Insert_Click(object sender, EventArgs e)
@@ -16,13 +21,12 @@ namespace Business_App_Dev
                 // Let ASP.NET validators run first
                 if (!Page.IsValid) return;
 
-                // ✅ TEMP: fake seller until login is ready
-                // (Make sure SellerID 1 exists in dbo.Seller — your screenshot shows it does)
-                int fakeSellerId = 1;
+                
+                int sellerId = Convert.ToInt32(Session["SellerId"]);
 
                 string name = (tb_ProductName.Text ?? "").Trim();
                 string subtitle = (tb_Subtitle.Text ?? "").Trim();
-                string imageUrl = (tb_ImageUrl.Text ?? "").Trim();
+                //string imageUrl = (tb_ImageUrl.Text ?? "").Trim();
                 string category = (tb_category.Text ?? "").Trim();
 
                 if (string.IsNullOrWhiteSpace(name))
@@ -62,11 +66,11 @@ namespace Business_App_Dev
                 // ✅ Create ProductModel (no Product.cs)
                 var p = new ProductModel
                 {
-                    SellerID = fakeSellerId,   // ✅ IMPORTANT: prevents NULL SellerID insert error
+                    SellerID = sellerId,  
 
                     ProductName = name,
                     Subtitle = subtitle,
-                    ImageUrl = imageUrl,
+                    //ImageUrl = imageUrl,
 
                     PriceNow = priceNow,
                     PriceOld = priceOld,

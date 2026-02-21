@@ -19,24 +19,88 @@
 <form id="form1" runat="server">
     
     <!-- ✅ STEP 1: required for server-side scripts -->
-    <asp:ScriptManager ID="sm1" runat="server" />
+    <asp:ScriptManager ID="sm1" runat="server" EnablePageMethods="true" />
 
 
     <!-- Top brand bar -->
     <header class="admin-topbar">
-        <div class="admin-brand">
-            <div class="admin-shield">
-                <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M12 2l7 4v6c0 5-3.5 9.4-7 10-3.5-.6-7-5-7-10V6l7-4z"
-                          fill="none" stroke="currentColor" stroke-width="2"></path>
-                </svg>
+        <div class="admin-head-row">
+
+            <!-- LEFT: existing brand -->
+            <div class="admin-brand">
+                <div class="admin-shield">
+                    <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 2l7 4v6c0 5-3.5 9.4-7 10-3.5-.6-7-5-7-10V6l7-4z"
+                              fill="none" stroke="currentColor" stroke-width="2"></path>
+                    </svg>
+                </div>
+
+                <div class="admin-title">
+                    <div class="admin-title-main">EcoEats Admin</div>
+                    <div class="admin-title-sub">System Dashboard</div>
+                </div>
             </div>
 
-            <div class="admin-title">
-                <div class="admin-title-main">EcoEats Admin</div>
-                <div class="admin-title-sub">System Dashboard</div>
+            <!-- RIGHT: bell -->
+            <div class="admin-head-right">
+                <button type="button" class="eco-bell-btn" onclick="toggleBellPopup()">
+                    🔔
+                    <asp:Label ID="lblBellCount" runat="server"
+                        CssClass="eco-bell-badge"
+                        Visible="false" />
+                </button>
+
+                <!-- POPUP -->
+                <div id="bellPopup" class="eco-bell-popup" style="display:none;">
+                    <div class="eco-bell-popup-head">
+                        <span class="eco-bell-title">Notifications</span>
+
+                        <asp:LinkButton ID="btnBellMarkAll" runat="server"
+                            CssClass="eco-bell-markall"
+                            OnClick="btnBellMarkAll_Click">
+                            Mark all as read
+                        </asp:LinkButton>
+                    </div>
+
+                    <div class="eco-bell-list">
+                        <asp:Repeater ID="rptBell" runat="server"
+                            OnItemCommand="rptBell_ItemCommand">
+                            <ItemTemplate>
+                                <div class='eco-bell-item <%# (Convert.ToBoolean(Eval("IsRead")) ? "" : "unread") %>'>
+                                    <div class="eco-bell-item-top">
+                                        <div class="eco-bell-item-title"><%# Eval("Title") %></div>
+                                        <div class="eco-bell-item-time">
+                                            <%# Eval("CreatedAt", "{0:dd MMM HH:mm}") %>
+                                        </div>
+                                    </div>
+
+                                    <div class="eco-bell-item-msg"><%# Eval("Message") %></div>
+
+                                    <div class="eco-bell-item-actions">
+                                        <asp:LinkButton runat="server"
+                                            CssClass="eco-bell-btnsmall"
+                                            CommandName="READ"
+                                            CommandArgument='<%# Eval("NotificationId") %>'
+                                            OnClientClick="return removeBellItem(this);">
+                                            Mark read
+                                        </asp:LinkButton>
+
+
+                                    </div>
+                                </div>
+                            </ItemTemplate>
+                        </asp:Repeater>
+
+                        <asp:Label ID="lblBellEmpty" runat="server"
+                            CssClass="eco-bell-empty"
+                            Text="No notifications"
+                            Visible="false" />
+                    </div>
+                </div>
             </div>
+
         </div>
+
     </header>
 
     <!-- Page background -->
@@ -136,16 +200,21 @@
                 <button type="button" class="admin-tab active" data-tab="approvals">Seller Approvals</button>
                 <button type="button" class="admin-tab" data-tab="feedback">Feedback Analytics</button>
                 <button type="button" class="admin-tab" data-tab="chat">Chat Escalations</button>
+                <button type="button" class="admin-tab" data-tab="analytics">Analytics</button>
+
+
             </nav>
 
-            <!-- Logout Button -->
-            <asp:Button
-                ID="btnLogout"
-                runat="server"
-                Text="Logout"
-                CssClass="admin-logout-btn"
+            <!-- Hidden ASP button (used for postback logout) -->
+            <asp:Button ID="btnLogout" runat="server"
                 OnClick="btnLogout_Click"
-                OnClientClick="return confirmLogout();" />
+                Style="display:none;" />
+
+            <!-- Visible logout button (user clicks this) -->
+            <button type="button" class="admin-logout-btn" onclick="openLogoutModal()">
+                Logout
+            </button>
+
 
 
             <!-- PAGE CONTENT (changes per page) -->
@@ -158,6 +227,24 @@
     </main>
 
     <div id="toast" class="eco-toast"></div>
+    <div id="eeLogoutModal" class="ee-modal-overlay" style="display:none;">
+        <div class="ee-modal">
+            <div class="ee-modal-head">
+                <div class="ee-modal-title">Log out</div>
+                <button type="button" class="ee-modal-x" onclick="closeLogoutModal()">✕</button>
+            </div>
+
+            <div class="ee-modal-body">
+                <p class="ee-modal-text">Do you really want to log out?</p>
+            </div>
+
+            <div class="ee-modal-actions">
+                <button type="button" class="ee-btn-secondary" onclick="closeLogoutModal()">Cancel</button>
+                <button type="button" class="ee-btn-primary" onclick="submitLogout()">Log out</button>
+            </div>
+        </div>
+    </div>
+
 
     <asp:ContentPlaceHolder ID="ScriptsContent" runat="server" />
 
@@ -171,8 +258,11 @@
 
             function activate(name) {
                 tabs.forEach(t => t.classList.toggle("active", t.dataset.tab === name));
-                panels.forEach(p => p.classList.toggle("active", p.dataset.tab === name));
+                panels.forEach(p => p.classList.toggle("active", p.dataset.tab === name));  
                 if (hf) hf.value = name;
+                if (name === "analytics" && typeof loadGrowthCharts === "function") {
+                    setTimeout(loadGrowthCharts, 50);
+                }
             }
 
             tabs.forEach(t => t.addEventListener("click", (e) => {
@@ -196,12 +286,61 @@
                 toast.className = "eco-toast";
             }, 800);
         }
+
         function confirmLogout() {
             return confirm("Are you sure you want to log out?");
         }
+        function openLogoutModal() {
+            document.getElementById("eeLogoutModal").style.display = "flex";
+        }
+
+        function closeLogoutModal() {
+            document.getElementById("eeLogoutModal").style.display = "none";
+        }
+
+        function submitLogout() {
+            closeLogoutModal();
+            __doPostBack('<%= btnLogout.UniqueID %>', '');
+        }
+
+        document.addEventListener("click", function (e) {
+            if (e.target && e.target.id === "eeLogoutModal") closeLogoutModal();
+        });
+
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") closeLogoutModal();
+        });
+        function toggleBellPopup() {
+            const p = document.getElementById("bellPopup");
+            if (!p) return;
+            p.style.display = (p.style.display === "block") ? "none" : "block";
+        }
+
+        document.addEventListener("click", function (e) {
+            const p = document.getElementById("bellPopup");
+            const b = document.querySelector(".eco-bell-btn");
+            if (!p || !b) return;
+            if (p.style.display === "block" && !p.contains(e.target) && !b.contains(e.target)) {
+                p.style.display = "none";
+            }
+        });
+        function removeBellItem(btn) {
+            const card = btn.closest(".eco-bell-item");
+            if (card) {
+                card.style.transition = "0.2s ease";
+                card.style.opacity = "0";
+                card.style.transform = "translateX(15px)";
+                setTimeout(() => {
+                    card.remove();
+                }, 200);
+            }
+            return true; // allow postback to update database
+        }
+
+
     </script>
-    <asp:Timer ID="kpiTimer" runat="server" Interval="5000"
-    OnTick="kpiTimer_Tick" />
+    <asp:Timer ID="kpiTimer" runat="server" Interval="2000"
+    OnTick="kpiTimer_Tick" Enabled="True" />
 
 
 </form>

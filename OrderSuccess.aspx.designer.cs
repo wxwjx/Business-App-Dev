@@ -15,13 +15,13 @@ namespace Business_App_Dev
     {
 
         /// <summary>
-        /// form1 control.
+        /// lblBackToShopping control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.HtmlControls.HtmlForm form1;
+        protected global::System.Web.UI.WebControls.Label lblBackToShopping;
 
         /// <summary>
         /// pnlError control.
@@ -42,6 +42,24 @@ namespace Business_App_Dev
         protected global::System.Web.UI.WebControls.Label lblError;
 
         /// <summary>
+        /// lblOrderSuccessful control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblOrderSuccessful;
+
+        /// <summary>
+        /// lblOrderIdText control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblOrderIdText;
+
+        /// <summary>
         /// lblOrderId control.
         /// </summary>
         /// <remarks>
@@ -49,6 +67,15 @@ namespace Business_App_Dev
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Label lblOrderId;
+
+        /// <summary>
+        /// lblStatusText control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblStatusText;
 
         /// <summary>
         /// lblPayStatus control.
@@ -60,6 +87,33 @@ namespace Business_App_Dev
         protected global::System.Web.UI.WebControls.Label lblPayStatus;
 
         /// <summary>
+        /// lblStepConfirmed control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblStepConfirmed;
+
+        /// <summary>
+        /// lblStepPreparing control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblStepPreparing;
+
+        /// <summary>
+        /// lblStepReady control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblStepReady;
+
+        /// <summary>
         /// rptSellerGroups control.
         /// </summary>
         /// <remarks>
@@ -67,6 +121,15 @@ namespace Business_App_Dev
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Repeater rptSellerGroups;
+
+        /// <summary>
+        /// lblTotalText control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblTotalText;
 
         /// <summary>
         /// lblTotal control.

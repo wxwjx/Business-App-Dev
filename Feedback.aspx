@@ -93,12 +93,13 @@
                 <asp:DropDownList ID="ddlTag" runat="server" CssClass="ee-input"
                                   Style="margin-top:4px; padding:6px 10px;">
                     <asp:ListItem Text="-- choose a tag --" Value="" />
-                    <asp:ListItem Text="Great prices" Value="Great prices" />
-                    <asp:ListItem Text="Easy to use" Value="Easy to use" />
-                    <asp:ListItem Text="Love the impact" Value="Love the impact" />
-                    <asp:ListItem Text="Fast pickup" Value="Fast pickup" />
-                    <asp:ListItem Text="Helpful support" Value="Helpful support" />
-                    <asp:ListItem Text="Good variety" Value="Good variety" />
+                    <asp:ListItem Text="Pricing" Value="Pricing" />
+                    <asp:ListItem Text="Usability" Value="Usability" />
+                    <asp:ListItem Text="Impact" Value="Impact" />
+                    <asp:ListItem Text="Pickup" Value="Pickup" />
+                    <asp:ListItem Text="Support" Value="Support" />
+                    <asp:ListItem Text="Variety" Value="Variety" />
+
                 </asp:DropDownList>
             </div>
 

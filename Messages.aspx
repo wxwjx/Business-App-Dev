@@ -1,195 +1,229 @@
-﻿<%@ Page Title="Messages" Language="C#" MasterPageFile="~/SellPage.master" AutoEventWireup="true"
-    CodeBehind="Messages.aspx.cs" Inherits="FoodSaver.Messages" %>
+﻿<%@ Page Title="Messages" Language="C#" MasterPageFile="~/Site.Master"
+    AutoEventWireup="true" CodeBehind="Messages.aspx.cs" Inherits="Business_App_Dev.Messages" %>
 
-<asp:Content ID="HeadContent" ContentPlaceHolderID="head" runat="server">
-</asp:Content>
+<asp:Content ID="HeadCss" ContentPlaceHolderID="HeadContent" runat="server">
+    <style>
+        .ee-msg-wrap{display:flex;gap:16px;align-items:stretch;margin:16px 0;}
+        .ee-panel{background:#fff;border:1px solid #e6e8ee;border-radius:14px;box-shadow:0 6px 20px rgba(15,23,42,.06);overflow:hidden;}
+        .ee-panel-h{padding:12px 14px;border-bottom:1px solid #eef0f6;display:flex;align-items:center;gap:10px;}
+        .ee-panel-title{font-weight:800;font-size:16px;}
+        .ee-subtle{opacity:.7;font-size:12px;}
 
-<asp:Content ID="MainContent" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
-    <div class="container">
-        <h2 class="mb-3">Messages</h2>
+        .ee-inbox{width:340px;min-width:300px;}
+        .ee-chat{flex:1;display:flex;flex-direction:column;min-height:560px;}
 
-        <asp:Label ID="lblInfo" runat="server" CssClass="text-muted" />
-        <asp:Label ID="lblError" runat="server" CssClass="text-danger" />
+        .ee-inbox-list{max-height:560px;overflow:auto;}
+        .ee-inbox-item{display:flex;justify-content:space-between;gap:12px;padding:12px 14px;border-bottom:1px solid #f1f3f8;text-decoration:none;color:inherit;}
+        .ee-inbox-item:hover{background:#fafbff;}
+        .ee-inbox-name{font-weight:800;}
+        .ee-inbox-preview{font-size:12px;opacity:.75;}
 
-        <asp:Panel ID="pnlSeller" runat="server" Visible="false">
-            <div class="row g-3">
-                <!-- LEFT: Inbox -->
-                <div class="col-lg-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title mb-3">Inbox</h5>
+        .ee-pill{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid #e6e8ee;background:#f7f8fc;}
+        .ee-pill.unread{background:#eef6ff;border-color:#cfe4ff;}
 
-                            <asp:GridView ID="gvInbox" runat="server" AutoGenerateColumns="False"
-                                CssClass="table table-sm"
-                                OnRowCommand="gvInbox_RowCommand">
-                                <Columns>
-                                    <asp:BoundField DataField="CustomerName" HeaderText="Customer" />
-                                    <asp:BoundField DataField="UnreadCount" HeaderText="Unread" />
-                                    <asp:TemplateField>
-                                        <ItemTemplate>
-                                            <asp:LinkButton runat="server" Text="Open"
-                                                CommandName="OpenChat"
-                                                CommandArgument='<%# Eval("ConversationID") %>' />
-                                        </ItemTemplate>
-                                    </asp:TemplateField>
-                                </Columns>
-                            </asp:GridView>
+        .ee-msg-list{flex:1;overflow:auto;padding:14px;background:linear-gradient(#fff,#fbfcff);}
+        .ee-row{display:flex;margin:10px 0;}
+        .ee-row.me{justify-content:flex-end;}
+        .ee-bubble{max-width:68%;padding:10px 12px;border-radius:14px;border:1px solid #e6e8ee;background:#fff;}
+        .ee-row.me .ee-bubble{background:#ecfdf3;border-color:#bfead0;}
+        .ee-meta{margin-top:6px;display:flex;align-items:center;gap:10px;font-size:12px;opacity:.7;}
+        .ee-meta .spacer{margin-left:auto;}
 
-                            <hr />
+        .ee-compose{padding:12px 14px;border-top:1px solid #eef0f6;display:flex;gap:10px;}
+        .ee-input{flex:1;border:1px solid #e6e8ee;border-radius:10px;padding:10px 12px;}
 
-                            <h6 class="mb-2">Start new chat (demo)</h6>
-                            <asp:DropDownList ID="ddlUsers" runat="server" CssClass="form-select mb-2" />
-                            <asp:Button ID="btnStartChat" runat="server" Text="Start / Open Chat"
-                                CssClass="btn btn-outline-primary btn-sm" OnClick="btnStartChat_Click" />
-                        </div>
-                    </div>
-                </div>
+        .ee-btn{border:0;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;}
+        .ee-btn-primary{background:#0ea5e9;color:#fff;}
+        .ee-btn-primary:hover{filter:brightness(.95);}
+        .ee-action{border:0;background:transparent;cursor:pointer;font-weight:800;font-size:12px;opacity:.75;}
+        .ee-action:hover{opacity:1;text-decoration:underline;}
 
-                <!-- RIGHT: Chat -->
-                <div class="col-lg-8">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title mb-3">
-                                Chat
-                                <asp:Label ID="lblChatWith" runat="server" CssClass="text-muted fs-6" />
-                            </h5>
+        .ee-error{color:#b91c1c;font-weight:700;margin:8px 0;}
+        /* --- Right-click menu for my messages --- */
+        .ee-bubble {
+            position: relative;
+        }
+        /* needed for absolute menu positioning */
 
-                            <asp:Panel ID="pnlChat" runat="server" Visible="false">
-
-                                <!-- Chat messages area -->
-                                <div id="chatWindow" class="chat-window mb-3">
-                                    <asp:Repeater ID="rptMessages" runat="server">
-                                        <ItemTemplate>
-                                            <div class='msg-row <%# (Convert.ToInt32(Eval("IsMine")) == 1 ? "mine" : "theirs") %>'>
-                                                <div class='msg-bubble'
-                                                    oncontextmenu='return showMsgMenu(event, "<%# Eval("MessageID") %>", <%# Eval("IsMine") %>, "<%# HttpUtility.JavaScriptStringEncode(Eval("MessageText").ToString()) %>");'>
-
-                                                    <div class="msg-text"><%# Server.HtmlEncode(Eval("MessageText").ToString()) %></div>
-
-                                                    <div class="msg-meta">
-                                                        <%# Convert.ToDateTime(Eval("SentAt")).ToString("HH:mm") %>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </ItemTemplate>
-                                    </asp:Repeater>
-                                </div>
-
-                                <!-- Send box -->
-                                <div class="chat-input">
-                                    <asp:TextBox ID="txtMessage" runat="server" TextMode="MultiLine" Rows="2"
-                                        CssClass="form-control" Placeholder="Type a message..." />
-                                    <div class="d-flex justify-content-end mt-2">
-                                        <asp:Button ID="btnSend" runat="server" Text="Send"
-                                            CssClass="btn btn-success" OnClick="btnSend_Click" />
-                                    </div>
-                                </div>
-
-                                <!-- Hidden fields + hidden buttons for context actions -->
-                                <asp:HiddenField ID="hfSelectedMessageId" runat="server" />
-                                <asp:HiddenField ID="hfEditText" runat="server" />
-
-                                <asp:LinkButton ID="btnCtxDelete" runat="server" OnClick="btnCtxDelete_Click" Style="display: none" />
-                                <asp:LinkButton ID="btnSaveEdit" runat="server" OnClick="btnSaveEdit_Click" Style="display: none" />
-
-                            </asp:Panel>
-
-                            <!-- Right-click context menu -->
-                            <div id="msgMenu" class="msg-menu" style="display: none;">
-                                <button type="button" class="dropdown-item" onclick="openEditModal()">Edit</button>
-                                <button type="button" class="dropdown-item text-danger" onclick="deleteMessage()">Delete</button>
-                            </div>
-
-                            <!-- Bootstrap Edit Modal -->
-                            <div class="modal fade" id="editMsgModal" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">Edit message</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <textarea id="editMsgBox" class="form-control" rows="3"></textarea>
-                                            <div class="small text-muted mt-2">Right-click only works on desktop.</div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                                            <button type="button" class="btn btn-primary" onclick="saveEdit()">Save</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <asp:Panel ID="pnlNoChat" runat="server" Visible="true">
-                                <p class="text-muted mb-0">Select a conversation from the inbox to view messages.</p>
-                            </asp:Panel>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </asp:Panel>
-
-        <asp:Panel ID="pnlCustomerPlaceholder" runat="server" Visible="false">
-            <div class="alert alert-info">
-                Customer messaging is not implemented yet (no customer login). This page will support both sellers and customers later.
-            </div>
-        </asp:Panel>
-    </div>
-
-    <script>
-    function showMsgMenu(e, messageId, isMine, messageText) {
-        e.preventDefault();
-
-        // Only allow context menu for your own messages
-        if (parseInt(isMine) !== 1) return false;
-
-        document.getElementById('<%= hfSelectedMessageId.ClientID %>').value = messageId;
-        document.getElementById('<%= hfEditText.ClientID %>').value = messageText;
-
-        const menu = document.getElementById('msgMenu');
-        menu.style.display = 'block';
-        menu.style.left = e.clientX + 'px';
-        menu.style.top = e.clientY + 'px';
-
-        return false;
-    }
-
-    function hideMsgMenu() {
-        const menu = document.getElementById('msgMenu');
-        if (menu) menu.style.display = 'none';
-    }
-
-    document.addEventListener('click', hideMsgMenu);
-    document.addEventListener('scroll', hideMsgMenu, true);
-
-    function openEditModal() {
-        hideMsgMenu();
-
-        const text = document.getElementById('<%= hfEditText.ClientID %>').value || "";
-        document.getElementById('editMsgBox').value = text;
-
-        const modal = new bootstrap.Modal(document.getElementById('editMsgModal'));
-        modal.show();
-    }
-
-    function saveEdit() {
-        const newText = document.getElementById('editMsgBox').value || "";
-        document.getElementById('<%= hfEditText.ClientID %>').value = newText;
-
-        document.getElementById('<%= btnSaveEdit.ClientID %>').click();
-    }
-
-    function deleteMessage() {
-        hideMsgMenu();
-        if (!confirm("Delete this message?")) return;
-        document.getElementById('<%= btnCtxDelete.ClientID %>').click();
+        .ee-actions-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 6px;
+            background: #fff;
+            border: 1px solid #e6e8ee;
+            border-radius: 12px;
+            padding: 6px;
+            box-shadow: 0 10px 25px rgba(15,23,42,.12);
+            z-index: 9999;
+            min-width: 120px;
+            display: none; /* hidden by default */
         }
 
-        // Auto-scroll to bottom on load (after render)
-        window.addEventListener('load', function () {
-            const chat = document.getElementById('chatWindow');
-            if (chat) chat.scrollTop = chat.scrollHeight;
+            .ee-actions-menu .ee-action {
+                display: block;
+                width: 100%;
+                text-align: left;
+                padding: 8px 10px;
+                border-radius: 10px;
+                opacity: .9;
+                text-decoration: none;
+            }
+
+                .ee-actions-menu .ee-action:hover {
+                    background: #f3f5fb;
+                    opacity: 1;
+                    text-decoration: none;
+                }
+
+    </style>
+</asp:Content>
+
+
+<asp:Content ID="Content1" ContentPlaceHolderID="MainContent" runat="server">
+
+    <div class="ee-container" style="padding:16px 0;">
+        <h2 style="margin:0 0 12px 0;">Messages</h2>
+
+        <asp:Label ID="lblError" runat="server" CssClass="ee-error" />
+        <asp:HiddenField ID="hfConversationID" runat="server" />
+        <asp:HiddenField ID="hfEditingMessageID" runat="server" />
+
+        <div class="ee-msg-wrap">
+
+            <!-- Inbox -->
+            <div class="ee-panel ee-inbox">
+                <div class="ee-panel-h">
+                    <div class="ee-panel-title">Inbox</div>
+                    <div class="ee-subtle">Sellers</div>
+                </div>
+
+                <div class="ee-inbox-list">
+                    <asp:Repeater ID="rptInbox" runat="server" OnItemCommand="rptInbox_ItemCommand">
+                        <ItemTemplate>
+                            <asp:LinkButton runat="server" ID="lnkOpen" CssClass="ee-inbox-item"
+                                CommandName="Open"
+                                CommandArgument='<%# Eval("ConversationID") %>'
+                                CausesValidation="false"
+                                UseSubmitBehavior="false">
+
+                                <div>
+                                    <div class="ee-inbox-name"><%# Eval("ShopName") %></div>
+                                    <div class="ee-inbox-preview"><%# Eval("LastPreview") %></div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div class="ee-subtle"><%# Eval("LastMessageAt", "{0:dd MMM, HH:mm}") %></div>
+                                    <asp:Panel runat="server" Visible='<%# (int)Eval("UnreadCount") > 0 %>'>
+                                        <span class="ee-pill unread"><%# Eval("UnreadCount") %> new</span>
+                                    </asp:Panel>
+                                </div>
+                            </asp:LinkButton>
+                        </ItemTemplate>
+                    </asp:Repeater>
+                </div>
+            </div>
+
+            <!-- Chat -->
+            <div class="ee-panel ee-chat">
+                <div class="ee-panel-h">
+                    <div class="ee-panel-title">
+                        <asp:Label ID="lblChatHeader" runat="server" Text="Select a conversation" />
+                    </div>
+                    <div class="ee-subtle">
+                        <asp:Label ID="lblChatSub" runat="server" />
+                    </div>
+                </div>
+
+                <div class="ee-msg-list">
+                    <asp:Repeater ID="rptMessages" runat="server"
+                        OnItemCommand="rptMessages_ItemCommand"
+                        OnItemDataBound="rptMessages_ItemDataBound">
+                        <ItemTemplate>
+                            <div class='ee-row <%# (bool)Eval("IsMe") ? "me" : "" %>'>
+                                <div class='ee-bubble <%# (bool)Eval("IsMe") ? "is-me" : "" %>'>
+
+                                    <!-- VIEW -->
+                                    <asp:Panel ID="pnlView" runat="server">
+                                        <div><%# Server.HtmlEncode(Eval("MessageText").ToString()) %></div>
+
+                                        <div class="ee-meta">
+                                            <span><%# Eval("SentAt", "{0:dd MMM, HH:mm}") %></span>
+                                            <span class="spacer"></span>
+
+                                            <asp:Panel ID="pnlActions" runat="server"
+                                                CssClass="ee-actions-menu"
+                                                Visible='<%# (bool)Eval("IsMe") %>'>
+                                                <asp:LinkButton runat="server" CssClass="ee-action"
+                                                    CommandName="Edit" CommandArgument='<%# Eval("MessageID") %>'>Edit</asp:LinkButton>
+
+                                                <asp:LinkButton runat="server" CssClass="ee-action"
+                                                    CommandName="Delete" CommandArgument='<%# Eval("MessageID") %>'
+                                                    OnClientClick="return confirm('Delete this message?');">Delete</asp:LinkButton>
+                                            </asp:Panel>
+
+                                        </div>
+                                    </asp:Panel>
+
+                                    <!-- EDIT -->
+                                    <asp:Panel ID="pnlEdit" runat="server" Visible="false">
+                                        <asp:TextBox ID="txtEdit" runat="server" TextMode="MultiLine" Rows="3"
+                                            CssClass="ee-input" Text='<%# Eval("MessageText") %>' />
+                                        <div class="ee-meta">
+                                            <asp:LinkButton runat="server" CssClass="ee-action"
+                                                CommandName="Save" CommandArgument='<%# Eval("MessageID") %>'>Save</asp:LinkButton>
+                                            <asp:LinkButton runat="server" CssClass="ee-action"
+                                                CommandName="Cancel" CommandArgument='<%# Eval("MessageID") %>'>Cancel</asp:LinkButton>
+                                        </div>
+                                    </asp:Panel>
+
+                                </div>
+                            </div>
+                        </ItemTemplate>
+                    </asp:Repeater>
+                </div>
+
+                <asp:Panel ID="pnlCompose" runat="server" CssClass="ee-compose" DefaultButton="btnSend">
+                    <asp:TextBox ID="txtMessage" runat="server" CssClass="ee-input" placeholder="Type a message..." />
+                    <asp:Button ID="btnSend" runat="server" Text="Send" CssClass="ee-btn ee-btn-primary"
+                        OnClick="btnSend_Click" CausesValidation="false" />
+                </asp:Panel>
+
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            function closeAllMenus() {
+                document.querySelectorAll(".ee-actions-menu").forEach(m => m.style.display = "none");
+            }
+
+            // Right-click on MY bubble opens menu
+            document.addEventListener("contextmenu", function (e) {
+                const bubble = e.target.closest(".ee-bubble.is-me");
+                if (!bubble) return; // allow normal right click elsewhere
+
+                const menu = bubble.querySelector(".ee-actions-menu");
+                if (!menu) return;
+
+                e.preventDefault();
+                closeAllMenus();
+                menu.style.display = "block";
+            });
+
+            // Click anywhere closes menus
+            document.addEventListener("click", function (e) {
+                // If clicking inside the menu, let the LinkButton click proceed
+                if (e.target.closest(".ee-actions-menu")) return;
+                closeAllMenus();
+            });
+
+            // ESC closes
+            document.addEventListener("keydown", function (e) {
+                if (e.key === "Escape") closeAllMenus();
+            });
+
         });
     </script>
-
 </asp:Content>
+

@@ -15,15 +15,6 @@ namespace Business_App_Dev
     {
 
         /// <summary>
-        /// form1 control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.HtmlControls.HtmlForm form1;
-
-        /// <summary>
         /// hfLat control.
         /// </summary>
         /// <remarks>
@@ -78,22 +69,49 @@ namespace Business_App_Dev
         protected global::System.Web.UI.WebControls.Button btnRefreshByLoc;
 
         /// <summary>
-        /// txtSearch control.
+        /// lblHeroTitle control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtSearch;
+        protected global::System.Web.UI.WebControls.Label lblHeroTitle;
 
         /// <summary>
-        /// btnSearch control.
+        /// lblHeroSubtitle control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Button btnSearch;
+        protected global::System.Web.UI.WebControls.Label lblHeroSubtitle;
+
+        /// <summary>
+        /// lblMealsSaved control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblMealsSaved;
+
+        /// <summary>
+        /// lblMoneySaved control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblMoneySaved;
+
+        /// <summary>
+        /// lblCO2Saved control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblCO2Saved;
 
         /// <summary>
         /// pnlError control.

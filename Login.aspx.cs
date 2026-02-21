@@ -1,71 +1,437 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using System.Web.UI;
-using System.Web.UI.WebControls;
 using System.Configuration;
 using System.Data.SqlClient;
-
+using System.Linq;
+using System.Net;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Business_App_Dev
 {
-    public partial class Login : Page
+    public partial class Login : System.Web.UI.Page
     {
+        private readonly string _connStr =
+            ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
+
         protected void Page_Load(object sender, EventArgs e)
         {
+            lblError.Text = "";
+
+            if (!IsPostBack)
+            {
+                if (Request.QueryString["err"] == "2fa_locked")
+                    lblError.Text = "Too many invalid 2FA attempts. Please login again.";
+                else if (Request.QueryString["err"] == "mfa_mismatch")
+                    lblError.Text = "MFA account mismatch. Please try again.";
+            }
         }
 
-        protected void btnLogin_Click(object sender, EventArgs e)
+        // -------------------------
+        // NEW helpers: email/phone
+        // -------------------------
+        private bool LooksLikeEmail(string s)
         {
-            string email = txtLoginEmail.Text.Trim();
-            string password = txtLoginPassword.Text.Trim();
+            s = (s ?? "").Trim();
+            return s.Contains("@");
+        }
 
-            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
+        private string NormalizePhoneToE164(string input, string cc)
+        {
+            input = (input ?? "").Trim();
+
+            // keep digits and '+'
+            string cleaned = new string(input.Where(ch => char.IsDigit(ch) || ch == '+').ToArray());
+
+            if (cleaned.StartsWith("+"))
             {
-                lblLoginMessage.Text = "Please enter both email and password.";
+                // E.164 already
+                cleaned = "+" + new string(cleaned.Skip(1).Where(char.IsDigit).ToArray());
+                return cleaned;
+            }
+
+            // digits only -> prefix selected country code
+            string digits = new string(cleaned.Where(char.IsDigit).ToArray());
+            return (cc ?? "+65") + digits;
+        }
+
+        private bool IsValidE164(string phone)
+        {
+            // E.164: + followed by 8-15 digits
+            return Regex.IsMatch(phone ?? "", @"^\+\d{8,15}$");
+        }
+
+        // -------------------------
+        // Sign in
+        // -------------------------
+        protected void btnSignIn_Click(object sender, EventArgs e)
+        {
+            string role = rblRole.SelectedValue;
+
+            // NEW: login input (email OR phone)
+            string loginId = (txtLoginId.Text ?? "").Trim();
+            string password = txtPassword.Text ?? "";
+
+            // Always clear any old 2FA flow BEFORE starting a new login
+            Session.Remove("Pending2FAEmail");
+            Session.Remove("TwoFAAttempts");
+
+            // reCAPTCHA check
+            if (!IsCaptchaValid())
+            {
+                lblError.Text = "❌ Please verify that you are not a robot.";
                 return;
             }
 
-            string cs = ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
-            string sql = @"SELECT UserID, FullName, IsPremium
-                   FROM Users
-                   WHERE Email = @Email AND Password = @Password";
+            if (string.IsNullOrWhiteSpace(loginId) || string.IsNullOrWhiteSpace(password))
+            {
+                lblError.Text = "Please enter your email/phone and password.";
+                return;
+            }
 
-            using (SqlConnection con = new SqlConnection(cs))
-            using (SqlCommand cmd = new SqlCommand(sql, con))
+            string email = null;
+            string phone = null;
+
+            if (role == "Admin")
+            {
+                // Admin must use email
+                if (!LooksLikeEmail(loginId))
+                {
+                    lblError.Text = "Admin must login with email.";
+                    return;
+                }
+
+                email = loginId;
+                string passwordHash = Sha256(password);
+
+                if (!IsValidAdmin(email, passwordHash))
+                {
+                    lblError.Text = "Invalid admin email or password.";
+                    return;
+                }
+
+                // Start 2FA flow
+                Session["Pending2FAEmail"] = email;
+                Session["TwoFAAttempts"] = 0;
+
+                var twofa = GetAdmin2FA(email);
+                if (!twofa.enabled || string.IsNullOrWhiteSpace(twofa.secret))
+                {
+                    Response.Redirect("~/Enable2FA.aspx");
+                    return;
+                }
+
+                Response.Redirect("~/Verify2FA.aspx");
+                return;
+            }
+
+            string mode = (hfLoginMode.Value ?? "Email").Trim(); // "Email" or "Phone"
+
+            // Admin forced Email no matter what
+            if (role == "Admin") mode = "Email";
+
+            if (mode.Equals("Email", StringComparison.OrdinalIgnoreCase))
+            {
+                email = loginId;
+
+                if (string.IsNullOrWhiteSpace(email) || !LooksLikeEmail(email))
+                {
+                    lblError.Text = "Please enter a valid email address.";
+                    ClearLoginFields();
+                    return;
+                }
+            }
+            else
+            {
+                // Phone mode
+                phone = NormalizePhoneToE164(loginId, ddlLoginCountryCode.SelectedValue);
+
+                if (!IsValidE164(phone))
+                {
+                    lblError.Text = "Please enter a valid phone number.";
+                    return;
+                }
+            }
+
+
+            // Customer login
+            if (role == "Customer")
+            {
+                if (!TryLoginUser(email, phone, password, out int userId, out string userEmail))
+                {
+                    lblError.Text = "Invalid customer login.";
+                    ClearLoginFields();
+                    return;
+                }
+
+                Session["UserId"] = userId;
+                Session["UserID"] = userId;       // ✅ for pages that read UserID
+                Session["UserEmail"] = userEmail;   // store real email from DB
+                Session["UserRole"] = "Customer";
+                Response.Redirect("Product.aspx");
+                return;
+            }
+
+            // Seller login
+            if (role == "Seller")
+            {
+                if (!TryLoginSeller(email, phone, password, out int sellerId, out string status, out string sellerEmail))
+                {
+                    if (status == "Pending")
+                        lblError.Text = "Your seller application is still pending approval.";
+                    else if (status.Equals("Rejected", StringComparison.OrdinalIgnoreCase))
+                        lblError.Text = "Your seller application was rejected.";
+                    else
+                        lblError.Text = "Invalid seller login.";
+
+                    ClearLoginFields();   // ✅ clear everything
+                    return;
+                }
+
+                Session["SellerId"] = sellerId;
+                Session["SellerID"] = sellerId;   // ✅ for pages that read SellerID
+                Session["UserEmail"] = sellerEmail;
+                Session["UserRole"] = "Seller";
+                Response.Redirect("SellerDashboard.aspx");
+                return;
+            }
+        }
+
+        // -------------------------
+        // Admin
+        // -------------------------
+        private bool IsValidAdmin(string email, string passwordHash)
+        {
+            using (SqlConnection conn = new SqlConnection(_connStr))
+            using (SqlCommand cmd = new SqlCommand(@"
+                SELECT COUNT(1)
+                FROM Admin
+                WHERE Email=@Email AND PasswordHash=@PasswordHash AND IsActive=1
+            ", conn))
             {
                 cmd.Parameters.AddWithValue("@Email", email);
-                cmd.Parameters.AddWithValue("@Password", password);
+                cmd.Parameters.AddWithValue("@PasswordHash", passwordHash);
+                conn.Open();
+                return Convert.ToInt32(cmd.ExecuteScalar()) == 1;
+            }
+        }
 
-                con.Open();
-                using (SqlDataReader reader = cmd.ExecuteReader())
+        private (bool enabled, string secret) GetAdmin2FA(string email)
+        {
+            using (SqlConnection conn = new SqlConnection(_connStr))
+            using (SqlCommand cmd = new SqlCommand(@"
+                SELECT TwoFAEnabled, TwoFASecret
+                FROM Admin
+                WHERE Email = @Email
+            ", conn))
+            {
+                cmd.Parameters.AddWithValue("@Email", email);
+                conn.Open();
+
+                using (var r = cmd.ExecuteReader())
                 {
-                    if (reader.Read())
-                    {
-                        // Get values from DB
-                        int userId = Convert.ToInt32(reader["UserID"]);
-                        string fullName = reader["FullName"].ToString();
-                        bool isPremium = reader["IsPremium"] != DBNull.Value &&
-                                         Convert.ToBoolean(reader["IsPremium"]);
+                    if (!r.Read())
+                        return (false, null);
 
-                        // Store in session
-                        Session["UserID"] = userId;
-                        Session["FullName"] = fullName;
-                        Session["Email"] = email;
-                        Session["IsPremium"] = isPremium;
+                    bool enabled = Convert.ToBoolean(r["TwoFAEnabled"]);
+                    string secret = r["TwoFASecret"] as string;
 
-                        // After login go to Home (Product page)
-                        Response.Redirect("Product.aspx");
-                    }
-                    else
-                    {
-                        lblLoginMessage.Text = "Invalid email or password.";
-                    }
+                    return (enabled, secret);
                 }
             }
         }
 
+        // -------------------------
+        // Customer login (email OR phone)
+        // -------------------------
+        private bool TryLoginUser(string email, string phone, string password, out int userId, out string userEmail)
+        {
+            userId = 0;
+            userEmail = "";
+
+            using (SqlConnection conn = new SqlConnection(_connStr))
+            using (SqlCommand cmd = new SqlCommand(@"
+                SELECT TOP 1 UserId, Email, Password
+                FROM Users
+                WHERE
+                    (@Email IS NOT NULL AND LOWER(LTRIM(RTRIM(Email))) = LOWER(LTRIM(RTRIM(@Email))))
+                 OR (@Phone IS NOT NULL AND LTRIM(RTRIM(PhoneNumber)) = LTRIM(RTRIM(@Phone)))
+            ", conn))
+            {
+                cmd.Parameters.AddWithValue("@Email", (object)email ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@Phone", (object)phone ?? DBNull.Value);
+
+                conn.Open();
+
+                using (var r = cmd.ExecuteReader())
+                {
+                    if (!r.Read())
+                        return false;
+
+                    userId = Convert.ToInt32(r["UserId"]);
+                    userEmail = (r["Email"]?.ToString() ?? "").Trim();
+                    string stored = r["Password"]?.ToString() ?? "";
+
+                    // Reject non-hashed passwords
+                    if (!stored.StartsWith("pbkdf2$"))
+                        return false;
+
+                    return VerifyPbkdf2(password, stored);
+                }
+            }
+        }
+
+        // -------------------------
+        // Seller login (email OR phone)
+        // Requires SellerApplications.PhoneNumber column
+        // -------------------------
+        private bool TryLoginSeller(string email, string phone, string password,
+    out int sellerId, out string status, out string sellerEmail)
+        {
+            sellerId = 0;
+            status = "";
+            sellerEmail = "";
+
+            using (SqlConnection conn = new SqlConnection(_connStr))
+            using (SqlCommand cmd = new SqlCommand(@"
+        SELECT TOP 1
+            s.SellerID,
+            sa.Email,
+            sa.PasswordHash,
+            sa.Status
+        FROM dbo.SellerApplications sa
+        LEFT JOIN dbo.Seller s
+            ON LOWER(LTRIM(RTRIM(s.Email))) = LOWER(LTRIM(RTRIM(sa.Email)))
+        WHERE
+            (
+                (@Email IS NOT NULL AND LOWER(LTRIM(RTRIM(sa.Email))) = LOWER(LTRIM(RTRIM(@Email))))
+             OR (@Phone IS NOT NULL AND LTRIM(RTRIM(sa.PhoneNumber)) = LTRIM(RTRIM(@Phone)))
+            );
+    ", conn))
+            {
+                cmd.Parameters.AddWithValue("@Email", (object)email ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@Phone", (object)phone ?? DBNull.Value);
+
+                conn.Open();
+
+                using (var r = cmd.ExecuteReader())
+                {
+                    if (!r.Read())
+                        return false;
+
+                    status = (r["Status"]?.ToString() ?? "").Trim();
+                    sellerEmail = (r["Email"]?.ToString() ?? "").Trim();
+                    string stored = (r["PasswordHash"]?.ToString() ?? "").Trim();
+
+                    // validate hash
+                    if (!stored.StartsWith("pbkdf2$"))
+                        return false;
+
+                    // verify password FIRST
+                    if (!VerifyPbkdf2(password, stored))
+                        return false;
+
+                    // if not approved -> return false but status is known
+                    if (!status.Equals("Approved", StringComparison.OrdinalIgnoreCase))
+                        return false;
+
+                    // approved but missing Seller row = error
+                    if (r["SellerID"] == DBNull.Value)
+                        return false;
+
+                    sellerId = Convert.ToInt32(r["SellerID"]);
+                    return true;
+                }
+            }
+        }
+
+
+
+        // -------------------------
+        // PBKDF2 verify helpers
+        // -------------------------
+        private bool VerifyPbkdf2(string password, string stored)
+        {
+            // Format: pbkdf2$iterations$saltBase64$hashBase64
+            var parts = stored.Split('$');
+            if (parts.Length != 4) return false;
+            if (parts[0] != "pbkdf2") return false;
+
+            if (!int.TryParse(parts[1], out int iterations))
+                return false;
+
+            byte[] salt = Convert.FromBase64String(parts[2]);
+            byte[] storedKey = Convert.FromBase64String(parts[3]);
+
+            byte[] computedKey;
+            using (var pbkdf2 = new Rfc2898DeriveBytes(
+                password, salt, iterations, HashAlgorithmName.SHA256))
+            {
+                computedKey = pbkdf2.GetBytes(storedKey.Length);
+            }
+
+            return FixedTimeEquals(storedKey, computedKey);
+        }
+
+        private bool FixedTimeEquals(byte[] a, byte[] b)
+        {
+            if (a == null || b == null || a.Length != b.Length)
+                return false;
+
+            int diff = 0;
+            for (int i = 0; i < a.Length; i++)
+                diff |= a[i] ^ b[i];
+
+            return diff == 0;
+        }
+
+        // -------------------------
+        // SHA for admin only
+        // -------------------------
+        private static string Sha256(string input)
+        {
+            using (SHA256 sha = SHA256.Create())
+            {
+                byte[] bytes = Encoding.UTF8.GetBytes(input);
+                byte[] hash = sha.ComputeHash(bytes);
+
+                StringBuilder sb = new StringBuilder();
+                foreach (byte b in hash)
+                    sb.Append(b.ToString("x2"));
+
+                return sb.ToString();
+            }
+        }
+
+        // -------------------------
+        // reCAPTCHA
+        // -------------------------
+        private bool IsCaptchaValid()
+        {
+            string secretKey = Environment.GetEnvironmentVariable("RECAPTCHA_SECRET");
+            string response = Request.Form["g-recaptcha-response"];
+
+            if (string.IsNullOrWhiteSpace(secretKey))
+                return false;
+
+            if (string.IsNullOrWhiteSpace(response))
+                return false;
+
+            string url = $"https://www.google.com/recaptcha/api/siteverify?secret={secretKey}&response={response}";
+
+            using (var client = new WebClient())
+            {
+                string result = client.DownloadString(url);
+                return result.Contains("\"success\": true");
+            }
+        }
+        private void ClearLoginFields()
+        {
+            txtLoginId.Text = "";
+            txtPassword.Text = "";
+            ddlLoginCountryCode.SelectedIndex = 0;
+            hfLoginMode.Value = "Email";
+        }
+
     }
 }
-

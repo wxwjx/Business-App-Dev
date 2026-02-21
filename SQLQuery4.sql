@@ -1,0 +1,2 @@
+﻿ALTER TABLE Seller
+ADD Phone NVARCHAR(20) NULL;

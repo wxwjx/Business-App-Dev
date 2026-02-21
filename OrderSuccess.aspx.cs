@@ -9,6 +9,12 @@ using System.Web.UI.HtmlControls;
 using System.Web.UI.WebControls;
 using Stripe;
 using Stripe.Checkout;
+using Business_App_Dev.Services;
+
+// MailKit
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
 
 namespace Business_App_Dev
 {
@@ -24,35 +30,32 @@ namespace Business_App_Dev
 
             try
             {
-                // 1) Read session_id from Stripe redirect
+                ApplyPageTranslations();
+
                 string sessionId = Request.QueryString["session_id"];
                 if (string.IsNullOrWhiteSpace(sessionId))
                 {
-                    ShowError("Missing session_id from Stripe redirect.");
+                    ShowError(T("Missing session_id from Stripe redirect."));
                     return;
                 }
 
-                // 2) Verify payment with Stripe
                 if (!VerifyStripePaid(sessionId, out string failMsg))
                 {
-                    ShowError(failMsg);
+                    ShowError(T(failMsg));
                     return;
                 }
 
-                // 3) Display an Order ID (nice format)
                 lblOrderId.Text = "ORD-" + ShortId(sessionId);
 
-                // 4) Load snapshot from Session saved in Cart.aspx.cs
                 var items = Session["PENDING_ORDER_" + sessionId] as List<PurchasedItem>;
                 if (items == null || items.Count == 0)
                 {
-                    ShowError("Order data not found (Session expired). Try paying again, or implement Orders table to persist.");
+                    ShowError(T("Order data not found (Session expired). Try paying again."));
                     return;
                 }
 
                 pnlError.Visible = false;
 
-                // 5) Total
                 decimal total;
                 if (Session["PENDING_ORDER_TOTAL_" + sessionId] is decimal t)
                     total = t;
@@ -60,79 +63,170 @@ namespace Business_App_Dev
                     total = items.Sum(x => x.LineTotal);
 
                 lblTotal.Text = total.ToString("0.00");
-                lblPayStatus.Text = "PAID";
+                lblPayStatus.Text = T("PAID");
 
-                // 6) Build seller groups using ProductID -> Seller data from DB
+                // Translate product names for UI + email
+                items = TranslatePurchasedItemsIfNeeded(items);
+
+                // Build seller groups for receipt UI
                 var groups = BuildSellerGroups(items);
                 if (groups.Count == 0)
                 {
-                    ShowError("Could not determine pickup locations. Ensure Products.SellerID is filled and Seller table has data.");
+                    ShowError(T("Could not determine pickup locations. Ensure Products.SellerID is filled and Seller table has data."));
                     return;
                 }
 
-                // 7) SAVE ORDER INTO MDF (Orders + OrderItems) (safe against refresh)
                 int userId = GetUserIdOrThrow();
+
+                // Save order + items
                 int orderId = SaveOrderIfNotExists(sessionId, userId, total, items);
 
-                // (Optional) If you want to show DB orderId somewhere:
-                // lblDbOrderId.Text = orderId.ToString();
+                // Send email ONCE (DB flag)
+                TrySendOrderConfirmationEmail(orderId, userId, total, items);
 
-                // 8) Clear purchased items from cart AFTER payment confirmed
-                // Safe against refresh: we remove only using items list (same as before)
+                // Remove purchased items from cart
                 RemovePurchasedItemsFromCart(items);
 
-                // 9) Bind seller groups
+                // Bind UI
                 rptSellerGroups.DataSource = groups;
                 rptSellerGroups.DataBind();
+                ApplyRepeaterTranslations(rptSellerGroups);
 
-                // 10) Clean up pending snapshot so refresh won't remove again
+                // Cleanup
                 Session.Remove("PENDING_ORDER_" + sessionId);
                 Session.Remove("PENDING_ORDER_TOTAL_" + sessionId);
             }
             catch (StripeException)
             {
-                ShowError("Payment verification failed due to a payment service error. Please try again.");
+                ShowError(T("Payment verification failed due to a payment service error. Please try again."));
             }
             catch (SqlException)
             {
-                ShowError("Database error while saving/loading your order. Please try again later.");
+                ShowError(T("Database error while saving/loading your order. Please try again later."));
             }
             catch (Exception ex)
             {
-                // show message (or use generic if you prefer)
-                ShowError(ex.Message);
+                ShowError(T(ex.Message));
             }
         }
 
-        /* =========================
-         * USER / PROFILE LINK
-         * ========================= */
+        // =========================
+        // TRANSLATION HELPERS
+        // =========================
+        private string GetLang()
+        {
+            return (Session["LANG"] as string) ?? "en";
+        }
+
+        private string T(string text)
+        {
+            string lang = GetLang();
+            if (lang.Equals("en", StringComparison.OrdinalIgnoreCase)) return text ?? "";
+
+            text = text ?? "";
+            if (string.IsNullOrWhiteSpace(text)) return text;
+
+            string key = $"tr:en->{lang}:{text}";
+            return TranslationCache.GetOrAdd(key, () =>
+                TranslationService.Translate(text, lang, "en"), hours: 24);
+        }
+
+        private void ApplyPageTranslations()
+        {
+            string lang = GetLang();
+            if (lang.Equals("en", StringComparison.OrdinalIgnoreCase)) return;
+
+            lblBackToShopping.Text = T(lblBackToShopping.Text);
+            lblOrderSuccessful.Text = T(lblOrderSuccessful.Text);
+            lblOrderIdText.Text = T(lblOrderIdText.Text);
+            lblStatusText.Text = T(lblStatusText.Text);
+
+            lblStepConfirmed.Text = T(lblStepConfirmed.Text);
+            lblStepPreparing.Text = T(lblStepPreparing.Text);
+            lblStepReady.Text = T(lblStepReady.Text);
+
+            lblTotalText.Text = T(lblTotalText.Text);
+        }
+
+        private void ApplyRepeaterTranslations(Repeater rpt)
+        {
+            string lang = GetLang();
+            if (lang.Equals("en", StringComparison.OrdinalIgnoreCase)) return;
+
+            foreach (RepeaterItem it in rpt.Items)
+            {
+                var pickupLoc = it.FindControl("lblPickupLocationText") as Label;
+                if (pickupLoc != null) pickupLoc.Text = T(pickupLoc.Text);
+
+                var pickupWin = it.FindControl("lblPickupWindowText") as Label;
+                if (pickupWin != null) pickupWin.Text = T(pickupWin.Text);
+
+                var sellerStatus = it.FindControl("lblSellerStatusText") as Label;
+                if (sellerStatus != null) sellerStatus.Text = T(sellerStatus.Text);
+
+                var lnk = it.FindControl("lnkDirectionsSeller") as HyperLink;
+                if (lnk != null) lnk.Text = T(lnk.Text);
+
+                var sellerSubtotal = it.FindControl("lblSellerSubtotalText") as Label;
+                if (sellerSubtotal != null) sellerSubtotal.Text = T(sellerSubtotal.Text);
+
+                var inner = it.FindControl("rptItemsBySeller") as Repeater;
+                if (inner != null)
+                {
+                    foreach (RepeaterItem row in inner.Items)
+                    {
+                        var qty = row.FindControl("lblQtyText") as Label;
+                        if (qty != null) qty.Text = T(qty.Text);
+                    }
+                }
+            }
+        }
+
+        private List<PurchasedItem> TranslatePurchasedItemsIfNeeded(List<PurchasedItem> items)
+        {
+            string lang = GetLang();
+            if (lang.Equals("en", StringComparison.OrdinalIgnoreCase)) return items;
+            if (items == null) return items;
+
+            foreach (var it in items)
+            {
+                if (it == null) continue;
+                if (!string.IsNullOrWhiteSpace(it.ProductName))
+                    it.ProductName = T(it.ProductName);
+            }
+
+            return items;
+        }
+
+        // =========================
+        // USER / SESSION
+        // =========================
         private int GetUserIdOrThrow()
         {
-            // CHANGE this if your session key is different
             if (Session["UserID"] == null)
-                throw new Exception("Your session has expired. Please log in again.");
+                throw new Exception(T("Your session has expired. Please log in again."));
 
             if (!int.TryParse(Session["UserID"].ToString(), out int userId) || userId <= 0)
-                throw new Exception("Invalid user session. Please log in again.");
+                throw new Exception(T("Invalid user session. Please log in again."));
 
             return userId;
         }
 
-        /* =========================
-         * SAVE ORDER (Orders + OrderItems)
-         * ========================= */
+        private string ConnStr()
+        {
+            return ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
+        }
+
+        // =========================
+        // SAVE ORDER (dbo.Orders + dbo.OrderItems) - matches your schema
+        // =========================
         private int SaveOrderIfNotExists(string stripeSessionId, int userId, decimal total, List<PurchasedItem> items)
         {
-            // If this Stripe session was already saved (refresh), return existing OrderID
             int existing = GetOrderIdByStripeSession(stripeSessionId);
-            if (existing > 0)
-                return existing;
+            if (existing > 0) return existing;
 
-            // Map ProductID -> SellerID (for OrderItems.SellerID)
             var productIds = items.Select(i => i.ProductID).Distinct().ToList();
-            var productSellerMap = LoadSellerInfoForProducts(productIds); // already in your code
-            // productSellerMap maps productId -> SellerInfo (SellerID inside)
+            var productSellerMap = LoadSellerInfoForProducts(productIds);
 
             using (SqlConnection con = new SqlConnection(ConnStr()))
             {
@@ -141,11 +235,21 @@ namespace Business_App_Dev
 
                 try
                 {
-                    // 1) Insert Orders row
+                    // dbo.Orders columns (from your screenshot):
+                    // OrderID (identity)
+                    // UserID (int not null)
+                    // StripeSessionId (nvarchar 200 not null, unique)
+                    // TotalAmount (decimal)
+                    // PayStatus (nvarchar 30)
+                    // CreatedAt (datetime default getdate())
+                    // OrderStatus (nvarchar 30 default 'Confirmed')
+                    // UpdatedAt (datetime2 default sysutcdatetime())
+                    // SellerID (int null)
+                    // + EmailSent (bit) [we will add]
                     string insertOrderSql = @"
-INSERT INTO dbo.Orders (UserID, StripeSessionId, TotalAmount, PayStatus)
+INSERT INTO dbo.Orders (UserID, StripeSessionId, TotalAmount, PayStatus, OrderStatus, SellerID)
 OUTPUT INSERTED.OrderID
-VALUES (@UserID, @StripeSessionId, @TotalAmount, @PayStatus);";
+VALUES (@UserID, @StripeSessionId, @TotalAmount, @PayStatus, @OrderStatus, NULL);";
 
                     int orderId;
                     using (SqlCommand cmd = new SqlCommand(insertOrderSql, con, tx))
@@ -154,10 +258,13 @@ VALUES (@UserID, @StripeSessionId, @TotalAmount, @PayStatus);";
                         cmd.Parameters.AddWithValue("@StripeSessionId", stripeSessionId);
                         cmd.Parameters.AddWithValue("@TotalAmount", total);
                         cmd.Parameters.AddWithValue("@PayStatus", "PAID");
+                        cmd.Parameters.AddWithValue("@OrderStatus", "Confirmed");
                         orderId = Convert.ToInt32(cmd.ExecuteScalar());
                     }
 
-                    // 2) Insert OrderItems
+                    // dbo.OrderItems columns (from your screenshot):
+                    // OrderItemID (identity)
+                    // OrderID, ProductID, ProductName, Quantity, UnitPrice, LineTotal, SellerID
                     string insertItemSql = @"
 INSERT INTO dbo.OrderItems
 (OrderID, ProductID, ProductName, Quantity, UnitPrice, LineTotal, SellerID)
@@ -210,9 +317,9 @@ VALUES
             }
         }
 
-        /* =========================
-         * STRIPE VERIFY
-         * ========================= */
+        // =========================
+        // STRIPE VERIFY
+        // =========================
         private bool VerifyStripePaid(string sessionId, out string error)
         {
             error = "";
@@ -255,31 +362,188 @@ VALUES
             }
         }
 
-        /* =========================
-         * CLEAR CART (PURCHASED ITEMS)
-         * ========================= */
+        // =========================
+        // CART CLEAR
+        // =========================
         private void RemovePurchasedItemsFromCart(List<PurchasedItem> purchasedItems)
         {
             if (purchasedItems == null || purchasedItems.Count == 0) return;
 
             var cart = Session[CART_KEY] as List<CartItem> ?? new List<CartItem>();
-
             var purchasedIds = purchasedItems.Select(x => x.ProductID).ToHashSet();
 
             cart.RemoveAll(ci => purchasedIds.Contains(ci.ProductID));
 
             Session[CART_KEY] = cart;
-
             Session[CART_SELECTED_KEY] = new HashSet<int>();
             Session[CART_SELECTED_INIT_KEY] = false;
         }
 
-        private string ConnStr()
+        // =========================
+        // EMAIL (DB FLAG) - requires Orders.EmailSent
+        // =========================
+        private void TrySendOrderConfirmationEmail(int orderId, int userId, decimal total, List<PurchasedItem> items)
         {
-            return ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
+            // If you haven't added EmailSent column yet, this will throw.
+            // Add it with: ALTER TABLE dbo.Orders ADD EmailSent BIT NOT NULL CONSTRAINT DF_Orders_EmailSent DEFAULT(0);
+            if (IsEmailAlreadySent(orderId)) return;
+
+            LoadBuyerProfile(userId, out string email, out string fullName);
+            if (string.IsNullOrWhiteSpace(email)) return;
+
+            string subject = T($"EcoEats Order Confirmed — ORD-{orderId}");
+            string html = BuildOrderConfirmationHtml(orderId, fullName, total, items);
+
+            // send
+            SendEmailHtml(email, subject, html);
+
+            // mark as sent
+            MarkEmailSent(orderId);
         }
 
-        // Grouping & Seller info (your existing logic)
+        private bool IsEmailAlreadySent(int orderId)
+        {
+            string sql = "SELECT EmailSent FROM dbo.Orders WHERE OrderID=@oid;";
+            using (SqlConnection con = new SqlConnection(ConnStr()))
+            using (SqlCommand cmd = new SqlCommand(sql, con))
+            {
+                cmd.Parameters.AddWithValue("@oid", orderId);
+                con.Open();
+                object result = cmd.ExecuteScalar();
+                if (result == null || result == DBNull.Value) return false;
+                return Convert.ToBoolean(result);
+            }
+        }
+
+        private void MarkEmailSent(int orderId)
+        {
+            string sql = "UPDATE dbo.Orders SET EmailSent=1 WHERE OrderID=@oid;";
+            using (SqlConnection con = new SqlConnection(ConnStr()))
+            using (SqlCommand cmd = new SqlCommand(sql, con))
+            {
+                cmd.Parameters.AddWithValue("@oid", orderId);
+                con.Open();
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        private void LoadBuyerProfile(int userId, out string email, out string name)
+        {
+            email = "";
+            name = "";
+
+            // Matches your dbo.Users table
+            string sql = "SELECT TOP 1 [Email], [FullName] FROM dbo.[Users] WHERE [UserID]=@uid;";
+
+            using (SqlConnection con = new SqlConnection(ConnStr()))
+            using (SqlCommand cmd = new SqlCommand(sql, con))
+            {
+                cmd.Parameters.AddWithValue("@uid", userId);
+                con.Open();
+
+                using (var r = cmd.ExecuteReader())
+                {
+                    if (r.Read())
+                    {
+                        email = r["Email"]?.ToString() ?? "";
+                        name = r["FullName"]?.ToString() ?? "";
+                    }
+                }
+            }
+        }
+
+        private void SendEmailHtml(string toEmail, string subject, string htmlBody)
+        {
+            string fromName = ConfigurationManager.AppSettings["EmailFromName"] ?? "EcoEats";
+            string fromEmail = ConfigurationManager.AppSettings["EmailFromEmail"] ?? "";
+            string host = ConfigurationManager.AppSettings["EmailSmtpHost"] ?? "smtp.gmail.com";
+            int port = int.TryParse(ConfigurationManager.AppSettings["EmailSmtpPort"], out int p) ? p : 587;
+            string user = ConfigurationManager.AppSettings["EmailSmtpUser"] ?? "";
+            string pass = (ConfigurationManager.AppSettings["EmailSmtpPass"] ?? "").Replace(" ", "");
+
+            if (string.IsNullOrWhiteSpace(fromEmail) ||
+                string.IsNullOrWhiteSpace(user) ||
+                string.IsNullOrWhiteSpace(pass))
+                return;
+
+            var msg = new MimeMessage();
+            msg.From.Add(new MailboxAddress(fromName, fromEmail));
+            msg.To.Add(MailboxAddress.Parse(toEmail));
+            msg.Subject = subject ?? "";
+
+            msg.Body = new BodyBuilder
+            {
+                HtmlBody = htmlBody ?? "",
+                TextBody = "Your email client does not support HTML emails."
+            }.ToMessageBody();
+
+            using (var smtp = new SmtpClient())
+            {
+                smtp.Connect(host, port, SecureSocketOptions.StartTls);
+                smtp.Authenticate(user, pass);
+                smtp.Send(msg);
+                smtp.Disconnect(true);
+            }
+        }
+
+        private string BuildOrderConfirmationHtml(int orderId, string buyerName, decimal total, List<PurchasedItem> items)
+        {
+            string safeName = System.Net.WebUtility.HtmlEncode(buyerName ?? "");
+
+            string rows = "";
+            if (items != null)
+            {
+                foreach (var it in items)
+                {
+                    if (it == null) continue;
+                    string pname = System.Net.WebUtility.HtmlEncode(it.ProductName ?? "");
+                    rows += $@"
+<tr>
+  <td style='padding:10px 0;border-bottom:1px solid #eef2f7'>{pname}</td>
+  <td style='padding:10px 0;border-bottom:1px solid #eef2f7;text-align:right'>{it.Quantity}</td>
+  <td style='padding:10px 0;border-bottom:1px solid #eef2f7;text-align:right'>{it.LineTotal:0.00}</td>
+</tr>";
+                }
+            }
+
+            return $@"
+<div style='font-family:Inter,Arial,sans-serif;max-width:720px;margin:0 auto;padding:24px'>
+  <div style='border:1px solid #e5e7eb;border-radius:16px;padding:18px'>
+    <h2 style='margin:0 0 8px'>✅ {T("Order Confirmed")}</h2>
+    <p style='margin:0 0 14px;color:#334155'>{T("Hi")} <b>{safeName}</b>, {T("thank you for your purchase")}.</p>
+
+    <p style='margin:0 0 14px;color:#64748b'>
+      <b>{T("Order ID")}:</b> ORD-{orderId}<br/>
+      <b>{T("Total")}:</b> {total:0.00}<br/>
+      <b>{T("Status")}:</b> {T("PAID")}
+    </p>
+
+    <hr style='border:none;border-top:1px solid #e5e7eb;margin:14px 0'/>
+
+    <h3 style='margin:0 0 10px'>{T("Items")}</h3>
+    <table style='width:100%;border-collapse:collapse'>
+      <thead>
+        <tr>
+          <th style='text-align:left;border-bottom:1px solid #e5e7eb;padding:8px 0'>{T("Item")}</th>
+          <th style='text-align:right;border-bottom:1px solid #e5e7eb;padding:8px 0'>{T("Qty")}</th>
+          <th style='text-align:right;border-bottom:1px solid #e5e7eb;padding:8px 0'>{T("Amount")}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows}
+      </tbody>
+    </table>
+
+    <p style='margin:14px 0 0;color:#94a3b8;font-size:12px'>
+      {T("This is an automated email — please do not reply.")}
+    </p>
+  </div>
+</div>";
+        }
+
+        // =========================
+        // SELLER GROUPS (receipt UI)
+        // =========================
         private List<SellerGroupVM> BuildSellerGroups(List<PurchasedItem> items)
         {
             var productIds = items.Select(i => i.ProductID).Distinct().ToList();
@@ -323,9 +587,7 @@ VALUES
         private Dictionary<int, SellerInfo> LoadSellerInfoForProducts(List<int> productIds)
         {
             var map = new Dictionary<int, SellerInfo>();
-
-            if (productIds == null || productIds.Count == 0)
-                return map;
+            if (productIds == null || productIds.Count == 0) return map;
 
             var paramNames = productIds.Select((id, idx) => "@p" + idx).ToList();
             string inClause = string.Join(",", paramNames);
@@ -393,9 +655,31 @@ WHERE p.ProductID IN ({inClause});";
             if (lnk != null)
                 lnk.NavigateUrl = BuildDirectionsUrl(group);
 
-            var iframe = (HtmlIframe)e.Item.FindControl("mapFrameSeller");
+            // If your markup uses <iframe runat="server" id="mapFrameSeller">
+            // you can declare it as HtmlGenericControl or the HtmlIframe wrapper
+            var iframe = e.Item.FindControl("mapFrameSeller") as HtmlControl;
             if (iframe != null)
                 iframe.Attributes["src"] = BuildMapEmbedSrc(group);
+
+            // translate per-group UI labels
+            string lang = GetLang();
+            if (!lang.Equals("en", StringComparison.OrdinalIgnoreCase))
+            {
+                var pickupLoc = e.Item.FindControl("lblPickupLocationText") as Label;
+                if (pickupLoc != null) pickupLoc.Text = T(pickupLoc.Text);
+
+                var pickupWin = e.Item.FindControl("lblPickupWindowText") as Label;
+                if (pickupWin != null) pickupWin.Text = T(pickupWin.Text);
+
+                var sellerStatus = e.Item.FindControl("lblSellerStatusText") as Label;
+                if (sellerStatus != null) sellerStatus.Text = T(sellerStatus.Text);
+
+                var sellerSubtotal = e.Item.FindControl("lblSellerSubtotalText") as Label;
+                if (sellerSubtotal != null) sellerSubtotal.Text = T(sellerSubtotal.Text);
+
+                var link = e.Item.FindControl("lnkDirectionsSeller") as HyperLink;
+                if (link != null) link.Text = T(link.Text);
+            }
         }
 
         private string BuildDirectionsUrl(SellerGroupVM group)
@@ -439,7 +723,7 @@ WHERE p.ProductID IN ({inClause});";
             lblError.Text = msg;
         }
 
-        // ===== View Models for multi-seller UI =====
+        // ===== View Models =====
         [Serializable]
         private class SellerGroupVM
         {
@@ -449,10 +733,8 @@ WHERE p.ProductID IN ({inClause});";
             public string PickupWindow { get; set; }
             public string SellerStatus { get; set; }
             public decimal SellerSubtotal { get; set; }
-
             public decimal? Latitude { get; set; }
             public decimal? Longitude { get; set; }
-
             public List<ItemVM> Items { get; set; } = new List<ItemVM>();
         }
 
@@ -475,7 +757,4 @@ WHERE p.ProductID IN ({inClause});";
             public decimal? Longitude { get; set; }
         }
     }
-
-    // PurchasedItem class is in Cart.aspx.cs already.
-    // CartItem class is your existing CartItem model.
 }

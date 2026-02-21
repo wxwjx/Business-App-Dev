@@ -1,20 +1,22 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="Product.aspx.cs" Inherits="Business_App_Dev.Product" %>
+﻿<%@ Page Title="EcoEats"
+    Language="C#"
+    MasterPageFile="~/Site.Master"
+    AutoEventWireup="true"
+    CodeBehind="Product.aspx.cs"
+    Inherits="Business_App_Dev.Product" %>
 
-<!DOCTYPE html>
-<html>
-<head runat="server">
-    <title>EcoEats</title>
+<asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-
     <link href="<%= ResolveUrl("~/Content/EcoEats.css") %>" rel="stylesheet" />
+    <link href="<%= ResolveUrl("~/Content/Product.css") %>" rel="stylesheet" />
+
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-</head>
+</asp:Content>
 
-<body>
-<form id="form1" runat="server">
+<asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
 
     <!-- GEO -->
     <asp:HiddenField ID="hfLat" runat="server" />
@@ -28,63 +30,37 @@
     <asp:Button ID="btnRefreshByLoc" runat="server" Text="refresh"
         OnClick="btnRefreshByLoc_Click" Style="display:none;" UseSubmitBehavior="true" />
 
-    <!-- TOP BAR -->
-    <header class="ee-topbar">
-        <div class="ee-container ee-topbar-inner">
-
-            <div class="ee-brand">
-                <div class="ee-logo">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M19 3c-6.5.7-11 3.8-13.8 7.2C2.6 13.4 2.2 17.2 4 21c3.8 1.8 7.6 1.4 10.8-1.2C18.2 17 21.3 12.5 22 6c.1-1.2-.7-2.9-3-3z"></path>
-                    </svg>
-                </div>
-                <div class="ee-brand-name">EcoEats</div>
-            </div>
-
-            <!-- SEARCH -->
-            <div class="ee-search">
-                <asp:TextBox ID="txtSearch" runat="server"
-                    placeholder="Search meals or shop..."
-                    AutoPostBack="true"
-                    OnTextChanged="txtSearch_TextChanged" />
-                <asp:Button ID="btnSearch" runat="server" Text="Search" OnClick="btnSearch_Click" />
-            </div>
-
-            <nav class="ee-nav">
-                <a class="active" href="Product.aspx">Home</a>
-                <a href="OrderHistory.aspx">Orders</a>
-                <a href="About.aspx">About Us</a>
-                <a href="#">Help</a>
-                <a href="Feedback.aspx">Feedback</a>
-            </nav>
-
-            <div class="ee-actions">
-                <a class="ee-icon-btn" href="#" title="Notifications">🔔</a>
-                <a class="ee-icon-btn" href="Cart.aspx" title="Cart">🛒</a>
-                <a class="ee-icon-btn" href="Profile.aspx" title="Account">👤</a>
-            </div>
-
-        </div>
-    </header>
-
     <!-- HERO -->
     <section class="ee-hero">
         <div class="ee-container">
-            <h1>Save meals, save money, save the planet</h1>
-            <p>Discover surplus food from local restaurants at amazing prices</p>
+            <h1>
+                <asp:Label ID="lblHeroTitle" runat="server"
+                    Text="Save meals, save money, save the planet" />
+            </h1>
+
+            <p>
+                <asp:Label ID="lblHeroSubtitle" runat="server"
+                    Text="Discover surplus food from local restaurants at amazing prices" />
+            </p>
 
             <div class="ee-hero-stats">
                 <div class="ee-stat">
                     <div class="ee-stat-value">210</div>
-                    <div class="ee-stat-label">Meals Saved</div>
+                    <div class="ee-stat-label">
+                        <asp:Label ID="lblMealsSaved" runat="server" Text="Meals Saved" />
+                    </div>
                 </div>
                 <div class="ee-stat">
                     <div class="ee-stat-value">$455</div>
-                    <div class="ee-stat-label">Money Saved</div>
+                    <div class="ee-stat-label">
+                        <asp:Label ID="lblMoneySaved" runat="server" Text="Money Saved" />
+                    </div>
                 </div>
                 <div class="ee-stat">
                     <div class="ee-stat-value">525 kg</div>
-                    <div class="ee-stat-label">CO₂ Saved</div>
+                    <div class="ee-stat-label">
+                        <asp:Label ID="lblCO2Saved" runat="server" Text="CO₂ Saved" />
+                    </div>
                 </div>
             </div>
         </div>
@@ -99,7 +75,7 @@
 
         <!-- PILLS -->
         <div class="ee-pills">
-            <asp:LinkButton ID="btnAI" runat="server" CssClass="ee-pill" OnClick="btnAI_Click">✨ AI Recommended</asp:LinkButton>
+            <asp:LinkButton ID="btnAI" runat="server" CssClass="ee-pill" OnClick="btnAI_Click">✨ Recommended</asp:LinkButton>
             <asp:LinkButton ID="btnDeals" runat="server" CssClass="ee-pill" OnClick="btnDeals_Click">🔥 Daily Best Deals</asp:LinkButton>
             <asp:LinkButton ID="btnCats" runat="server" CssClass="ee-pill" OnClick="btnCats_Click">🧭 Explore Categories</asp:LinkButton>
         </div>
@@ -165,7 +141,9 @@
         </div>
     </div>
 
-    <!-- GEOLOCATION SCRIPT -->
+</asp:Content>
+
+<asp:Content ID="ScriptsContent" ContentPlaceHolderID="ScriptsContent" runat="server">
     <script>
         (function () {
             var hasLoc = document.getElementById("<%= hfHasLoc.ClientID %>").value;
@@ -186,7 +164,4 @@
             );
         })();
     </script>
-
-</form>
-</body>
-</html>
+</asp:Content>

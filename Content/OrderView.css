@@ -1,0 +1,146 @@
+﻿.ov-wrap {
+    padding: 20px 0 50px;
+}
+
+.ov-card {
+    background: #fff;
+    border-radius: 18px;
+    padding: 20px;
+    margin: 18px 0;
+    box-shadow: 0 18px 40px rgba(0,0,0,.08);
+}
+
+/* HEADER */
+.ov-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.ov-title {
+    font-size: 22px;
+    font-weight: 900;
+}
+
+.ov-sub {
+    margin-top: 6px;
+    font-size: 13px;
+    color: #666;
+}
+
+.ov-total {
+    font-size: 28px;
+    font-weight: 900;
+}
+
+.ov-back {
+    font-weight: 800;
+    font-size: 13px;
+    text-decoration: none;
+    color: #444;
+}
+
+/* BADGES */
+.ov-badges {
+    margin-top: 12px;
+    display: flex;
+    gap: 10px;
+}
+
+.ov-badge {
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-weight: 900;
+    font-size: 12px;
+    background: rgba(46,125,50,.12);
+    border: 1px solid rgba(46,125,50,.25);
+}
+
+.ov-badge-soft {
+    background: rgba(0,0,0,.05);
+    border: 1px solid rgba(0,0,0,.1);
+}
+
+/* BIG CTA BUTTONS */
+.ov-actions {
+    margin-top: 24px;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.ov-btn {
+    padding: 18px 26px;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: 900;
+    text-decoration: none;
+    transition: all .2s ease;
+    min-width: 220px;
+    text-align: center;
+}
+
+.ov-btn-primary {
+    background: #111827;
+    color: #fff;
+    box-shadow: 0 20px 48px rgba(0,0,0,.25);
+}
+
+    .ov-btn-primary:hover {
+        transform: translateY(-4px);
+    }
+
+.ov-btn-chat {
+    background: #fff;
+    border: 2px solid rgba(0,0,0,.15);
+    color: #111827;
+}
+
+    .ov-btn-chat:hover {
+        transform: translateY(-3px);
+    }
+
+/* ITEMS */
+.ov-section-title {
+    font-weight: 900;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.ov-items {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ov-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(0,0,0,.03);
+}
+
+.ov-item-name {
+    font-weight: 900;
+}
+
+.ov-item-meta {
+    font-size: 13px;
+    color: #666;
+}
+
+/* MOBILE */
+@media (max-width: 720px) {
+    .ov-top {
+        flex-direction: column;
+    }
+
+    .ov-actions {
+        flex-direction: column;
+    }
+
+    .ov-btn {
+        width: 100%;
+    }
+}
