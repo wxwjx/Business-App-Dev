@@ -160,18 +160,33 @@
 
 
     <!-- CHAT PANEL -->
+    <!-- CHAT PANEL -->
     <section class="admin-panel" data-tab="chat">
         <div class="eco-cardbox">
-            <div class="eco-cardbox-title">Escalated Chats</div>
 
-            <asp:Repeater ID="rptChats" runat="server"
-                OnItemCommand="rptChats_ItemCommand">
+            <!-- Header + Filter -->
+            <div class="eco-chat-header">
+                <div class="eco-cardbox-title">Escalated Chats</div>
 
+                <div class="eco-chat-filter">
+                    <span class="eco-filter-label">Show:</span>
+                    <asp:DropDownList ID="ddlChatStatus" runat="server"
+                        CssClass="eco-filter-ddl"
+                        AutoPostBack="true"
+                        OnSelectedIndexChanged="ddlChatStatus_SelectedIndexChanged">
+                        <asp:ListItem Text="Open" Value="OPEN" Selected="True" />
+                        <asp:ListItem Text="Resolved" Value="RESOLVED" />
+                        <asp:ListItem Text="All" Value="ALL" />
+                    </asp:DropDownList>
+                </div>
+            </div>
 
+            <asp:Repeater ID="rptChats" runat="server" OnItemCommand="rptChats_ItemCommand">
                 <ItemTemplate>
                     <div class="eco-chat-item">
+
                         <div class="eco-avatar">
-                            <%# Eval("CustomerName").ToString().Substring(0,1) %>
+                            <%# GetInitial(Eval("CustomerName")) %>
                         </div>
 
                         <div class="eco-chat-info">
@@ -183,15 +198,15 @@
                         </div>
 
                         <div class="eco-chat-actions">
-                            <span class="eco-chat-pill <%# Eval("Status").ToString().ToLower() %>">
+                            <span class="eco-chat-pill <%# (Eval("Status") ?? "").ToString().ToLower() %>">
                                 <%# Eval("Status") %>
                             </span>
 
-                            <asp:LinkButton runat="server"
+                            <asp:LinkButton ID="btnTakeOver" runat="server"
                                 CssClass="eco-btn eco-takeover"
                                 CommandName="TAKEOVER"
-                                CommandArgument='<%# Eval("EscalationId") %>'
-                                Visible='<%# Eval("Status").ToString() != "Resolved" %>'>
+                                CommandArgument='<%# Eval("LogId") %>'
+                                Visible='<%# (Eval("Status") ?? "").ToString().ToUpper() != "RESOLVED" %>'>
                                 Take Over
                             </asp:LinkButton>
                         </div>
@@ -199,7 +214,7 @@
                         <!-- Reply box (shown only when selected) -->
                         <asp:Panel runat="server"
                             CssClass="eco-reply-box"
-                            Visible='<%# IsReplying(Eval("EscalationId")) %>'>
+                            Visible='<%# IsReplying(Eval("LogId")) %>'>
 
                             <asp:TextBox ID="txtReply" runat="server"
                                 TextMode="MultiLine"
@@ -212,24 +227,22 @@
                                     Text="Send Reply"
                                     CssClass="eco-btn eco-approve"
                                     CommandName="SEND"
-                                    CommandArgument='<%# Eval("EscalationId") %>' />
+                                    CommandArgument='<%# Eval("LogId") %>' />
 
                                 <asp:Button runat="server"
                                     Text="Cancel"
                                     CssClass="eco-btn eco-reject"
                                     CommandName="CANCEL"
-                                    CommandArgument='<%# Eval("EscalationId") %>' />
+                                    CommandArgument='<%# Eval("LogId") %>' />
                             </div>
                         </asp:Panel>
 
-
                     </div>
                 </ItemTemplate>
-
             </asp:Repeater>
-            
+
             <asp:Label ID="lblChatMsg" runat="server" CssClass="eco-msg" />
-            
+
         </div>
     </section>
 

@@ -11,106 +11,88 @@ namespace Business_App_Dev
 {
 
 
-    public partial class EcoEatsAdmin
+    public partial class Game
     {
 
         /// <summary>
-        /// rptApps control.
+        /// form1 control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Repeater rptApps;
+        protected global::System.Web.UI.HtmlControls.HtmlForm form1;
 
         /// <summary>
-        /// lblMsg control.
+        /// btnSaveResult control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblMsg;
+        protected global::System.Web.UI.WebControls.Button btnSaveResult;
 
         /// <summary>
-        /// cblRatings control.
+        /// lblServerMsg control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.CheckBoxList cblRatings;
+        protected global::System.Web.UI.WebControls.Label lblServerMsg;
 
         /// <summary>
-        /// btnApplyRatingFilter control.
+        /// hfScore control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Button btnApplyRatingFilter;
+        protected global::System.Web.UI.WebControls.HiddenField hfScore;
 
         /// <summary>
-        /// btnClearRatingFilter control.
+        /// hfSaved control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.LinkButton btnClearRatingFilter;
+        protected global::System.Web.UI.WebControls.HiddenField hfSaved;
 
         /// <summary>
-        /// btnExportFeedback control.
+        /// hfWasted control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.LinkButton btnExportFeedback;
+        protected global::System.Web.UI.WebControls.HiddenField hfWasted;
 
         /// <summary>
-        /// rptFeedback control.
+        /// hfWon control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Repeater rptFeedback;
+        protected global::System.Web.UI.WebControls.HiddenField hfWon;
 
         /// <summary>
-        /// lblFeedbackMsg control.
+        /// hfLocked control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblFeedbackMsg;
+        protected global::System.Web.UI.WebControls.HiddenField hfLocked;
 
         /// <summary>
-        /// ddlChatStatus control.
+        /// hfFinalized control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.DropDownList ddlChatStatus;
-
-        /// <summary>
-        /// rptChats control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Repeater rptChats;
-
-        /// <summary>
-        /// lblChatMsg control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblChatMsg;
+        protected global::System.Web.UI.WebControls.HiddenField hfFinalized;
     }
 }

@@ -7,6 +7,8 @@ using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 using System.Web.Security;
+using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 
 namespace Business_App_Dev
 {
@@ -31,7 +33,7 @@ namespace Business_App_Dev
                 LoadStore(sellerId);
             }
 
-           
+
         }
 
         private void LoadStore(int sellerId)
@@ -157,56 +159,83 @@ namespace Business_App_Dev
 
         protected void btnSave_Click(object sender, EventArgs e)
         {
-
-            if (string.IsNullOrWhiteSpace(tbDefaultFrom.Text) || string.IsNullOrWhiteSpace(tbDefaultTo.Text))
+            if (string.IsNullOrWhiteSpace(tbDefaultFrom.Text) ||
+                string.IsNullOrWhiteSpace(tbDefaultTo.Text))
             {
-                // simplest: stop save + show message (or just return)
-                // lblError.Text = "Please set Default operating hours.";
+                // show error instead of silently failing
+                ScriptManager.RegisterStartupScript(this, GetType(),
+                    "err", "alert('Please set default operating hours.');", true);
                 return;
             }
 
             int sellerId = Convert.ToInt32(Session["SellerId"]);
 
-            string shopName = (tbStoreName.Text ?? "").Trim();
-            string address = (tbAddress.Text ?? "").Trim();
-            string email = (tbEmail.Text ?? "").Trim();
-            string phone = (tbPhone.Text ?? "").Trim();
-            string description = (tbDescription.Text ?? "").Trim();
-            // Save operating hours into PickupWindow as one string
+            string shopName = tbStoreName.Text.Trim();
+            string address = tbAddress.Text.Trim();
+            string newEmail = tbEmail.Text.Trim();
+            string phone = tbPhone.Text.Trim();
+            string description = tbDescription.Text.Trim();
             string pickupWindow = BuildPickupWindowText();
 
             using (SqlConnection conn = new SqlConnection(ConnStr))
-            using (SqlCommand cmd = new SqlCommand(@"
-        UPDATE Seller
-        SET ShopName = @ShopName,
-            Address = @Address,
-            PickupWindow = @PickupWindow,
-            Email = @Email,
-            Phone = @Phone,
-            Description = @Description
-        WHERE SellerID = @SellerID;", conn))
             {
-                cmd.Parameters.AddWithValue("@ShopName", shopName);
-                cmd.Parameters.AddWithValue("@Address", address);
-                cmd.Parameters.AddWithValue("@PickupWindow", pickupWindow);
-                cmd.Parameters.AddWithValue("@Email", email);
-                cmd.Parameters.AddWithValue("@Phone", phone);
-                cmd.Parameters.AddWithValue("@Description", description);
-                cmd.Parameters.AddWithValue("@SellerID", sellerId);
-
-
                 conn.Open();
-                cmd.ExecuteNonQuery();
+
+                // 1️⃣ Get OLD email first
+                string oldEmail = "";
+                using (SqlCommand getCmd = new SqlCommand(
+                    "SELECT Email FROM Seller WHERE SellerID = @SellerID", conn))
+                {
+                    getCmd.Parameters.AddWithValue("@SellerID", sellerId);
+                    oldEmail = getCmd.ExecuteScalar()?.ToString() ?? "";
+                }
+
+                // 2️⃣ Update Seller table
+                using (SqlCommand cmd = new SqlCommand(@"
+            UPDATE Seller
+            SET ShopName = @ShopName,
+                Address = @Address,
+                PickupWindow = @PickupWindow,
+                Email = @Email,
+                Phone = @Phone,
+                Description = @Description
+            WHERE SellerID = @SellerID;", conn))
+                {
+                    cmd.Parameters.AddWithValue("@ShopName", shopName);
+                    cmd.Parameters.AddWithValue("@Address", address);
+                    cmd.Parameters.AddWithValue("@PickupWindow", pickupWindow);
+                    cmd.Parameters.AddWithValue("@Email", newEmail);
+                    cmd.Parameters.AddWithValue("@Phone", phone);
+                    cmd.Parameters.AddWithValue("@Description", description);
+                    cmd.Parameters.AddWithValue("@SellerID", sellerId);
+
+                    cmd.ExecuteNonQuery();
+                }
+
+                // 3️⃣ Update SellerApplications table
+                using (SqlCommand cmd2 = new SqlCommand(@"
+            UPDATE SellerApplications
+            SET BusinessName = @BusinessName,
+                Address = @Address,
+                Email = @NewEmail,
+                PhoneNumber = @Phone
+            WHERE Email = @OldEmail;", conn))
+                {
+                    cmd2.Parameters.AddWithValue("@BusinessName", shopName);
+                    cmd2.Parameters.AddWithValue("@Address", address);
+                    cmd2.Parameters.AddWithValue("@NewEmail", newEmail);
+                    cmd2.Parameters.AddWithValue("@Phone", phone);
+                    cmd2.Parameters.AddWithValue("@OldEmail", oldEmail);
+
+                    cmd2.ExecuteNonQuery();
+                }
             }
 
-            // Reload latest data & go back to VIEW mode
+            // Reload page cleanly
             LoadStore(sellerId);
-            hfEditMode.Value = "0";
-            ScriptManager.RegisterStartupScript(this, this.GetType(), "backToView",
-                "toggleEdit(false);", true);
-            hfEditMode.Value = "0";
 
-
+            ScriptManager.RegisterStartupScript(this, this.GetType(),
+                "backToView", "toggleEdit(false);", true);
         }
 
         protected void btnCancel_Click(object sender, EventArgs e)
@@ -396,6 +425,124 @@ namespace Business_App_Dev
             // Redirect to seller login
             Response.Redirect("~/login.aspx?role=Seller", true);
         }
+        private string HashPasswordPbkdf2(string password)
+        {
+            const int iterations = 100000;
+            byte[] salt = new byte[16];
+
+            using (var rng = RandomNumberGenerator.Create())
+                rng.GetBytes(salt);
+
+            using (var pbkdf2 = new Rfc2898DeriveBytes(password, salt, iterations, HashAlgorithmName.SHA256))
+            {
+                byte[] hash = pbkdf2.GetBytes(32);
+                return $"pbkdf2${iterations}${Convert.ToBase64String(salt)}${Convert.ToBase64String(hash)}";
+            }
+        }
+        protected void btnUpdateStorePassword_Click(object sender, EventArgs e)
+        {
+            lblStorePwMsg.Style["display"] = "none";
+            lblStorePwMsg.Text = "";
+
+            // You must have seller email somewhere.
+            // Option A: from Session (best)
+            string sellerEmail = (Session["SellerEmail"] as string);
+
+            // Option B: fallback to the label already on StoreDetails (VIEW MODE)
+            if (string.IsNullOrWhiteSpace(sellerEmail))
+                sellerEmail = (lblEmail.Text ?? "").Trim();
+
+            if (string.IsNullOrWhiteSpace(sellerEmail))
+            {
+                lblStorePwMsg.Style["display"] = "block";
+                lblStorePwMsg.Style["background"] = "#FEF2F2";
+                lblStorePwMsg.Style["border"] = "1px solid #FCA5A5";
+                lblStorePwMsg.Style["color"] = "#991B1B";
+                lblStorePwMsg.Text = "❌ Cannot detect seller email. Please log in again.";
+                return;
+            }
+
+            string pw = (txtStorePw.Text ?? "").Trim();
+            string cf = (txtStorePwConfirm.Text ?? "").Trim();
+
+            bool hasLen = pw.Length >= 8;
+            bool hasLetter = System.Text.RegularExpressions.Regex.IsMatch(pw, "[A-Za-z]");
+            bool hasNum = System.Text.RegularExpressions.Regex.IsMatch(pw, "[0-9]");
+            bool hasSpecial = System.Text.RegularExpressions.Regex.IsMatch(pw, "[^A-Za-z0-9]");
+
+            if (!hasLen || !hasLetter || !hasNum || !hasSpecial)
+            {
+                lblStorePwMsg.Style["display"] = "block";
+                lblStorePwMsg.Style["background"] = "#FEF2F2";
+                lblStorePwMsg.Style["border"] = "1px solid #FCA5A5";
+                lblStorePwMsg.Style["color"] = "#991B1B";
+                lblStorePwMsg.Text = "❌ Password does not meet the requirements.";
+                return;
+            }
+
+            if (pw != cf)
+            {
+                lblStorePwMsg.Style["display"] = "block";
+                lblStorePwMsg.Style["background"] = "#FEF2F2";
+                lblStorePwMsg.Style["border"] = "1px solid #FCA5A5";
+                lblStorePwMsg.Style["color"] = "#991B1B";
+                lblStorePwMsg.Text = "❌ Confirm password does not match.";
+                return;
+            }
+
+            try
+            {
+                string newHash = HashPasswordPbkdf2(pw);
+
+                using (SqlConnection conn = new SqlConnection(ConnStr))
+                {
+                    conn.Open();
+
+                    // ✅ update SellerApplications because password is from application table
+                    string sql = @"
+UPDATE SellerApplications
+SET PasswordHash = @Pw
+WHERE Email = @Email";
+
+                    using (SqlCommand cmd = new SqlCommand(sql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@Pw", newHash);
+                        cmd.Parameters.AddWithValue("@Email", sellerEmail);
+
+                        int rows = cmd.ExecuteNonQuery();
+                        if (rows == 0)
+                        {
+                            lblStorePwMsg.Style["display"] = "block";
+                            lblStorePwMsg.Style["background"] = "#FEF2F2";
+                            lblStorePwMsg.Style["border"] = "1px solid #FCA5A5";
+                            lblStorePwMsg.Style["color"] = "#991B1B";
+                            lblStorePwMsg.Text = "❌ Update failed. Seller application not found.";
+                            return;
+                        }
+                    }
+                }
+
+                lblStorePwMsg.Style["display"] = "block";
+                lblStorePwMsg.Style["background"] = "#ECFDF5";
+                lblStorePwMsg.Style["border"] = "1px solid #86EFAC";
+                lblStorePwMsg.Style["color"] = "#065F46";
+                lblStorePwMsg.Text = "✅ Password changed successfully.";
+
+                txtStorePw.Text = "";
+                txtStorePwConfirm.Text = "";
+                lblStorePassword.Text = "•••••••• (secured)";
+            }
+            catch (Exception ex)
+            {
+                lblStorePwMsg.Style["display"] = "block";
+                lblStorePwMsg.Style["background"] = "#FEF2F2";
+                lblStorePwMsg.Style["border"] = "1px solid #FCA5A5";
+                lblStorePwMsg.Style["color"] = "#991B1B";
+                lblStorePwMsg.Text = "❌ Server error: " + ex.Message;
+            }
+        }
+
+
 
     }
 }

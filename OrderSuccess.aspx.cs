@@ -4,17 +4,13 @@ using System.Configuration;
 using System.Data.SqlClient;
 using System.Globalization;
 using System.Linq;
+using System.Net.Mail;
 using System.Web.UI;
 using System.Web.UI.HtmlControls;
 using System.Web.UI.WebControls;
 using Stripe;
 using Stripe.Checkout;
 using Business_App_Dev.Services;
-
-// MailKit
-using MailKit.Net.Smtp;
-using MailKit.Security;
-using MimeKit;
 
 namespace Business_App_Dev
 {
@@ -103,6 +99,12 @@ namespace Business_App_Dev
             catch (SqlException)
             {
                 ShowError(T("Database error while saving/loading your order. Please try again later."));
+            }
+            catch (SmtpException ex)
+            {
+                // Email failing should not break checkout success page
+                // Show user success; optionally log ex somewhere
+                // If you want, you can show a soft message or keep silent.
             }
             catch (Exception ex)
             {
@@ -218,7 +220,7 @@ namespace Business_App_Dev
         }
 
         // =========================
-        // SAVE ORDER (dbo.Orders + dbo.OrderItems) - matches your schema
+        // SAVE ORDER (dbo.Orders + dbo.OrderItems)
         // =========================
         private int SaveOrderIfNotExists(string stripeSessionId, int userId, decimal total, List<PurchasedItem> items)
         {
@@ -235,17 +237,6 @@ namespace Business_App_Dev
 
                 try
                 {
-                    // dbo.Orders columns (from your screenshot):
-                    // OrderID (identity)
-                    // UserID (int not null)
-                    // StripeSessionId (nvarchar 200 not null, unique)
-                    // TotalAmount (decimal)
-                    // PayStatus (nvarchar 30)
-                    // CreatedAt (datetime default getdate())
-                    // OrderStatus (nvarchar 30 default 'Confirmed')
-                    // UpdatedAt (datetime2 default sysutcdatetime())
-                    // SellerID (int null)
-                    // + EmailSent (bit) [we will add]
                     string insertOrderSql = @"
 INSERT INTO dbo.Orders (UserID, StripeSessionId, TotalAmount, PayStatus, OrderStatus, SellerID)
 OUTPUT INSERTED.OrderID
@@ -262,9 +253,6 @@ VALUES (@UserID, @StripeSessionId, @TotalAmount, @PayStatus, @OrderStatus, NULL)
                         orderId = Convert.ToInt32(cmd.ExecuteScalar());
                     }
 
-                    // dbo.OrderItems columns (from your screenshot):
-                    // OrderItemID (identity)
-                    // OrderID, ProductID, ProductName, Quantity, UnitPrice, LineTotal, SellerID
                     string insertItemSql = @"
 INSERT INTO dbo.OrderItems
 (OrderID, ProductID, ProductName, Quantity, UnitPrice, LineTotal, SellerID)
@@ -384,8 +372,6 @@ VALUES
         // =========================
         private void TrySendOrderConfirmationEmail(int orderId, int userId, decimal total, List<PurchasedItem> items)
         {
-            // If you haven't added EmailSent column yet, this will throw.
-            // Add it with: ALTER TABLE dbo.Orders ADD EmailSent BIT NOT NULL CONSTRAINT DF_Orders_EmailSent DEFAULT(0);
             if (IsEmailAlreadySent(orderId)) return;
 
             LoadBuyerProfile(userId, out string email, out string fullName);
@@ -432,7 +418,6 @@ VALUES
             email = "";
             name = "";
 
-            // Matches your dbo.Users table
             string sql = "SELECT TOP 1 [Email], [FullName] FROM dbo.[Users] WHERE [UserID]=@uid;";
 
             using (SqlConnection con = new SqlConnection(ConnStr()))
@@ -452,37 +437,31 @@ VALUES
             }
         }
 
+        // =========================
+        // EMAIL SENDER (System.Net.Mail)
+        // Reads SMTP from <system.net><mailSettings> automatically
+        // =========================
         private void SendEmailHtml(string toEmail, string subject, string htmlBody)
         {
             string fromName = ConfigurationManager.AppSettings["EmailFromName"] ?? "EcoEats";
             string fromEmail = ConfigurationManager.AppSettings["EmailFromEmail"] ?? "";
-            string host = ConfigurationManager.AppSettings["EmailSmtpHost"] ?? "smtp.gmail.com";
-            int port = int.TryParse(ConfigurationManager.AppSettings["EmailSmtpPort"], out int p) ? p : 587;
-            string user = ConfigurationManager.AppSettings["EmailSmtpUser"] ?? "";
-            string pass = (ConfigurationManager.AppSettings["EmailSmtpPass"] ?? "").Replace(" ", "");
 
-            if (string.IsNullOrWhiteSpace(fromEmail) ||
-                string.IsNullOrWhiteSpace(user) ||
-                string.IsNullOrWhiteSpace(pass))
-                return;
+            // If you prefer, you can hard-use the <smtp from="..."> value by leaving fromEmail empty,
+            // but using your current appSettings is fine (no SMTP creds stored here).
+            if (string.IsNullOrWhiteSpace(fromEmail))
+                fromEmail = "no-reply@ecoeats.local"; // fallback (won't work unless smtp allows it)
 
-            var msg = new MimeMessage();
-            msg.From.Add(new MailboxAddress(fromName, fromEmail));
-            msg.To.Add(MailboxAddress.Parse(toEmail));
+            var msg = new MailMessage();
+            msg.From = new MailAddress(fromEmail, fromName);
+            msg.To.Add(toEmail);
             msg.Subject = subject ?? "";
+            msg.Body = htmlBody ?? "";
+            msg.IsBodyHtml = true;
 
-            msg.Body = new BodyBuilder
-            {
-                HtmlBody = htmlBody ?? "",
-                TextBody = "Your email client does not support HTML emails."
-            }.ToMessageBody();
-
+            // This uses Web.config <system.net><mailSettings>
             using (var smtp = new SmtpClient())
             {
-                smtp.Connect(host, port, SecureSocketOptions.StartTls);
-                smtp.Authenticate(user, pass);
                 smtp.Send(msg);
-                smtp.Disconnect(true);
             }
         }
 
@@ -655,8 +634,6 @@ WHERE p.ProductID IN ({inClause});";
             if (lnk != null)
                 lnk.NavigateUrl = BuildDirectionsUrl(group);
 
-            // If your markup uses <iframe runat="server" id="mapFrameSeller">
-            // you can declare it as HtmlGenericControl or the HtmlIframe wrapper
             var iframe = e.Item.FindControl("mapFrameSeller") as HtmlControl;
             if (iframe != null)
                 iframe.Attributes["src"] = BuildMapEmbedSrc(group);

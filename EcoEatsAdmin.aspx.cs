@@ -4,11 +4,11 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Net;
+using System.Net.Configuration;
 using System.Net.Mail;
 using System.Text;
 using System.Web;
 using System.Web.UI.WebControls;
-
 
 namespace Business_App_Dev
 {
@@ -19,19 +19,17 @@ namespace Business_App_Dev
 
         protected void Page_Load(object sender, EventArgs e)
         {
-
             if (Session["UserRole"] == null || Session["UserRole"].ToString() != "Admin")
             {
                 Response.Redirect("~/login.aspx");
                 return;
             }
+
             if (!IsPostBack)
             {
                 LoadPendingApplications();
                 LoadFeedback();
                 LoadChats();
-
-
             }
         }
 
@@ -67,7 +65,7 @@ namespace Business_App_Dev
             {
                 ApproveSeller(appId);
                 lblMsg.Text = "✅ Seller application approved.";
-                ShowToast("Seller approved & email sent");
+                ShowToast("Seller approved & email attempted");
                 InsertNotification("Seller approved", $"Application #{appId} approved.");
             }
             else if (e.CommandName == "REJECT")
@@ -80,6 +78,7 @@ namespace Business_App_Dev
 
             LoadPendingApplications();
         }
+
         private void ApproveSeller(int applicationId)
         {
             using (SqlConnection conn = new SqlConnection(_connStr))
@@ -88,10 +87,10 @@ namespace Business_App_Dev
 
                 // 1️⃣ Get application data (include phone)
                 SqlCommand get = new SqlCommand(@"
-            SELECT BusinessName, Address, Email, PhoneNumber
-            FROM SellerApplications
-            WHERE Id = @Id
-        ", conn);
+                    SELECT BusinessName, Address, Email, PhoneNumber
+                    FROM SellerApplications
+                    WHERE Id = @Id
+                ", conn);
 
                 get.Parameters.AddWithValue("@Id", applicationId);
 
@@ -110,10 +109,10 @@ namespace Business_App_Dev
 
                 // 2️⃣ Prevent duplicate seller insert
                 SqlCommand check = new SqlCommand(@"
-            SELECT COUNT(1)
-            FROM Seller
-            WHERE LOWER(LTRIM(RTRIM(Email))) = LOWER(LTRIM(RTRIM(@Email)))
-        ", conn);
+                    SELECT COUNT(1)
+                    FROM Seller
+                    WHERE LOWER(LTRIM(RTRIM(Email))) = LOWER(LTRIM(RTRIM(@Email)))
+                ", conn);
 
                 check.Parameters.AddWithValue("@Email", email);
 
@@ -122,9 +121,9 @@ namespace Business_App_Dev
 
                 // 3️⃣ Insert into Seller table (include phone)
                 SqlCommand insert = new SqlCommand(@"
-            INSERT INTO Seller (ShopName, Address, Email, Phone, CreatedAt)
-            VALUES (@ShopName, @Address, @Email, @Phone, GETDATE())
-        ", conn);
+                    INSERT INTO Seller (ShopName, Address, Email, Phone, CreatedAt)
+                    VALUES (@ShopName, @Address, @Email, @Phone, GETDATE())
+                ", conn);
 
                 insert.Parameters.AddWithValue("@ShopName", shopName);
                 insert.Parameters.AddWithValue("@Address", address);
@@ -135,20 +134,33 @@ namespace Business_App_Dev
 
                 // 4️⃣ Update application status + send email
                 UpdateStatus(applicationId, "APPROVED");
-                SendSellerApprovedEmail(email, shopName);
+
+                // IMPORTANT: don't crash admin page if email fails
+                try
+                {
+                    SendSellerApprovedEmail(email, shopName);
+                }
+                catch (SmtpException ex)
+                {
+                    // show a friendly message but keep approval successful
+                    ShowToast("Approved, but email failed: " + SafeMsg(ex.Message), "warn");
+                }
+                catch (Exception ex)
+                {
+                    ShowToast("Approved, but email failed: " + SafeMsg(ex.Message), "warn");
+                }
             }
         }
-
 
         private void UpdateStatus(int id, string status)
         {
             using (SqlConnection conn = new SqlConnection(_connStr))
             using (SqlCommand cmd = new SqlCommand(@"
-        UPDATE SellerApplications
-        SET Status = @Status,
-            ApprovedAt = CASE WHEN @Status = 'APPROVED' THEN ISNULL(ApprovedAt, GETDATE()) ELSE ApprovedAt END,
-            RejectedAt = CASE WHEN @Status = 'REJECTED' THEN ISNULL(RejectedAt, GETDATE()) ELSE RejectedAt END
-        WHERE Id = @Id;", conn))
+                UPDATE SellerApplications
+                SET Status = @Status,
+                    ApprovedAt = CASE WHEN @Status = 'APPROVED' THEN ISNULL(ApprovedAt, GETDATE()) ELSE ApprovedAt END,
+                    RejectedAt = CASE WHEN @Status = 'REJECTED' THEN ISNULL(RejectedAt, GETDATE()) ELSE RejectedAt END
+                WHERE Id = @Id;", conn))
             {
                 cmd.Parameters.AddWithValue("@Status", status);
                 cmd.Parameters.AddWithValue("@Id", id);
@@ -158,42 +170,75 @@ namespace Business_App_Dev
             }
         }
 
-
         private void SendSellerApprovedEmail(string toEmail, string shopName)
         {
+            // Read the <smtp from="..."> value from Web.config
+            var smtpSection = (SmtpSection)ConfigurationManager.GetSection("system.net/mailSettings/smtp");
+            string fromEmail = smtpSection?.From ?? "no-reply@ecoeats.local";
+
+            string fromName = ConfigurationManager.AppSettings["EmailFromName"] ?? "EcoEats";
+
             var msg = new MailMessage();
+            msg.From = new MailAddress(fromEmail, fromName);
             msg.To.Add(toEmail);
+
             msg.Subject = "EcoEats Seller Application Approved 🎉";
             msg.Body = $@"
-                Hello {shopName},
+Hello {shopName},
 
-                Great news! 🎉
+Great news! 🎉
 
-                Your seller application on EcoEats has been APPROVED.
+Your seller application on EcoEats has been APPROVED.
 
-                You can now log in and start listing surplus food items on our platform.
+You can now log in and start listing surplus food items on our platform.
 
-                Thank you for helping reduce food waste 🌱
+Thank you for helping reduce food waste 🌱
 
-                Best regards,
-                EcoEats Team
+Best regards,
+EcoEats Team
 ";
-
             msg.IsBodyHtml = false;
-            msg.From = new MailAddress("kwayongle54@gmail.com", "EcoEats");
 
             using (var smtp = CreateSmtpClient())
             {
                 smtp.Send(msg);
             }
+        }
 
+        private SmtpClient CreateSmtpClient()
+        {
+            // Reads <system.net><mailSettings><smtp> from Web.config
+            var smtpSection = (SmtpSection)ConfigurationManager.GetSection("system.net/mailSettings/smtp");
+            if (smtpSection == null || smtpSection.Network == null)
+                throw new Exception("Missing <system.net><mailSettings> SMTP configuration in Web.config.");
+
+            string host = smtpSection.Network.Host;
+            int port = smtpSection.Network.Port;
+            string user = smtpSection.Network.UserName ?? "";
+            string pass = (smtpSection.Network.Password ?? "").Replace(" ", "");
+            bool ssl = smtpSection.Network.EnableSsl;
+
+            if (string.IsNullOrWhiteSpace(host))
+                throw new Exception("SMTP host is missing in Web.config mailSettings.");
+
+            if (string.IsNullOrWhiteSpace(user) || string.IsNullOrWhiteSpace(pass))
+                throw new Exception("SMTP username/password missing in Web.config mailSettings. Gmail requires an App Password.");
+
+            var smtp = new SmtpClient(host, port)
+            {
+                EnableSsl = ssl,
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+                UseDefaultCredentials = false,
+                Credentials = new NetworkCredential(user, pass)
+            };
+
+            return smtp;
         }
 
         private void LoadFeedback()
         {
             try
             {
-                // Build selected ratings list
                 var selected = cblRatings.Items.Cast<ListItem>()
                     .Where(i => i.Selected)
                     .Select(i => i.Value)
@@ -204,24 +249,21 @@ namespace Business_App_Dev
                 {
                     cmd.Connection = conn;
 
-                    // Base query
                     var sql = new StringBuilder(@"
-                SELECT 
-                    f.FeedbackID,
-                    f.UserID,
-                    u.FullName AS CustomerName,
-                    f.Rating,
-                    f.Tag,
-                    f.Comments,
-                    f.CreatedAt
-                FROM Feedback f
-                INNER JOIN Users u ON f.UserID = u.UserID
-            ");
+                        SELECT 
+                            f.FeedbackID,
+                            f.UserID,
+                            u.FullName AS CustomerName,
+                            f.Rating,
+                            f.Tag,
+                            f.Comments,
+                            f.CreatedAt
+                        FROM Feedback f
+                        INNER JOIN Users u ON f.UserID = u.UserID
+                    ");
 
-                    // Apply rating filter if any selected
                     if (selected.Count > 0)
                     {
-                        // Create @r0,@r1,... parameters
                         var placeholders = selected.Select((v, idx) => $"@r{idx}").ToArray();
                         sql.Append(" WHERE f.Rating IN (" + string.Join(",", placeholders) + ") ");
 
@@ -230,7 +272,6 @@ namespace Business_App_Dev
                     }
 
                     sql.Append(" ORDER BY f.CreatedAt DESC, f.FeedbackID DESC;");
-
                     cmd.CommandText = sql.ToString();
 
                     conn.Open();
@@ -249,9 +290,6 @@ namespace Business_App_Dev
             }
         }
 
-
-
-        // ★★★★★ stars HTML
         public IHtmlString GetStars(int rating)
         {
             rating = Math.Max(0, Math.Min(5, rating));
@@ -267,7 +305,6 @@ namespace Business_App_Dev
             return new HtmlString(sb.ToString());
         }
 
-        // Map pill colors
         public string GetFeedbackPillClass(string tag)
         {
             switch ((tag ?? "").Trim().ToLower())
@@ -279,21 +316,19 @@ namespace Business_App_Dev
             }
         }
 
-
-        // Optional: Export CSV
         protected void btnExportFeedback_Click(object sender, EventArgs e)
         {
             using (SqlConnection conn = new SqlConnection(_connStr))
             using (SqlCommand cmd = new SqlCommand(@"
-        SELECT 
-            u.FullName AS CustomerName,
-            f.Rating,
-            f.Tag,
-            f.Comments,
-            f.CreatedAt
-        FROM Feedback f
-        INNER JOIN Users u ON f.UserID = u.UserID
-        ORDER BY f.CreatedAt DESC, f.FeedbackID DESC;", conn))
+                SELECT 
+                    u.FullName AS CustomerName,
+                    f.Rating,
+                    f.Tag,
+                    f.Comments,
+                    f.CreatedAt
+                FROM Feedback f
+                INNER JOIN Users u ON f.UserID = u.UserID
+                ORDER BY f.CreatedAt DESC, f.FeedbackID DESC;", conn))
             {
                 conn.Open();
 
@@ -324,14 +359,29 @@ namespace Business_App_Dev
 
         private void LoadChats()
         {
+            string filter = ddlChatStatus?.SelectedValue ?? "OPEN";
+
+            string where = "";
+            if (filter == "OPEN")
+                where = "WHERE c.IsEscalated = 1 AND c.Status = 'OPEN'";
+            else if (filter == "RESOLVED")
+                where = "WHERE c.IsEscalated = 1 AND c.Status = 'RESOLVED'";
+            else
+                where = "WHERE c.IsEscalated = 1";
+
             using (SqlConnection conn = new SqlConnection(_connStr))
-            using (SqlCommand cmd = new SqlCommand(@"
-        SELECT EscalationId, CustomerName, IssueTitle, Status, CreatedAt
-        FROM ChatEscalations
-        WHERE Status <> 'Resolved'
-        ORDER BY 
-            CASE WHEN Status = 'Urgent' THEN 1 ELSE 2 END,
-            CreatedAt DESC", conn))
+            using (SqlCommand cmd = new SqlCommand($@"
+        SELECT
+            c.LogId,
+            c.UserId,
+            ISNULL(u.FullName, 'User') AS CustomerName,
+            c.UserMessage AS IssueTitle,
+            c.CreatedAt,
+            c.Status
+        FROM ChatbotLog c
+        LEFT JOIN Users u ON u.UserID = TRY_CONVERT(int, c.UserId)
+        {where}
+        ORDER BY c.CreatedAt DESC;", conn))
             {
                 conn.Open();
                 DataTable dt = new DataTable();
@@ -341,6 +391,7 @@ namespace Business_App_Dev
                 rptChats.DataBind();
             }
         }
+
         protected void rptChats_ItemCommand(object source, RepeaterCommandEventArgs e)
         {
             int id = Convert.ToInt32(e.CommandArgument);
@@ -348,14 +399,13 @@ namespace Business_App_Dev
             if (e.CommandName == "TAKEOVER")
             {
                 ActiveReplyId = id;
-                ((HiddenField)Master.FindControl("hfActiveTab")).Value = "chat"; // stay on chat
+                ((HiddenField)Master.FindControl("hfActiveTab")).Value = "chat";
                 LoadChats();
             }
             else if (e.CommandName == "CANCEL")
             {
                 ActiveReplyId = null;
                 ((HiddenField)Master.FindControl("hfActiveTab")).Value = "chat";
-
                 LoadChats();
             }
             else if (e.CommandName == "SEND")
@@ -363,7 +413,6 @@ namespace Business_App_Dev
                 var txt = (TextBox)e.Item.FindControl("txtReply");
                 string reply = txt?.Text?.Trim();
 
-                // stay on chat tab
                 ((HiddenField)Master.FindControl("hfActiveTab")).Value = "chat";
 
                 if (string.IsNullOrWhiteSpace(reply))
@@ -372,14 +421,13 @@ namespace Business_App_Dev
                     return;
                 }
 
-                SaveReply(id, reply);      // ✅ updates DB + sets Status=Resolved
-                ActiveReplyId = null;      // ✅ closes reply box
-                LoadChats();               // ✅ refresh = chat disappears
+                SaveReply(id, reply);
+                ActiveReplyId = null;
+                LoadChats();
                 ShowToast("Reply sent!");
-
             }
-
         }
+
         private void ShowToast(string message, string type = "success")
         {
             string safe = message.Replace("\\", "\\\\").Replace("'", "\\'");
@@ -391,18 +439,21 @@ namespace Business_App_Dev
             );
         }
 
-
-
+        private static string SafeMsg(string msg)
+        {
+            msg = msg ?? "";
+            if (msg.Length > 180) msg = msg.Substring(0, 180) + "...";
+            return msg.Replace("\r", " ").Replace("\n", " ");
+        }
 
         private void SaveReply(int id, string reply)
         {
             using (SqlConnection conn = new SqlConnection(_connStr))
             using (SqlCommand cmd = new SqlCommand(@"
-        UPDATE ChatEscalations
+        UPDATE dbo.ChatbotLog
         SET AdminReply = @reply,
-            RepliedAt = GETDATE(),
-            Status = 'Resolved'
-        WHERE EscalationId = @id", conn))
+            Status = 'RESOLVED'
+        WHERE LogId = @id;", conn))
             {
                 cmd.Parameters.AddWithValue("@reply", reply);
                 cmd.Parameters.AddWithValue("@id", id);
@@ -411,11 +462,11 @@ namespace Business_App_Dev
                 cmd.ExecuteNonQuery();
             }
         }
-
-        private int? ActiveReplyId
+        public string GetInitial(object nameObj)
         {
-            get => ViewState["ActiveReplyId"] as int?;
-            set => ViewState["ActiveReplyId"] = value;
+            string s = Convert.ToString(nameObj) ?? "";
+            s = s.Trim();
+            return string.IsNullOrEmpty(s) ? "U" : s.Substring(0, 1).ToLower();
         }
 
         public bool IsReplying(object idObj)
@@ -424,21 +475,16 @@ namespace Business_App_Dev
             return Convert.ToInt32(idObj) == ActiveReplyId.Value;
         }
 
-        private SmtpClient CreateSmtpClient()
+        private int? ActiveReplyId
         {
-            string appPassword = Environment.GetEnvironmentVariable("EMAIL_APP_PASSWORD");
+            get => ViewState["ActiveReplyId"] as int?;
+            set => ViewState["ActiveReplyId"] = value;
+        }
 
-            if (string.IsNullOrWhiteSpace(appPassword))
-                throw new Exception("EMAIL_APP_PASSWORD is missing. Set it using setx.");
-
-            var smtp = new SmtpClient("smtp.gmail.com", 587)
-            {
-                EnableSsl = true,
-                UseDefaultCredentials = false,
-                Credentials = new NetworkCredential("kwayongle54@gmail.com", appPassword)
-            };
-
-            return smtp;
+        protected void ddlChatStatus_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            ((HiddenField)Master.FindControl("hfActiveTab")).Value = "chat";
+            LoadChats();
         }
         public bool HasTag(object tagObj)
         {
@@ -447,13 +493,14 @@ namespace Business_App_Dev
 
         public string GetRatingPillClass(int rating)
         {
-            if (rating <= 2) return "bad";      // red
-            if (rating == 3) return "mid";      // orange
-            return "good";                      // green (4-5)
+            if (rating <= 2) return "bad";
+            if (rating == 3) return "mid";
+            return "good";
         }
+
         protected void btnApplyRatingFilter_Click(object sender, EventArgs e)
         {
-            LoadFeedback(); // it will read selected ratings
+            LoadFeedback();
         }
 
         protected void btnClearRatingFilter_Click(object sender, EventArgs e)
@@ -463,12 +510,13 @@ namespace Business_App_Dev
 
             LoadFeedback();
         }
+
         private void InsertNotification(string title, string message)
         {
             using (SqlConnection conn = new SqlConnection(_connStr))
             using (SqlCommand cmd = new SqlCommand(@"
-        INSERT INTO AdminNotifications (Type, Title, Message)
-        VALUES ('System', @t, @m)", conn))
+                INSERT INTO AdminNotifications (Type, Title, Message)
+                VALUES ('System', @t, @m)", conn))
             {
                 cmd.Parameters.AddWithValue("@t", title);
                 cmd.Parameters.AddWithValue("@m", message);
@@ -476,8 +524,5 @@ namespace Business_App_Dev
                 cmd.ExecuteNonQuery();
             }
         }
-
     }
 }
-
-// test admin branch
