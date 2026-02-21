@@ -2,12 +2,12 @@
     Language="C#"
     MasterPageFile="~/SellPage.master"
     AutoEventWireup="true"
-    CodeBehind="SalesDashboard.aspx.cs"
+    CodeBehind="SallesDashboard.aspx.cs"
     Inherits="Business_App_Dev.SalesDashboard" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
-
-    <%--<style>
+    <p>login Successful</p>
+   <%-- <style>
         .sdash-wrap {
             max-width: 1100px;
             margin: 24px auto;

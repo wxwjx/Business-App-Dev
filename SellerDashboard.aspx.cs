@@ -10,7 +10,7 @@ namespace Business_App_Dev
 {
     public partial class SalesDashboard : Page
     {
-        //private static string ConnStr => ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
+        //        private static string ConnStr => ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
 
         protected void Page_Load(object sender, EventArgs e)
         {
@@ -25,9 +25,11 @@ namespace Business_App_Dev
             //                // default range: 30 days
             //                ViewState["days"] = 30;
             //                LoadDashboard(30);
-            //}
+            //            }
         }
+
     }
+
 
 //        protected void Range_Click(object sender, EventArgs e)
 //        {

@@ -1,4 +1,4 @@
-﻿<%--<%@ Page Title="Order Management"
+﻿<%@ Page Title="Order Management"
     Language="C#"
     MasterPageFile="~/SellPage.master"
     AutoEventWireup="true"
@@ -188,4 +188,4 @@
         }
     </script>
 
-</asp:Content>--%>
+</asp:Content>
