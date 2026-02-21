@@ -2,7 +2,7 @@
     Language="C#"
     MasterPageFile="~/SellPage.master"
     AutoEventWireup="true"
-    CodeBehind="StoreDetails.aspx.cs"
+    CodeBehind="StoreDetails_1.aspx.cs"
     Inherits="Business_App_Dev.StoreDetails" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">

@@ -239,6 +239,8 @@ namespace Business_App_Dev
         /// </remarks>
         protected global::System.Web.UI.WebControls.TextBox tbAddrLine;
 
+
+        protected global::System.Web.UI.WebControls.TextBox tbAddress;
         /// <summary>
         /// tbUnit control.
         /// </summary>
