@@ -379,6 +379,22 @@
             }
         }
 
+        // ===== Logout modal =====
+        function openLogoutModal() {
+            document.getElementById("sdLogoutModal").style.display = "flex";
+        }
+
+        function closeLogoutModal() {
+            document.getElementById("sdLogoutModal").style.display = "none";
+        }
+
+        // Click hidden ASP.NET button to ensure server event always fires
+        function submitLogout() {
+            closeLogoutModal();
+            document.getElementById("<%= btnLogoutTrigger.ClientID %>").click();
+        }
+
+
         let map, marker;
 
         function initMap() {
@@ -429,30 +445,6 @@
                 });
             }
         }
-
-        // ===== Logout modal =====
-        function openLogoutModal() {
-            document.getElementById("sdLogoutModal").style.display = "flex";
-        }
-
-        function closeLogoutModal() {
-            document.getElementById("sdLogoutModal").style.display = "none";
-        }
-
-        // Click hidden ASP.NET button to ensure server event always fires
-        function submitLogout() {
-            closeLogoutModal();
-            document.getElementById("<%= btnLogoutTrigger.ClientID %>").click();
-        }
-
-        document.addEventListener("click", function (e) {
-            if (e.target && e.target.id === "sdLogoutModal") closeLogoutModal();
-        });
-
-        document.addEventListener("keydown", function (e) {
-            if (e.key === "Escape") closeLogoutModal();
-        });
-
     </script>
 
     <script async defer
