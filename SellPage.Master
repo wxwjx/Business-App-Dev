@@ -6,76 +6,52 @@
 <html lang="en">
 <head runat="server">
     <style>
-        /* ===== Seller topbar layout: two rows ===== */
-.ee-topbar .ee-toprow{
+       /* ===== Seller topbar: match Site.Master one-row layout ===== */
+.ee-topbar .ee-topbar-inner.seller{
   display:flex;
   align-items:center;
-  gap:16px;
+  gap:18px;
 }
 
+/* Small seller badge under EcoEats */
+.ee-seller-badge{
+  font-size:12px;
+  font-weight:700;
+  color:#6b7280;
+  margin-top:2px;
+}
+
+/* Reuse ee-search look; just ensure it behaves like customer topbar */
 .ee-topbar .ee-search{
-  flex:1;
-  min-width:220px;
-}
-
-.ee-topbar .ee-navrow{
-  margin-top:10px;
-}
-
-/* ===== Nav UI: pill style + wrapping ===== */
-.ee-nav.seller.ee-nav-pills{
+  flex: 1;
+  min-width: 280px;
   display:flex;
-  gap:10px;
-  flex-wrap:wrap;               /* wraps nicely on smaller screens */
-  padding:8px;
-  border-radius:14px;
-  background: rgba(0,0,0,0.04); /* soft container */
-}
-
-.ee-nav.seller.ee-nav-pills a{
-  display:inline-flex;
   align-items:center;
-  padding:8px 12px;
-  border-radius:999px;
-  text-decoration:none;
-  font-weight:600;
-  font-size:14px;
+  gap:10px;
+}
+
+/* Make seller nav use same "link row" style as Site.Master */
+.ee-navlinks.seller-navlinks{
+  display:flex;
+  align-items:center;
+  gap:18px;
   white-space:nowrap;
-  transition: transform .08s ease, background-color .15s ease;
-  background: rgba(255,255,255,0.8);
 }
 
-.ee-nav.seller.ee-nav-pills a:hover{
-  transform: translateY(-1px);
-  background: rgba(255,255,255,1);
-}
-
-/* highlight active page automatically */
-.ee-nav.seller.ee-nav-pills a.active{
-  background: rgba(255,255,255,1);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
-}
-
-/* ===== Responsive: smaller screens ===== */
-@media (max-width: 900px){
-  .ee-topbar .ee-toprow{
+/* Responsive like Site.Master */
+@media (max-width: 1000px){
+  .ee-topbar .ee-topbar-inner.seller{
     flex-wrap:wrap;
   }
-
-  .ee-actions{
-    margin-left:auto;
-  }
-
   .ee-topbar .ee-search{
     order: 3;
     flex-basis: 100%;
   }
-}
-
-@media (max-width: 520px){
-  .ee-nav.seller.ee-nav-pills a{
-    font-size:13px;
-    padding:7px 10px;
+  .ee-navlinks.seller-navlinks{
+    order: 4;
+    flex-basis: 100%;
+    overflow:auto;
+    padding-bottom:6px;
   }
 }
 
@@ -98,49 +74,50 @@
 <body>
 <form id="form1" runat="server">
 
-    <!-- SELLER TOP BAR -->
-    <header class="ee-topbar">
-        <div class="ee-container ee-topbar-inner seller">
+    <!-- SELLER TOP BAR (match Site.Master UI) -->
+<header class="ee-topbar">
+    <div class="ee-container ee-topbar-inner seller">
 
-        <div class="ee-toprow"><!-- Brand -->
-            <div class="ee-brand">
-                <div class="ee-logo">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M19 3c-6.5.7-11 3.8-13.8 7.2C2.6 13.4 2.2 17.2 4 21c3.8 1.8 7.6 1.4 10.8-1.2C18.2 17 21.3 12.5 22 6c.1-1.2-.7-2.9-3-3z"></path>
-                    </svg>
-                </div>
-                <div>
-                    <div class="ee-brand-name">EcoEats</div>
-                    <div class="ee-seller-badge">Seller Portal</div>
-                </div>
-            </div>
-           </div>
-
-            <!-- Search -->
-            <div class="ee-search">
-                <input type="text" placeholder="Search inventory, orders..." />
+        <!-- Brand -->
+        <div class="ee-brand">
+            <div class="ee-logo">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M19 3c-6.5.7-11 3.8-13.8 7.2C2.6 13.4 2.2 17.2 4 21c3.8 1.8 7.6 1.4 10.8-1.2C18.2 17 21.3 12.5 22 6c.1-1.2-.7-2.9-3-3z"></path>
+                </svg>
             </div>
 
-            <!-- Seller Navigation -->
-            <nav class="ee-nav seller">
-                <a href="SellerDashboard.aspx">Dashboard</a>
-                <a href="SellerWasteTracker.aspx">Waste Tracker</a>
-                <a href="Inventory.aspx">Inventory</a>
-                <a href="SellerOrders.aspx">Orders</a>
-                <a href="SellerFeedback.aspx">Feedback</a>
-                <a href="SellerMessages.aspx">Messages</a>
-                <a href="StoreDetails.aspx">Store Profile</a>
-            </nav>
-
-            <!-- Actions -->
-            <div class="ee-actions">
-                <a class="ee-icon-btn" href="SellerMessages.aspx" title="Messages">💬</a>
-                <a class="ee-icon-btn" href="Inventory.aspx" title="Inventory">📦</a>
-                <a class="ee-icon-btn" href="StoreDetails.aspx" title="Account">👤</a>
+            <div>
+                <div class="ee-brand-name">EcoEats</div>
+                <div class="ee-seller-badge">Seller Portal</div>
             </div>
-
         </div>
-    </header>
+
+        <!-- Search (UI only) -->
+        <div class="ee-search">
+            <input type="text" placeholder="Search inventory, orders..." />
+            <button type="button">Search</button>
+        </div>
+
+        <!-- Seller NAV (same links, just styled like Site.Master nav) -->
+        <nav class="ee-navlinks seller-navlinks">
+            <a href="SellerDashboard.aspx">Dashboard</a>
+            <a href="SellerOrders.aspx">Orders</a>
+            <a href="Inventory.aspx">Inventory</a>
+            <a href="SellerWasteTracker.aspx">Waste Tracker</a>
+            <a href="SellerFeedback.aspx">Feedback</a>
+            <a href="SellerMessages.aspx">Messages</a>
+            <a href="StoreDetails.aspx">Store Profile</a>
+        </nav>
+
+        <!-- Actions (same icons) -->
+        <div class="ee-actions">
+            <a class="ee-icon-btn" href="SellerMessages.aspx" title="Messages">💬</a>
+            <a class="ee-icon-btn" href="Inventory.aspx" title="Inventory">📦</a>
+            <a class="ee-icon-btn" href="StoreDetails.aspx" title="Account">👤</a>
+        </div>
+
+    </div>
+</header>
 
     <!-- MAIN CONTENT -->
     <main class="ee-container ee-main-wrap">
