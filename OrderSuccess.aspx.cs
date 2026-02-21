@@ -50,7 +50,7 @@ namespace Business_App_Dev
                 var items = Session["PENDING_ORDER_" + sessionId] as List<PurchasedItem>;
                 if (items == null || items.Count == 0)
                 {
-                    ShowError(T("Order data not found (Session expired). Try paying again, or implement Orders table to persist."));
+                    ShowError(T("Order data not found (Session expired). Try paying again."));
                     return;
                 }
 
@@ -65,10 +65,10 @@ namespace Business_App_Dev
                 lblTotal.Text = total.ToString("0.00");
                 lblPayStatus.Text = T("PAID");
 
-                // translate purchased item names (receipt + email)
+                // Translate product names for UI + email
                 items = TranslatePurchasedItemsIfNeeded(items);
 
-                // group by seller for receipt UI
+                // Build seller groups for receipt UI
                 var groups = BuildSellerGroups(items);
                 if (groups.Count == 0)
                 {
@@ -78,13 +78,13 @@ namespace Business_App_Dev
 
                 int userId = GetUserIdOrThrow();
 
-                // Save to Orders + OrderItems (with your table schema)
+                // Save order + items
                 int orderId = SaveOrderIfNotExists(sessionId, userId, total, items);
 
-                // ✅ Send email ONCE (DB-based, safe against refresh)
+                // Send email ONCE (DB flag)
                 TrySendOrderConfirmationEmail(orderId, userId, total, items);
 
-                // Clear purchased items from cart
+                // Remove purchased items from cart
                 RemovePurchasedItemsFromCart(items);
 
                 // Bind UI
@@ -92,7 +92,7 @@ namespace Business_App_Dev
                 rptSellerGroups.DataBind();
                 ApplyRepeaterTranslations(rptSellerGroups);
 
-                // Cleanup pending session data
+                // Cleanup
                 Session.Remove("PENDING_ORDER_" + sessionId);
                 Session.Remove("PENDING_ORDER_TOTAL_" + sessionId);
             }
@@ -198,9 +198,9 @@ namespace Business_App_Dev
             return items;
         }
 
-        /* =========================
-         * USER / PROFILE LINK
-         * ========================= */
+        // =========================
+        // USER / SESSION
+        // =========================
         private int GetUserIdOrThrow()
         {
             if (Session["UserID"] == null)
@@ -212,14 +212,18 @@ namespace Business_App_Dev
             return userId;
         }
 
-        /* =========================
-         * SAVE ORDER (Orders + OrderItems)
-         * ========================= */
+        private string ConnStr()
+        {
+            return ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
+        }
+
+        // =========================
+        // SAVE ORDER (dbo.Orders + dbo.OrderItems) - matches your schema
+        // =========================
         private int SaveOrderIfNotExists(string stripeSessionId, int userId, decimal total, List<PurchasedItem> items)
         {
             int existing = GetOrderIdByStripeSession(stripeSessionId);
-            if (existing > 0)
-                return existing;
+            if (existing > 0) return existing;
 
             var productIds = items.Select(i => i.ProductID).Distinct().ToList();
             var productSellerMap = LoadSellerInfoForProducts(productIds);
@@ -231,14 +235,21 @@ namespace Business_App_Dev
 
                 try
                 {
-                    // Matches your Orders columns:
-                    // (UserID, StripeSessionId, TotalAmount, PayStatus, CreatedAt, UpdatedAt, OrderStatus, SellerID)
+                    // dbo.Orders columns (from your screenshot):
+                    // OrderID (identity)
+                    // UserID (int not null)
+                    // StripeSessionId (nvarchar 200 not null, unique)
+                    // TotalAmount (decimal)
+                    // PayStatus (nvarchar 30)
+                    // CreatedAt (datetime default getdate())
+                    // OrderStatus (nvarchar 30 default 'Confirmed')
+                    // UpdatedAt (datetime2 default sysutcdatetime())
+                    // SellerID (int null)
+                    // + EmailSent (bit) [we will add]
                     string insertOrderSql = @"
-INSERT INTO dbo.Orders
-(UserID, StripeSessionId, TotalAmount, PayStatus, CreatedAt, UpdatedAt, OrderStatus, SellerID)
+INSERT INTO dbo.Orders (UserID, StripeSessionId, TotalAmount, PayStatus, OrderStatus, SellerID)
 OUTPUT INSERTED.OrderID
-VALUES
-(@UserID, @StripeSessionId, @TotalAmount, @PayStatus, GETDATE(), SYSDATETIME(), @OrderStatus, NULL);";
+VALUES (@UserID, @StripeSessionId, @TotalAmount, @PayStatus, @OrderStatus, NULL);";
 
                     int orderId;
                     using (SqlCommand cmd = new SqlCommand(insertOrderSql, con, tx))
@@ -251,6 +262,9 @@ VALUES
                         orderId = Convert.ToInt32(cmd.ExecuteScalar());
                     }
 
+                    // dbo.OrderItems columns (from your screenshot):
+                    // OrderItemID (identity)
+                    // OrderID, ProductID, ProductName, Quantity, UnitPrice, LineTotal, SellerID
                     string insertItemSql = @"
 INSERT INTO dbo.OrderItems
 (OrderID, ProductID, ProductName, Quantity, UnitPrice, LineTotal, SellerID)
@@ -303,9 +317,9 @@ VALUES
             }
         }
 
-        /* =========================
-         * STRIPE VERIFY
-         * ========================= */
+        // =========================
+        // STRIPE VERIFY
+        // =========================
         private bool VerifyStripePaid(string sessionId, out string error)
         {
             error = "";
@@ -348,9 +362,9 @@ VALUES
             }
         }
 
-        /* =========================
-         * CLEAR CART (PURCHASED ITEMS)
-         * ========================= */
+        // =========================
+        // CART CLEAR
+        // =========================
         private void RemovePurchasedItemsFromCart(List<PurchasedItem> purchasedItems)
         {
             if (purchasedItems == null || purchasedItems.Count == 0) return;
@@ -365,36 +379,25 @@ VALUES
             Session[CART_SELECTED_INIT_KEY] = false;
         }
 
-        private string ConnStr()
-        {
-            return ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
-        }
-
         // =========================
-        // EMAIL (DB FLAG: Orders.EmailSent)
+        // EMAIL (DB FLAG) - requires Orders.EmailSent
         // =========================
         private void TrySendOrderConfirmationEmail(int orderId, int userId, decimal total, List<PurchasedItem> items)
         {
-            // If column doesn't exist yet, this will throw - you can wrap in try.
-            // But since you will run ALTER TABLE, it should be fine.
+            // If you haven't added EmailSent column yet, this will throw.
+            // Add it with: ALTER TABLE dbo.Orders ADD EmailSent BIT NOT NULL CONSTRAINT DF_Orders_EmailSent DEFAULT(0);
+            if (IsEmailAlreadySent(orderId)) return;
 
-            if (IsEmailAlreadySent(orderId))
-                return;
-
-            // load buyer
             LoadBuyerProfile(userId, out string email, out string fullName);
+            if (string.IsNullOrWhiteSpace(email)) return;
 
-            if (string.IsNullOrWhiteSpace(email))
-                return;
-
-            // subject + html (translated)
             string subject = T($"EcoEats Order Confirmed — ORD-{orderId}");
             string html = BuildOrderConfirmationHtml(orderId, fullName, total, items);
 
-            // send (MailKit)
+            // send
             SendEmailHtml(email, subject, html);
 
-            // mark sent in DB
+            // mark as sent
             MarkEmailSent(orderId);
         }
 
@@ -429,6 +432,7 @@ VALUES
             email = "";
             name = "";
 
+            // Matches your dbo.Users table
             string sql = "SELECT TOP 1 [Email], [FullName] FROM dbo.[Users] WHERE [UserID]=@uid;";
 
             using (SqlConnection con = new SqlConnection(ConnStr()))
@@ -455,7 +459,7 @@ VALUES
             string host = ConfigurationManager.AppSettings["EmailSmtpHost"] ?? "smtp.gmail.com";
             int port = int.TryParse(ConfigurationManager.AppSettings["EmailSmtpPort"], out int p) ? p : 587;
             string user = ConfigurationManager.AppSettings["EmailSmtpUser"] ?? "";
-            string pass = ConfigurationManager.AppSettings["EmailSmtpPass"] ?? "";
+            string pass = (ConfigurationManager.AppSettings["EmailSmtpPass"] ?? "").Replace(" ", "");
 
             if (string.IsNullOrWhiteSpace(fromEmail) ||
                 string.IsNullOrWhiteSpace(user) ||
@@ -537,9 +541,9 @@ VALUES
 </div>";
         }
 
-        /* =========================
-         * SELLER GROUPS UI
-         * ========================= */
+        // =========================
+        // SELLER GROUPS (receipt UI)
+        // =========================
         private List<SellerGroupVM> BuildSellerGroups(List<PurchasedItem> items)
         {
             var productIds = items.Select(i => i.ProductID).Distinct().ToList();
@@ -651,11 +655,13 @@ WHERE p.ProductID IN ({inClause});";
             if (lnk != null)
                 lnk.NavigateUrl = BuildDirectionsUrl(group);
 
-            var iframe = e.Item.FindControl("mapFrameSeller") as HtmlIframe;
+            // If your markup uses <iframe runat="server" id="mapFrameSeller">
+            // you can declare it as HtmlGenericControl or the HtmlIframe wrapper
+            var iframe = e.Item.FindControl("mapFrameSeller") as HtmlControl;
             if (iframe != null)
                 iframe.Attributes["src"] = BuildMapEmbedSrc(group);
 
-            // per-group label translation
+            // translate per-group UI labels
             string lang = GetLang();
             if (!lang.Equals("en", StringComparison.OrdinalIgnoreCase))
             {
@@ -717,7 +723,7 @@ WHERE p.ProductID IN ({inClause});";
             lblError.Text = msg;
         }
 
-        // ===== View Models for multi-seller UI =====
+        // ===== View Models =====
         [Serializable]
         private class SellerGroupVM
         {
@@ -749,12 +755,6 @@ WHERE p.ProductID IN ({inClause});";
             public string PickupWindow { get; set; }
             public decimal? Latitude { get; set; }
             public decimal? Longitude { get; set; }
-        }
-
-        // WebForms doesn't have HtmlIframe by default; this avoids compile errors
-        public class HtmlIframe : HtmlControl
-        {
-            public HtmlIframe() : base("iframe") { }
         }
     }
 }
