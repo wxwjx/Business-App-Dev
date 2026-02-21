@@ -68,7 +68,45 @@
                 closeLogoutModal();
             }
         });
+        function togglePw(serverId) {
+            // serverId is like 'txtPassword' (ASP control ID)
+            var el = document.getElementById("<%= txtPassword.ClientID %>");
+            var el2 = document.getElementById("<%= txtConfirm.ClientID %>");
+
+        // decide which one they clicked
+        var target = null;
+        if (serverId === "txtPassword") target = el;
+        if (serverId === "txtConfirm") target = el2;
+        if (!target) return;
+
+        target.type = (target.type === "password") ? "text" : "password";
+    }
+
+    function updatePasswordUI() {
+        const pwEl = document.getElementById("<%= txtPassword.ClientID %>");
+            const cfEl = document.getElementById("<%= txtConfirm.ClientID %>");
+            if (!pwEl || !cfEl) return;
+
+            const pw = pwEl.value || "";
+            const confirm = cfEl.value || "";
+
+            const hasLen = pw.length >= 8;
+            const hasLetter = /[A-Za-z]/.test(pw);
+            const hasNum = /[0-9]/.test(pw);
+            const hasSpecial = /[^A-Za-z0-9]/.test(pw);
+
+            document.getElementById("ruleLen").classList.toggle("ok", hasLen);
+            document.getElementById("ruleLetter").classList.toggle("ok", hasLetter);
+            document.getElementById("ruleNum").classList.toggle("ok", hasNum);
+            document.getElementById("ruleSpecial").classList.toggle("ok", hasSpecial);
+
+            // optional: confirm match highlight (if you want)
+            // you can add a "ruleMatch" too, but you didn't ask, so I leave it.
+        }
+
+        window.addEventListener("load", updatePasswordUI);
     </script>
+
 </head>
 <body>
     <form id="form1" runat="server">
@@ -156,9 +194,57 @@
                 <div style="font-size:14px; color:#555; line-height:1.7;">
                     <p><strong>User ID:</strong> <asp:Label ID="lblUserId" runat="server" Text=""></asp:Label></p>
 
-                    <p style="margin-bottom:10px;">
-                        <strong>Password:</strong> •••••••• (hidden for security)
-                    </p>
+                        <p style="margin-bottom:8px;">
+                            <strong>Password:</strong>
+                            <asp:Label ID="lblPassword" runat="server" Text="•••••••• (secured)"></asp:Label>
+                        </p>
+
+                        <div class="pw-wrap">
+
+                            <!-- New Password -->
+                            <div class="pw-field">
+                                <asp:TextBox ID="txtPassword" runat="server"
+                                    TextMode="Password"
+                                    CssClass="pw-input"
+                                    placeholder="New password"
+                                    onkeyup="updatePasswordUI()"
+                                    onchange="updatePasswordUI()" />
+                                <button type="button" class="pw-eye" onclick="togglePw('txtPassword')">👁</button>
+                            </div>
+
+                            <!-- Confirm Password -->
+                            <div class="pw-field" style="margin-top:10px;">
+                                <asp:TextBox ID="txtConfirm" runat="server"
+                                    TextMode="Password"
+                                    CssClass="pw-input"
+                                    placeholder="Confirm new password"
+                                    onkeyup="updatePasswordUI()"
+                                    onchange="updatePasswordUI()" />
+                                <button type="button" class="pw-eye" onclick="togglePw('txtConfirm')">👁</button>
+                            </div>
+
+                            <!-- Rules -->
+                            <div class="pw-rules">
+                                <div class="pw-rule" id="ruleLen">At least 8 characters</div>
+                                <div class="pw-rule" id="ruleLetter">Contains a letter (A–Z)</div>
+                                <div class="pw-rule" id="ruleNum">Contains a number (0–9)</div>
+                                <div class="pw-rule" id="ruleSpecial">Contains a special character (!@#...)</div>
+                            </div>
+
+                            <!-- Confirm Button -->
+                            <asp:Button ID="btnUpdatePassword" runat="server"
+                                Text="Confirm Password Change"
+                                OnClick="btnUpdatePassword_Click"
+                                CssClass="pw-confirm-full" />
+
+                            <!-- Message -->
+                            <asp:Label ID="lblPwdMsg" runat="server"
+                                CssClass="pw-msg"
+                                Style="display:none;"
+                                EnableViewState="false"></asp:Label>
+
+                        </div>
+
 
                     <!-- Buttons row: left = delete, right = logout -->
                     <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:6px;">
