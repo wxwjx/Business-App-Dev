@@ -223,10 +223,12 @@
     <Content Include="App_Data\EcoEats_log.ldf">
       <DependentUpon>EcoEats.mdf</DependentUpon>
     </Content>
+    <Content Include="Chatbot.aspx" />
     <Content Include="Content\EcoEatsRegister.css" />
     <Content Include="Content\OrderView.css" />
     <Content Include="Content\SellerPending.css" />
     <Content Include="ForgotPassword.aspx" />
+    <Content Include="Game.aspx" />
     <Content Include="login.aspx" />
     <Content Include="Content\AdminCommon.css" />
     <Content Include="Cart.aspx" />
@@ -364,12 +366,26 @@
       <DependentUpon>Admin.Master</DependentUpon>
     </Compile>
     <Compile Include="App_Code\NotificationHelper.cs" />
+    <Compile Include="Chatbot.aspx.cs">
+      <DependentUpon>Chatbot.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Chatbot.aspx.designer.cs">
+      <DependentUpon>Chatbot.aspx</DependentUpon>
+    </Compile>
     <Compile Include="ForgotPassword.aspx.cs">
       <DependentUpon>ForgotPassword.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="ForgotPassword.aspx.designer.cs">
       <DependentUpon>ForgotPassword.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Game.aspx.cs">
+      <DependentUpon>Game.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Game.aspx.designer.cs">
+      <DependentUpon>Game.aspx</DependentUpon>
     </Compile>
     <Compile Include="login.aspx.cs">
       <DependentUpon>login.aspx</DependentUpon>
