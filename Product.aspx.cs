@@ -201,8 +201,13 @@ namespace Business_App_Dev
                 return;
             }
 
+            // ✅ AI Recommended
+            int userId = 0;
+            if (Session["UserID"] != null)
+                int.TryParse(Session["UserID"].ToString(), out userId);
+
             var aiProducts = hasLoc
-                ? ProductModel.GetProductsWithDistanceAndSearch(userLat, userLng, keyword)
+                ? ProductModel.GetAIRecommended(userId, userLat, userLng, keyword)
                 : ProductModel.GetProductsBySearch(keyword);
 
             aiProducts = TranslateProductsIfNeeded(aiProducts);

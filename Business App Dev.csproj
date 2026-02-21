@@ -572,8 +572,10 @@
       <DependentUpon>AdminAnalytics.asmx</DependentUpon>
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Services\EmbeddingStore.cs" />
     <Compile Include="Services\TranslationCache.cs" />
     <Compile Include="Services\TranslationService.cs" />
+    <Compile Include="Services\VectorMath.cs" />
     <Compile Include="SignUp.aspx.cs">
       <DependentUpon>SignUp.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>

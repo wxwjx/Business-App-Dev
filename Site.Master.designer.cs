@@ -87,15 +87,6 @@ namespace Business_App_Dev
         protected global::System.Web.UI.HtmlControls.HtmlAnchor navHelp;
 
         /// <summary>
-        /// navFeedback control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.HtmlControls.HtmlAnchor navFeedback;
-
-        /// <summary>
         /// ddlLanguage control.
         /// </summary>
         /// <remarks>

@@ -47,7 +47,6 @@
                 <a href="OrderHistory.aspx" id="navOrders" runat="server">Orders</a>
                 <a href="About.aspx" id="navAbout" runat="server">About Us</a>
                 <a href="#" id="navHelp" runat="server">Help</a>
-                <a href="Feedback.aspx" id="navFeedback" runat="server">Feedback</a>
             </nav>
 
             <div class="ee-actions">
@@ -78,7 +77,7 @@
         <asp:ContentPlaceHolder ID="MainContent" runat="server" />
     </main>
 
-    <!-- FOOTER (MUST BE AFTER CONTENT) -->
+    <!-- FOOTER -->
     <footer class="lp-footer">
         <div class="lp-footer-inner">
             <div>
@@ -95,7 +94,6 @@
                 <a href="Product.aspx">Browse Deals</a>
                 <a href="OrderHistory.aspx">Your Orders</a>
                 <a href="About.aspx">About EcoEats</a>
-                <a href="Feedback.aspx">Feedback</a>
                 <a href="Profile.aspx">Profile</a>
                 <a href="RegisterSeller.aspx">Become a Seller</a>
             </div>

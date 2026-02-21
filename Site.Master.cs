@@ -20,7 +20,7 @@ namespace Business_App_Dev
                     item.Selected = true;
                 }
 
-                // Optional: highlight active tab automatically
+                // Highlight active tab automatically
                 string path = (Request.Url.AbsolutePath ?? "").ToLowerInvariant();
 
                 if (path.EndsWith("/product") || path.EndsWith("/product.aspx"))
@@ -29,8 +29,6 @@ namespace Business_App_Dev
                     navOrders.Attributes["class"] = "active";
                 else if (path.Contains("about"))
                     navAbout.Attributes["class"] = "active";
-                else if (path.Contains("feedback"))
-                    navFeedback.Attributes["class"] = "active";
             }
         }
 
