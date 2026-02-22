@@ -14,14 +14,11 @@ namespace Business_App_Dev
 
             if (!IsPostBack)
             {
-                if (ddlLanguage != null && ddlLanguage.Items != null)
+                var item = ddlLanguage.Items.FindByValue(lang);
+                if (item != null)
                 {
-                    var item = ddlLanguage.Items.FindByValue(lang);
-                    if (item != null)
-                    {
-                        ddlLanguage.ClearSelection();
-                        item.Selected = true;
-                    }
+                    ddlLanguage.ClearSelection();
+                    item.Selected = true;
                 }
             }
 
@@ -30,7 +27,6 @@ namespace Business_App_Dev
 
         protected void ddlLanguage_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (ddlLanguage == null) return;
             Session["LANG"] = (ddlLanguage.SelectedValue ?? "en").ToLowerInvariant();
             Response.Redirect(Request.RawUrl, true);
         }
@@ -39,11 +35,11 @@ namespace Business_App_Dev
         {
             string path = (Request.Url.AbsolutePath ?? "").ToLowerInvariant();
 
-            if (navHome != null) navHome.Attributes.Remove("class");
-            if (navOrders != null) navOrders.Attributes.Remove("class");
-            if (navAbout != null) navAbout.Attributes.Remove("class");
-            if (navHelp != null) navHelp.Attributes.Remove("class");
-            if (navFeedback != null) navFeedback.Attributes.Remove("class");
+            navHome.Attributes.Remove("class");
+            navOrders.Attributes.Remove("class");
+            navAbout.Attributes.Remove("class");
+            navHelp.Attributes.Remove("class");
+            navFeedback.Attributes.Remove("class");
 
             if (path.EndsWith("/product") || path.EndsWith("/product.aspx"))
                 navHome.Attributes["class"] = "active";
@@ -51,8 +47,6 @@ namespace Business_App_Dev
                 navOrders.Attributes["class"] = "active";
             else if (path.Contains("about"))
                 navAbout.Attributes["class"] = "active";
-            else if (path.Contains("help"))
-                navHelp.Attributes["class"] = "active";
             else if (path.Contains("feedback"))
                 navFeedback.Attributes["class"] = "active";
         }

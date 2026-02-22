@@ -1,223 +1,200 @@
 ﻿using System;
-using System.Data.SqlClient;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Web.UI;
-using System.Web.UI.WebControls;
 
-namespace Business_App_Dev
+namespace Business_App_Dev.Pages
 {
-    public partial class Product : Page
+    public partial class ProductPage : Page
     {
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!IsPostBack)
             {
-                SetActivePillCss();
-                TryLoad();
+                if (ViewState["tab"] == null) ViewState["tab"] = "recommended";
             }
+
+            BindProducts();
         }
 
-        protected void btnRefreshByLoc_Click(object sender, EventArgs e) => TryLoad();
-        protected void txtSearch_TextChanged(object sender, EventArgs e) => TryLoad();
-
-        protected void btnClearSearch_Click(object sender, EventArgs e)
+        private void BindProducts()
         {
-            txtSearch.Text = "";
-            TryLoad();
-        }
+            string tab = (ViewState["tab"] as string) ?? "recommended";
+            string keyword = (txtSearch.Text ?? "").Trim();
 
-        protected void btnAI_Click(object sender, EventArgs e)
-        {
-            txtSearch.Text = "";
-            hfMode.Value = "AI";
-            hfCategory.Value = "";
-            pnlCategories.Visible = false;
-            SetActivePillCss();
-            TryLoad();
-        }
+            double? lat = TryParseDouble(hfLat.Value);
+            double? lng = TryParseDouble(hfLng.Value);
 
-        protected void btnDeals_Click(object sender, EventArgs e)
-        {
-            txtSearch.Text = "";
-            hfMode.Value = "DEALS";
-            hfCategory.Value = "";
-            pnlCategories.Visible = false;
-            SetActivePillCss();
-            TryLoad();
-        }
+            int userId = GetUserId();
 
-        protected void btnCats_Click(object sender, EventArgs e)
-        {
-            txtSearch.Text = "";
-            hfMode.Value = "CATS";
-            pnlCategories.Visible = !pnlCategories.Visible;
+            List<ProductModel> rows;
 
-            if (pnlCategories.Visible)
+            if (tab == "deals")
             {
-                rptCategories.DataSource = ProductModel.GetCategories();
-                rptCategories.DataBind();
+                if (lat.HasValue && lng.HasValue && lat.Value != 0 && lng.Value != 0)
+                    rows = ProductModel.GetDailyBestDealsWithDistance(lat.Value, lng.Value, keyword);
+                else
+                    rows = ProductModel.GetDailyBestDeals(keyword);
             }
-
-            SetActivePillCss();
-            TryLoad();
-        }
-
-        protected void rptCategories_ItemCommand(object source, RepeaterCommandEventArgs e)
-        {
-            if (e.CommandName == "Pick")
+            else if (tab == "categories")
             {
-                txtSearch.Text = "";
-                hfMode.Value = "CATS";
-                hfCategory.Value = (e.CommandArgument ?? "").ToString();
-                pnlCategories.Visible = true;
-                SetActivePillCss();
-                TryLoad();
+                if (lat.HasValue && lng.HasValue && lat.Value != 0 && lng.Value != 0)
+                    rows = ProductModel.GetProductsWithDistanceAndSearch(lat.Value, lng.Value, keyword);
+                else
+                    rows = ProductModel.GetProductsBySearch(keyword);
+
+                rows = rows
+                    .OrderBy(x => x.Category ?? "")
+                    .ThenByDescending(x => x.DiscountPercent)
+                    .ThenBy(x => x.DistanceKm)
+                    .ThenByDescending(x => x.CreatedAt)
+                    .ToList();
             }
+            else
+            {
+                if (lat.HasValue && lng.HasValue && lat.Value != 0 && lng.Value != 0)
+                    rows = ProductModel.GetAIRecommended(userId, lat.Value, lng.Value, keyword);
+                else
+                    rows = ProductModel.GetAIRecommended(userId, 0, 0, keyword);
+            }
+
+            if (rows == null) rows = new List<ProductModel>();
+
+            var vm = rows.Select(p => new ProductCardVm
+            {
+                ProductID = p.ProductID,
+                ProductName = p.ProductName ?? "",
+                Subtitle = p.Subtitle ?? "",
+                ImageUrl = string.IsNullOrWhiteSpace(p.ImageUrl) ? "Content/img/placeholder.jpg" : p.ImageUrl,
+                PriceNow = p.PriceNow,
+                PriceOld = p.PriceOld,
+                Rating = p.Rating,
+                Reviews = p.Reviews,
+                DistanceKm = (p.DistanceKm >= 9999) ? (double?)null : p.DistanceKm,
+                ExpiryHours = p.ExpiryHours,
+                CO2Saved = p.CO2Saved,
+                DiscountPercent = p.DiscountPercent,
+                Quantity = p.Quantity,
+                Category = p.Category ?? "",
+                CreatedAt = p.CreatedAt,
+                SellerID = p.SellerID,
+
+                StoreName = GetShopNameFallback(p)
+            }).ToList();
+
+            rptProducts.DataSource = vm;
+            rptProducts.DataBind();
         }
 
-        protected void btnClearCategory_Click(object sender, EventArgs e)
+        private static string GetShopNameFallback(ProductModel p)
+        {
+            var prop = p.GetType().GetProperty("ShopName");
+            if (prop != null)
+            {
+                var v = prop.GetValue(p, null);
+                var s = v == null ? "" : v.ToString();
+                if (!string.IsNullOrWhiteSpace(s)) return s;
+            }
+
+            var prop2 = p.GetType().GetProperty("StoreName");
+            if (prop2 != null)
+            {
+                var v = prop2.GetValue(p, null);
+                var s = v == null ? "" : v.ToString();
+                if (!string.IsNullOrWhiteSpace(s)) return s;
+            }
+
+            return "EcoEats";
+        }
+
+        protected void btnSearch_Click(object sender, EventArgs e)
+        {
+            BindProducts();
+        }
+
+        protected void btnClear_Click(object sender, EventArgs e)
         {
             txtSearch.Text = "";
-            hfCategory.Value = "";
-            pnlCategories.Visible = false;
-            hfMode.Value = "AI";
-            SetActivePillCss();
-            TryLoad();
+            BindProducts();
         }
 
-        private string Keyword() => (txtSearch.Text ?? "").Trim();
-
-        private double Lat
+        protected void btnTabRecommended_Click(object sender, EventArgs e)
         {
-            get { double.TryParse(hfLat.Value, out double v); return v; }
+            ViewState["tab"] = "recommended";
+            BindProducts();
         }
 
-        private double Lng
+        protected void btnTabDeals_Click(object sender, EventArgs e)
         {
-            get { double.TryParse(hfLng.Value, out double v); return v; }
+            ViewState["tab"] = "deals";
+            BindProducts();
         }
 
-        private bool HasLoc
+        protected void btnTabCategories_Click(object sender, EventArgs e)
         {
-            get
-            {
-                if (hfHasLoc.Value != "1") return false;
-
-                double lat = Lat, lng = Lng;
-                if (double.IsNaN(lat) || double.IsNaN(lng)) return false;
-                if (Math.Abs(lat) <= 0.0001 || Math.Abs(lng) <= 0.0001) return false;
-
-                return true;
-            }
+            ViewState["tab"] = "categories";
+            BindProducts();
         }
 
-        // ✅ FIXED: supports multiple session keys so UserId is not accidentally 0
-        private int UserId
+        protected void btnGeoRefresh_Click(object sender, EventArgs e)
         {
-            get
-            {
-                object v =
-                    Session["UserID"] ??
-                    Session["UserId"] ??
-                    Session["MemberID"] ??
-                    Session["MemberId"] ??
-                    Session["UID"];
-
-                if (v == null) return 0;
-                int.TryParse(v.ToString(), out int id);
-                return id;
-            }
+            BindProducts();
         }
 
-        private void SetActivePillCss()
-        {
-            btnAI.CssClass = "ee-pill";
-            btnDeals.CssClass = "ee-pill";
-            btnCats.CssClass = "ee-pill";
-
-            string mode = (hfMode.Value ?? "AI").ToUpperInvariant();
-            if (mode == "AI") btnAI.CssClass = "ee-pill active";
-            else if (mode == "DEALS") btnDeals.CssClass = "ee-pill active";
-            else if (mode == "CATS") btnCats.CssClass = "ee-pill active";
-        }
-
-        private void TryLoad()
+        private int GetUserId()
         {
             try
             {
-                LoadProducts();
-                pnlError.Visible = false;
-                lblError.Text = "";
+                if (Session["UserID"] != null)
+                {
+                    int id;
+                    if (int.TryParse(Session["UserID"].ToString(), out id)) return id;
+                }
+                if (Session["UserId"] != null)
+                {
+                    int id;
+                    if (int.TryParse(Session["UserId"].ToString(), out id)) return id;
+                }
+                if (Session["MemberID"] != null)
+                {
+                    int id;
+                    if (int.TryParse(Session["MemberID"].ToString(), out id)) return id;
+                }
             }
-            catch (SqlException ex)
-            {
-                pnlError.Visible = true;
-                lblError.Text = "Database error: " + ex.Message;
-            }
-            catch (Exception ex)
-            {
-                pnlError.Visible = true;
-                lblError.Text = "Error: " + ex.Message;
-            }
+            catch { }
+            return 0;
         }
 
-        private void LoadProducts()
+        private static double? TryParseDouble(string s)
         {
-            string kw = Keyword();
+            if (string.IsNullOrWhiteSpace(s)) return null;
+            double v;
+            if (double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out v)) return v;
+            if (double.TryParse(s, NumberStyles.Any, CultureInfo.CurrentCulture, out v)) return v;
+            return null;
+        }
 
-            if (!string.IsNullOrWhiteSpace(kw))
-            {
-                pnlSearchResults.Visible = true;
-                pnlBrowse.Visible = false;
+        public class ProductCardVm
+        {
+            public int ProductID { get; set; }
+            public string ProductName { get; set; }
+            public string Subtitle { get; set; }
+            public string ImageUrl { get; set; }
+            public decimal PriceNow { get; set; }
+            public decimal PriceOld { get; set; }
+            public double Rating { get; set; }
+            public int Reviews { get; set; }
+            public double? DistanceKm { get; set; }
+            public int ExpiryHours { get; set; }
+            public double CO2Saved { get; set; }
+            public int DiscountPercent { get; set; }
+            public int Quantity { get; set; }
+            public string Category { get; set; }
+            public DateTime CreatedAt { get; set; }
+            public int SellerID { get; set; }
 
-                pnlCategories.Visible = false;
-                hfCategory.Value = "";
-
-                var results = HasLoc
-                    ? ProductModel.SearchProductsWithDistance(Lat, Lng, kw, scope: "ALL")
-                    : ProductModel.SearchProducts(kw, scope: "ALL");
-
-                rptSearch.DataSource = results;
-                rptSearch.DataBind();
-
-                litSearchMeta.Text = "Showing results for <b>" + Server.HtmlEncode(kw) + "</b>";
-                return;
-            }
-
-            pnlSearchResults.Visible = false;
-            pnlBrowse.Visible = true;
-            litSearchMeta.Text = "";
-
-            string mode = (hfMode.Value ?? "AI").ToUpperInvariant();
-            string category = (hfCategory.Value ?? "").Trim();
-
-            if (mode == "DEALS")
-            {
-                var deals = HasLoc
-                    ? ProductModel.GetDailyBestDealsWithDistance(Lat, Lng, "")
-                    : ProductModel.GetDailyBestDeals("");
-
-                ProductRepeater.DataSource = deals;
-                ProductRepeater.DataBind();
-                return;
-            }
-
-            if (mode == "CATS")
-            {
-                var cats = HasLoc
-                    ? ProductModel.GetProductsByCategoryWithDistance(Lat, Lng, category, "")
-                    : ProductModel.GetProductsByCategory(category, "");
-
-                ProductRepeater.DataSource = cats;
-                ProductRepeater.DataBind();
-                return;
-            }
-
-            var ai = HasLoc
-                ? ProductModel.GetAIRecommended(UserId, Lat, Lng, "")
-                : ProductModel.GetAIRecommended(UserId, 0, 0, "");
-
-            ProductRepeater.DataSource = ai;
-            ProductRepeater.DataBind();
+            public string StoreName { get; set; }
         }
     }
 }

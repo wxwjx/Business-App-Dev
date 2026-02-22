@@ -32,13 +32,11 @@
                 <div class="ee-brand-name">EcoEats</div>
             </div>
 
-            <!-- Search REMOVED -->
-
             <nav class="ee-navlinks">
                 <a href="Product.aspx" id="navHome" runat="server">Home</a>
                 <a href="OrderHistory.aspx" id="navOrders" runat="server">Orders</a>
                 <a href="About.aspx" id="navAbout" runat="server">About Us</a>
-                <a href="Help.aspx" id="navHelp" runat="server">Help</a>
+                <a href="Product.aspx?openHelp=1" id="navHelp" runat="server">Help</a>
                 <a href="Feedback.aspx" id="navFeedback" runat="server">Feedback</a>
             </nav>
 
@@ -102,59 +100,58 @@
 
     <asp:ContentPlaceHolder ID="ScriptsContent" runat="server" />
 
-    <!-- AUTO TRANSLATE WHOLE PAGE -->
     <script>
-        (function () {
-            const lang = "<%= (Session["LANG"] ?? "en").ToString() %>".toLowerCase();
-        if (!lang || lang === "en") return;
+    (function () {
+      const lang = "<%= (Session["LANG"] ?? "en").ToString() %>".toLowerCase();
+      if (!lang || lang === "en") return;
 
-        const SKIP_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "IFRAME", "TEXTAREA", "CODE", "PRE"]);
-        const norm = s => (s || "").replace(/\s+/g, " ").trim();
+      const SKIP_TAGS = new Set(["SCRIPT","STYLE","NOSCRIPT","IFRAME","TEXTAREA","CODE","PRE"]);
+      const norm = s => (s||"").replace(/\s+/g," ").trim();
 
-        function skip(el) {
-            if (!el || el.nodeType !== 1) return true;
-            if (SKIP_TAGS.has(el.tagName)) return true;
-            if (el.closest && el.closest("[data-notranslate='1']")) return true;
-            return false;
+      function skip(el){
+        if(!el||el.nodeType!==1) return true;
+        if(SKIP_TAGS.has(el.tagName)) return true;
+        if(el.closest&&el.closest("[data-notranslate='1']")) return true;
+        return false;
+      }
+
+      const textNodes=[];
+      const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{
+        acceptNode(n){
+          const t=norm(n.nodeValue);
+          if(!t) return NodeFilter.FILTER_REJECT;
+          const p=n.parentElement;
+          if(!p||skip(p)) return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
         }
+      });
+      while(walker.nextNode()) textNodes.push(walker.currentNode);
 
-        const textNodes = [];
-        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
-            acceptNode(n) {
-                const t = norm(n.nodeValue);
-                if (!t) return NodeFilter.FILTER_REJECT;
-                const p = n.parentElement;
-                if (!p || skip(p)) return NodeFilter.FILTER_REJECT;
-                return NodeFilter.FILTER_ACCEPT;
-            }
-        });
-        while (walker.nextNode()) textNodes.push(walker.currentNode);
+      const attrTargets=[];
+      document.querySelectorAll("input,button,a,[title],[placeholder]").forEach(el=>{
+        if(skip(el)) return;
+        const ph=el.getAttribute&&el.getAttribute("placeholder");
+        if(ph&&norm(ph)) attrTargets.push({el,attr:"placeholder",text:norm(ph)});
+        const tt=el.getAttribute&&el.getAttribute("title");
+        if(tt&&norm(tt)) attrTargets.push({el,attr:"title",text:norm(tt)});
+        if(el.tagName==="INPUT"){
+          const type=(el.getAttribute("type")||"").toLowerCase();
+          if(type==="button"||type==="submit"){
+            const v=norm(el.value);
+            if(v) attrTargets.push({el,attr:"value",text:v});
+          }
+        }
+      });
 
-        const attrTargets = [];
-        document.querySelectorAll("input,button,a,[title],[placeholder]").forEach(el => {
-            if (skip(el)) return;
-            const ph = el.getAttribute && el.getAttribute("placeholder");
-            if (ph && norm(ph)) attrTargets.push({ el, attr: "placeholder", text: norm(ph) });
-            const tt = el.getAttribute && el.getAttribute("title");
-            if (tt && norm(tt)) attrTargets.push({ el, attr: "title", text: norm(tt) });
-            if (el.tagName === "INPUT") {
-                const type = (el.getAttribute("type") || "").toLowerCase();
-                if (type === "button" || type === "submit") {
-                    const v = norm(el.value);
-                    if (v) attrTargets.push({ el, attr: "value", text: v });
-                }
-            }
-        });
+      const all=[];
+      textNodes.forEach(n=>all.push(norm(n.nodeValue)));
+      attrTargets.forEach(a=>all.push(a.text));
 
-        const all = [];
-        textNodes.forEach(n => all.push(norm(n.nodeValue)));
-        attrTargets.forEach(a => all.push(a.text));
+      const uniq=[];
+      const seen=new Set();
+      all.forEach(t=>{if(!seen.has(t)){seen.add(t);uniq.push(t);}});
 
-        const uniq = [];
-        const seen = new Set();
-        all.forEach(t => { if (!seen.has(t)) { seen.add(t); uniq.push(t); } });
-
-        fetch("<%= ResolveUrl("~/TranslateHandler.ashx") %>", {
+      fetch("<%= ResolveUrl("~/TranslateHandler.ashx") %>", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ targetLang: lang, texts: uniq })
@@ -179,106 +176,6 @@
                         }
                     });
                 });
-        })();
-    </script>
-
-    <!-- ===== Help Chat (OpenAI) ===== -->
-    <div id="eeChatFab" style="position:fixed; right:18px; bottom:18px; z-index:99999;">
-        <button type="button" id="eeChatOpenBtn"
-            style="width:54px;height:54px;border-radius:999px;border:none;cursor:pointer;background:#16a34a;color:#fff;font-weight:900;box-shadow:0 12px 30px rgba(0,0,0,.18);">
-            ?
-        </button>
-    </div>
-
-    <div id="eeChatPanel" style="position:fixed;right:18px;bottom:84px;width:340px;max-width:calc(100vw - 36px);
-        background:#fff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.18);
-        z-index:99999;display:none;">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:#111827;color:#fff;">
-            <div style="font-weight:900;">EcoEats Help</div>
-            <button type="button" id="eeChatCloseBtn" style="border:none;background:transparent;color:#fff;font-size:18px;cursor:pointer;">✕</button>
-        </div>
-
-        <div id="eeChatMsgs" style="height:320px;overflow:auto;padding:12px;background:#f9fafb;">
-            <div style="display:flex;gap:10px;margin-bottom:10px;">
-                <div style="max-width:85%;padding:10px 12px;border-radius:14px;background:#fff;border:1px solid #e5e7eb;">
-                    Hi 👋 Ask me anything about EcoEats (orders, sellers, checkout, location, etc.).
-                </div>
-            </div>
-        </div>
-
-        <div style="display:flex;gap:8px;padding:10px;border-top:1px solid #e5e7eb;background:#fff;">
-            <input id="eeChatInput" type="text" placeholder="Type your question…"
-                style="flex:1;border:1px solid #e5e7eb;border-radius:12px;padding:10px 12px;outline:none;" />
-            <button type="button" id="eeChatSendBtn"
-                style="border:none;background:#16a34a;color:#fff;font-weight:900;border-radius:12px;padding:10px 14px;cursor:pointer;">
-                Send
-            </button>
-        </div>
-    </div>
-
-    <script>
-        (function () {
-            var openBtn = document.getElementById("eeChatOpenBtn");
-            var closeBtn = document.getElementById("eeChatCloseBtn");
-            var panel = document.getElementById("eeChatPanel");
-            var msgs = document.getElementById("eeChatMsgs");
-            var input = document.getElementById("eeChatInput");
-            var sendBtn = document.getElementById("eeChatSendBtn");
-
-            function bubble(text, me) {
-                var row = document.createElement("div");
-                row.style.display = "flex";
-                row.style.marginBottom = "10px";
-                row.style.justifyContent = me ? "flex-end" : "flex-start";
-
-                var b = document.createElement("div");
-                b.style.maxWidth = "85%";
-                b.style.padding = "10px 12px";
-                b.style.borderRadius = "14px";
-                b.style.whiteSpace = "pre-wrap";
-                b.style.wordBreak = "break-word";
-
-                if (me) {
-                    b.style.background = "#16a34a";
-                    b.style.color = "#fff";
-                    b.style.fontWeight = "800";
-                } else {
-                    b.style.background = "#fff";
-                    b.style.border = "1px solid #e5e7eb";
-                    b.style.color = "#111827";
-                }
-
-                b.textContent = text;
-                row.appendChild(b);
-                msgs.appendChild(row);
-                msgs.scrollTop = msgs.scrollHeight;
-            }
-
-            async function send() {
-                var q = (input.value || "").trim();
-                if (!q) return;
-
-                bubble(q, true);
-                input.value = "";
-
-                try {
-                    var resp = await fetch("<%= ResolveUrl("~/HelpChat.ashx") %>", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ message: q })
-                    });
-
-                    var data = await resp.json();
-                    bubble((data && data.answer) ? data.answer : "No answer.", false);
-                } catch (e) {
-                    bubble("Sorry—server error.", false);
-                }
-            }
-
-            openBtn.onclick = function () { panel.style.display = "block"; setTimeout(function () { input.focus(); }, 50); };
-            closeBtn.onclick = function () { panel.style.display = "none"; };
-            sendBtn.onclick = send;
-            input.addEventListener("keydown", function (e) { if (e.key === "Enter") send(); });
         })();
     </script>
 
