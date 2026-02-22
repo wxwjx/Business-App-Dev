@@ -24,7 +24,6 @@
     }
 
     .sd-right-col{ display:flex; flex-direction:column; gap: 14px; }
-
     .sd-actions-top{ display:flex; justify-content:flex-end; gap:10px; }
 
     .sd-btn{
@@ -201,6 +200,8 @@
 <div class="sd-container">
 
     <asp:HiddenField ID="hfEditMode" runat="server" Value="0" />
+    <asp:HiddenField ID="hfPendingSave" runat="server" ClientIDMode="Static" Value="0" />
+    <asp:HiddenField ID="hfOrigAddr" runat="server" ClientIDMode="Static" Value="" />
 
     <asp:Button ID="btnLogoutTrigger" runat="server"
         Text=""
@@ -213,7 +214,6 @@
         <h2>Store Details</h2>
     </div>
 
-    <!-- VIEW MODE -->
     <div id="viewSection">
         <div class="sd-grid">
 
@@ -329,7 +329,6 @@
         </div>
     </div>
 
-    <!-- EDIT MODE -->
     <div id="editSection" style="display:none" class="sd-card">
 
         <div class="sd-field">
@@ -349,7 +348,9 @@
 
         <div class="sd-field">
             <label>Store Address</label>
-            <asp:TextBox ID="tbAddress" runat="server" CssClass="sd-input" />
+            <asp:TextBox ID="tbAddress" runat="server" CssClass="sd-input"
+                onblur="sdGeocodeAddress(false)"
+                onchange="sdGeocodeAddress(false)" />
         </div>
 
         <div class="sd-field">
@@ -466,8 +467,15 @@
         </div>
 
         <div class="sd-actions">
-            <asp:Button ID="btnSave" runat="server" Text="Save Changes" CssClass="sd-btn sd-save-btn" OnClick="btnSave_Click" />
-            <asp:Button ID="btnCancel" runat="server" Text="Cancel" CssClass="sd-btn sd-cancel-btn" OnClick="btnCancel_Click" />
+            <asp:Button ID="btnSave" runat="server" Text="Save Changes"
+                CssClass="sd-btn sd-save-btn"
+                OnClick="btnSave_Click"
+                UseSubmitBehavior="false"
+                OnClientClick="return sdBeforeSave();" />
+
+            <asp:Button ID="btnCancel" runat="server" Text="Cancel"
+                CssClass="sd-btn sd-cancel-btn"
+                OnClick="btnCancel_Click" />
         </div>
 
     </div>
@@ -518,6 +526,9 @@
             edit.style.setProperty("display", "block", "important");
             window.scrollTo({ top: 0, behavior: "smooth" });
             ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].forEach(toggleDay);
+
+            var addr = document.getElementById("<%= tbAddress.ClientID %>")?.value || "";
+            document.getElementById("hfOrigAddr").value = (addr || "").trim();
         } else {
             edit.style.setProperty("display", "none", "important");
             view.style.setProperty("display", "block", "important");
@@ -537,6 +548,17 @@
     }
 
     let map, marker;
+
+    function sdSetMap(lat, lng) {
+        if (!map || !marker) return;
+        const p = { lat: lat, lng: lng };
+        map.setCenter(p);
+        map.setZoom(16);
+        marker.setPosition(p);
+
+        const locText = document.getElementById("locText");
+        if (locText) locText.innerHTML = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
+    }
 
     function initMap() {
         const latStr = document.getElementById("hfLat")?.value || "";
@@ -572,15 +594,83 @@
 
         if (!hasLatLng && addr) {
             const geocoder = new google.maps.Geocoder();
-            geocoder.geocode({ address: addr }, (results, status) => {
+            geocoder.geocode({ address: addr, componentRestrictions: { country: "SG" } }, (results, status) => {
                 if (status === "OK" && results[0]) {
                     const p = results[0].geometry.location;
                     map.setCenter(p);
                     map.setZoom(16);
                     marker.setPosition(p);
+
+                    const newLat = p.lat();
+                    const newLng = p.lng();
+                    document.getElementById("hfLat").value = String(newLat);
+                    document.getElementById("hfLng").value = String(newLng);
+                    if (locText) locText.innerHTML = `Lat: ${newLat.toFixed(6)}, Lng: ${newLng.toFixed(6)}`;
                 }
             });
         }
+    }
+
+    function sdGeocodeAddress(isForSave) {
+        const input = document.getElementById("<%= tbAddress.ClientID %>");
+        if (!input) { if (isForSave) sdDoSavePostback(); return; }
+
+        const addr = (input.value || "").trim();
+        if (!addr) { if (isForSave) sdDoSavePostback(); return; }
+
+        const geocoder = new google.maps.Geocoder();
+        geocoder.geocode(
+            { address: addr, componentRestrictions: { country: "SG" } },
+            function (results, status) {
+                if (status === "OK" && results[0]) {
+                    const loc = results[0].geometry.location;
+                    const lat = loc.lat();
+                    const lng = loc.lng();
+
+                    document.getElementById("hfLat").value = String(lat);
+                    document.getElementById("hfLng").value = String(lng);
+                    document.getElementById("hfAddr").value = addr;
+
+                    if (map && marker) {
+                        map.setCenter(loc);
+                        map.setZoom(16);
+                        marker.setPosition(loc);
+                    }
+
+                    const locText = document.getElementById("locText");
+                    if (locText) locText.innerHTML = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
+                }
+
+                if (isForSave) sdDoSavePostback();
+            }
+        );
+    }
+
+    function sdDoSavePostback() {
+        document.getElementById("hfPendingSave").value = "0";
+        __doPostBack("<%= btnSave.UniqueID %>", "");
+    }
+
+    function sdBeforeSave() {
+        if (document.getElementById("hfPendingSave").value === "1") return false;
+
+        const input = document.getElementById("<%= tbAddress.ClientID %>");
+        const addrNow = ((input?.value) || "").trim();
+        const addrOrig = (document.getElementById("hfOrigAddr").value || "").trim();
+
+        const lat = parseFloat(document.getElementById("hfLat")?.value || "");
+        const lng = parseFloat(document.getElementById("hfLng")?.value || "");
+        const hasLatLng = !isNaN(lat) && !isNaN(lng) && Math.abs(lat) > 0.0001 && Math.abs(lng) > 0.0001;
+
+        if (!addrNow) return true;
+
+        if (addrNow !== addrOrig || !hasLatLng) {
+            document.getElementById("hfPendingSave").value = "1";
+            sdGeocodeAddress(true);
+            return false;
+        }
+
+        return true;
     }
 
     function sdTogglePw(serverId) {

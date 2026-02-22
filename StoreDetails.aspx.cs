@@ -55,6 +55,8 @@ namespace Business_App_Dev
             tbDescription.Text = store.Description;
 
             ApplyPickupWindowToUI(store.PickupWindow);
+
+            hfOrigAddr.Value = (store.Address ?? "").Trim();
         }
 
         private StoreDetailsModel GetStoreDetails(int sellerId)
@@ -110,6 +112,12 @@ WHERE SellerID = @SellerID", conn))
             string description = (tbDescription.Text ?? "").Trim();
             string pickupWindow = BuildPickupWindowText();
 
+            double lat = 0, lng = 0;
+            double.TryParse(hfLat.Value, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out lat);
+            double.TryParse(hfLng.Value, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out lng);
+
             using (SqlConnection conn = new SqlConnection(ConnStr))
             {
                 conn.Open();
@@ -125,6 +133,8 @@ WHERE SellerID = @SellerID", conn))
 UPDATE Seller
 SET ShopName = @ShopName,
     Address = @Address,
+    Latitude = @Lat,
+    Longitude = @Lng,
     PickupWindow = @PickupWindow,
     Email = @Email,
     Phone = @Phone,
@@ -133,6 +143,8 @@ WHERE SellerID = @SellerID;", conn))
                 {
                     cmd.Parameters.AddWithValue("@ShopName", shopName);
                     cmd.Parameters.AddWithValue("@Address", address);
+                    cmd.Parameters.AddWithValue("@Lat", lat);
+                    cmd.Parameters.AddWithValue("@Lng", lng);
                     cmd.Parameters.AddWithValue("@PickupWindow", pickupWindow);
                     cmd.Parameters.AddWithValue("@Email", newEmail);
                     cmd.Parameters.AddWithValue("@Phone", phone);
@@ -161,7 +173,9 @@ WHERE Email = @OldEmail;", conn))
             LoadStore(sellerId);
 
             ScriptManager.RegisterStartupScript(this, this.GetType(),
-                "backToView", "toggleEdit(false);", true);
+                "backToView",
+                "toggleEdit(false); setTimeout(function(){ try{ if(window.map && window.marker){ var lat=parseFloat(document.getElementById('hfLat').value||''); var lng=parseFloat(document.getElementById('hfLng').value||''); if(!isNaN(lat)&&!isNaN(lng)){ var p={lat:lat,lng:lng}; map.setCenter(p); map.setZoom(16); marker.setPosition(p); var t=document.getElementById('locText'); if(t){ t.innerHTML='Lat: '+lat.toFixed(6)+', Lng: '+lng.toFixed(6); } } } }catch(e){} }, 50);",
+                true);
         }
 
         protected void btnCancel_Click(object sender, EventArgs e)

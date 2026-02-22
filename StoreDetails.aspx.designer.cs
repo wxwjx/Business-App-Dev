@@ -24,6 +24,24 @@ namespace Business_App_Dev
         protected global::System.Web.UI.WebControls.HiddenField hfEditMode;
 
         /// <summary>
+        /// hfPendingSave control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HiddenField hfPendingSave;
+
+        /// <summary>
+        /// hfOrigAddr control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HiddenField hfOrigAddr;
+
+        /// <summary>
         /// btnLogoutTrigger control.
         /// </summary>
         /// <remarks>
@@ -445,7 +463,5 @@ namespace Business_App_Dev
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Button btnCancel;
-
-
     }
 }
