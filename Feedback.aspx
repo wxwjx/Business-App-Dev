@@ -1,56 +1,51 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="Feedback.aspx.cs" Inherits="Business_App_Dev.Feedback" %>
-
-<!DOCTYPE html>
-<html>
-<head runat="server">
-    <title>EcoEats - Feedback</title>
+﻿<%@ Page Title="EcoEats - Feedback"
+    Language="C#"
+    MasterPageFile="~/Site.Master"
+    AutoEventWireup="true"
+    CodeBehind="Feedback.aspx.cs"
+    Inherits="Business_App_Dev.Feedback" %>
+<asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <link href="<%= ResolveUrl("~/Content/EcoEats.css") %>" rel="stylesheet" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-</head>
-<body>
-<form id="form1" runat="server">
 
-    <!-- TOP BAR (same as Product) -->
-    <header class="ee-topbar">
-        <div class="ee-container ee-topbar-inner">
+    <style>
+        .ee-hero-green {
+            width: 100%;
+            padding: 40px 0;
+            background: linear-gradient(90deg, #2f7d32, #16967f);
+            color: #fff;
+        }
 
-            <div class="ee-brand">
-                <div class="ee-logo">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M19 3c-6.5.7-11 3.8-13.8 7.2C2.6 13.4 2.2 17.2 4 21c3.8 1.8 7.6 1.4 10.8-1.2C18.2 17 21.3 12.5 22 6c.1-1.2-.7-2.9-3-3z"></path>
-                    </svg>
-                </div>
-                <div class="ee-brand-name">EcoEats</div>
-            </div>
+        .ee-hero-green h1 {
+            color: #fff;
+            font-weight: 800;
+            font-size: 48px;
+            margin: 0 0 10px;
+        }
 
-            <div class="ee-search">
-                <input type="text" placeholder="Search for meals, restaurants..." />
-            </div>
+        .ee-hero-green p {
+            color: rgba(255,255,255,0.9);
+            font-size: 18px;
+            margin: 0;
+        }
 
-            <nav class="ee-nav">
-                <a href="Product.aspx">Home</a>
-                <a href="Order.aspx">Orders</a>
-                <a href="Profile.aspx">Profile</a>
-                <a href="About.aspx">About Us</a>
-                <a class="active" href="Feedback.aspx">Feedback</a>
-                <a href="#">Rate Sellers</a>
-            </nav>
+        @media (max-width: 640px) {
+            .ee-hero-green h1 { font-size: 34px; }
+            .ee-hero-green { padding: 30px 0; }
+        }
+    </style>
+</asp:Content>
+<asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
 
-            <div class="ee-actions">
-                <a class="ee-icon-btn" href="#" title="Notifications">🔔</a>
-                <a class="ee-icon-btn" href="Cart.aspx" title="Cart">🛒</a>
-                <a class="ee-icon-btn" href="Profile.aspx" title="Account">👤</a>
-            </div>
-
-        </div>
-    </header>
+    <%-- If Site.Master already has a ScriptManager, delete this line to avoid "Only one ScriptManager" error --%>
+    <asp:ScriptManager ID="ScriptManager1" runat="server" />
 
     <!-- HERO -->
-    <section class="ee-hero">
+    <section class="ee-hero ee-hero-green">
         <div class="ee-container">
             <h1>Feedback</h1>
             <p>Share your EcoEats experience and manage your past feedback.</p>
@@ -99,7 +94,6 @@
                     <asp:ListItem Text="Pickup" Value="Pickup" />
                     <asp:ListItem Text="Support" Value="Support" />
                     <asp:ListItem Text="Variety" Value="Variety" />
-
                 </asp:DropDownList>
             </div>
 
@@ -153,14 +147,15 @@
                                 <span style="margin-left:6px; font-size:13px; color:#888;">
                                     <%# Eval("Rating") %>/5
                                 </span>
-                               <asp:Label ID="lblTag" runat="server"
-           Text='<%# Convert.ToString(Eval("Tag")) %>'
-           Visible='<%# !String.IsNullOrEmpty(Convert.ToString(Eval("Tag"))) %>'
-           Style="margin-left:10px; padding:2px 8px; border-radius:999px;
-                  background:#e8f5e9; font-size:11px; color:#1b5e20;">
-</asp:Label>
 
+                                <asp:Label ID="lblTag" runat="server"
+                                    Text='<%# Convert.ToString(Eval("Tag")) %>'
+                                    Visible='<%# !String.IsNullOrEmpty(Convert.ToString(Eval("Tag"))) %>'
+                                    Style="margin-left:10px; padding:2px 8px; border-radius:999px;
+                                           background:#e8f5e9; font-size:11px; color:#1b5e20;">
+                                </asp:Label>
                             </div>
+
                             <div style="font-size:11px; color:#999;">
                                 <%# String.Format("{0:dd MMM yyyy}", Eval("CreatedAt")) %>
                             </div>
@@ -179,6 +174,7 @@
                                             Style="margin-right:12px; color:#007bff; text-decoration:none;">
                                 ✏ Edit
                             </asp:LinkButton>
+
                             <asp:LinkButton ID="lnkDelete" runat="server"
                                             CommandName="delete"
                                             CommandArgument='<%# Eval("FeedbackID") %>'
@@ -189,19 +185,16 @@
                         </div>
                     </div>
                 </ItemTemplate>
-                <FooterTemplate>
-                </FooterTemplate>
             </asp:Repeater>
+
             <asp:Panel ID="pnlNoFeedback" runat="server" Visible="false"
-           Style="margin-top:16px; padding:12px 16px;
-                  background:#fff8e1; border-radius:8px;
-                  color:#8a6d3b; font-size:14px;">
-    You haven't submitted any feedback yet.
-</asp:Panel>
+                       Style="margin-top:16px; padding:12px 16px;
+                              background:#fff8e1; border-radius:8px;
+                              color:#8a6d3b; font-size:14px;">
+                You haven't submitted any feedback yet.
+            </asp:Panel>
         </div>
 
     </section>
 
-</form>
-</body>
-</html>
+</asp:Content>
