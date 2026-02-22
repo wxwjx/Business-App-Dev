@@ -7,7 +7,6 @@
 <head runat="server">
     <title><%: Page.Title %> - EcoEats</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-
     <link href="<%= ResolveUrl("~/Content/EcoEats.css") %>" rel="stylesheet" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -20,7 +19,6 @@
 <body>
 <form id="form1" runat="server">
 
-    <!-- TOP BAR -->
     <header class="ee-topbar">
         <div class="ee-container ee-topbar-inner">
 
@@ -33,15 +31,6 @@
                 <div class="ee-brand-name">EcoEats</div>
             </div>
 
-            <div class="ee-search">
-                <asp:TextBox ID="txtSearch" runat="server"
-                    placeholder="Search meals or shop..."
-                    AutoPostBack="true"
-                    OnTextChanged="txtSearch_TextChanged" />
-                <asp:Button ID="btnSearch" runat="server" Text="Search" OnClick="btnSearch_Click" />
-            </div>
-
-            <!-- NAV LINKS -->
             <nav class="ee-navlinks">
                 <a href="Product.aspx" id="navHome" runat="server">Home</a>
                 <a href="OrderHistory.aspx" id="navOrders" runat="server">Orders</a>
@@ -63,7 +52,9 @@
                     <asp:ListItem Value="ta">TA</asp:ListItem>
                 </asp:DropDownList>
 
-                <a class="ee-icon-btn" href="#" title="Notifications">🔔</a>
+                <!-- Optional: link user to Product page where search exists -->
+                <a class="ee-icon-btn" href="Product.aspx" title="Search">🔍</a>
+
                 <a class="ee-icon-btn" href="Messages.aspx" title="Messages">💬</a>
                 <a class="ee-icon-btn" href="Cart.aspx" title="Cart">🛒</a>
                 <a class="ee-icon-btn" href="Profile.aspx" title="Account">👤</a>
@@ -72,36 +63,13 @@
         </div>
     </header>
 
-    <!-- PAGE CONTENT -->
     <main class="ee-page">
         <asp:ContentPlaceHolder ID="MainContent" runat="server" />
     </main>
 
-    <!-- FOOTER -->
     <footer class="lp-footer">
-        <div class="lp-footer-inner">
-            <div>
-                <div class="lp-brand">
-                    <span class="lp-brand-badge">🌱</span>
-                    EcoEats
-                </div>
-                <p>
-                    EcoEats connects users with surplus meals from local sellers — helping you save money while reducing food waste.
-                </p>
-            </div>
-
-            <div class="lp-links">
-                <a href="Product.aspx">Browse Deals</a>
-                <a href="OrderHistory.aspx">Your Orders</a>
-                <a href="About.aspx">About EcoEats</a>
-                <a href="Profile.aspx">Profile</a>
-                <a href="RegisterSeller.aspx">Become a Seller</a>
-            </div>
-        </div>
-
         <div class="lp-footnote">
             <div>© <%: DateTime.Now.Year %> EcoEats. All rights reserved.</div>
-            <div>Made for NYP DBFT • Enterprise Dev Project</div>
         </div>
     </footer>
 

@@ -619,6 +619,20 @@ ORDER BY DistanceKm ASC, p.DiscountPercent DESC, p.CreatedAt DESC;", conn))
 
             return list;
         }
+        // =========================================================
+        // COMPAT WRAPPERS (so Product.aspx.cs works)
+        // =========================================================
+        public static List<ProductModel> SearchProducts(string keyword, string scope = "ALL")
+        {
+            // scope not used; kept for signature compatibility
+            return GetProductsBySearch(keyword);
+        }
+
+        public static List<ProductModel> SearchProductsWithDistance(double lat, double lng, string keyword, string scope = "ALL")
+        {
+            // scope not used; kept for signature compatibility
+            return GetProductsWithDistanceAndSearch(lat, lng, keyword);
+        }
 
         // =========================================================
         // CRUD (KEEP - used by Inventory/AddNewProduct)
