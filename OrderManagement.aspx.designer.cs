@@ -11,17 +11,71 @@ namespace Business_App_Dev
 {
 
 
-    public partial class EcoEatsAdmin
+    public partial class OrdersManagement
     {
 
         /// <summary>
-        /// rptApps control.
+        /// lblTab control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Repeater rptApps;
+        protected global::System.Web.UI.WebControls.Label lblTab;
+
+        /// <summary>
+        /// btnTabPending control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnTabPending;
+
+        /// <summary>
+        /// btnTabAccepted control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnTabAccepted;
+
+        /// <summary>
+        /// btnTabPreparing control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnTabPreparing;
+
+        /// <summary>
+        /// btnTabCompleted control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnTabCompleted;
+
+        /// <summary>
+        /// btnTabRejected control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnTabRejected;
+
+        /// <summary>
+        /// gvOrders control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.GridView gvOrders;
 
         /// <summary>
         /// lblMsg control.
@@ -33,84 +87,30 @@ namespace Business_App_Dev
         protected global::System.Web.UI.WebControls.Label lblMsg;
 
         /// <summary>
-        /// cblRatings control.
+        /// hfRejectOrderId control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.CheckBoxList cblRatings;
+        protected global::System.Web.UI.WebControls.HiddenField hfRejectOrderId;
 
         /// <summary>
-        /// btnApplyRatingFilter control.
+        /// tbRejectReason control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Button btnApplyRatingFilter;
+        protected global::System.Web.UI.WebControls.TextBox tbRejectReason;
 
         /// <summary>
-        /// btnClearRatingFilter control.
+        /// btnConfirmReject control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.LinkButton btnClearRatingFilter;
-
-        /// <summary>
-        /// btnExportFeedback control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.LinkButton btnExportFeedback;
-
-        /// <summary>
-        /// rptFeedback control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Repeater rptFeedback;
-
-        /// <summary>
-        /// lblFeedbackMsg control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblFeedbackMsg;
-
-        /// <summary>
-        /// ddlChatStatus control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.DropDownList ddlChatStatus;
-
-        /// <summary>
-        /// rptChats control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Repeater rptChats;
-
-        /// <summary>
-        /// lblChatMsg control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblChatMsg;
+        protected global::System.Web.UI.WebControls.Button btnConfirmReject;
     }
 }

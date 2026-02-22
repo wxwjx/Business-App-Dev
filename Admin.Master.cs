@@ -54,7 +54,7 @@ namespace Business_App_Dev
 
                 // Option B: a status column EscalationStatus = 'Escalated'
                 int escalations = Convert.ToInt32(ExecScalar(conn,
-                    "SELECT COUNT(*) FROM ChatEscalations WHERE Status IN ('Pending', 'Urgent')"));
+                    "SELECT COUNT(*) FROM ChatbotLog WHERE IsEscalated = 1 AND Status = 'OPEN'"));
 
 
                 // Apply to UI (format)

@@ -264,6 +264,7 @@
     <Content Include="Inventory.aspx" />
     <Content Include="Landing.aspx" />
     <Content Include="Content\OrderHistory.css" />
+    <Content Include="OrderManagement.aspx" />
     <Content Include="OrderView.aspx" />
     <Content Include="RateOrder.aspx" />
     <Content Include="RegisterCustomer.aspx" />
@@ -455,6 +456,13 @@
     </Compile>
     <Compile Include="Landing.aspx.designer.cs">
       <DependentUpon>Landing.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="OrderManagement.aspx.cs">
+      <DependentUpon>OrderManagement.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="OrderManagement.aspx.designer.cs">
+      <DependentUpon>OrderManagement.aspx</DependentUpon>
     </Compile>
     <Compile Include="OrderView.aspx.cs">
       <DependentUpon>OrderView.aspx</DependentUpon>

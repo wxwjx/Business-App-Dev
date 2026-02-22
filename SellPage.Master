@@ -92,16 +92,12 @@
             </div>
         </div>
 
-        <!-- Search (UI only) -->
-        <div class="ee-search">
-            <input type="text" placeholder="Search inventory, orders..." />
-            <button type="button">Search</button>
-        </div>
+        
 
         <!-- Seller NAV (same links, just styled like Site.Master nav) -->
         <nav class="ee-navlinks seller-navlinks">
             <a href="SellerDashboard.aspx">Dashboard</a>
-            <a href="SellerOrders.aspx">Orders</a>
+            <a href="OrderManagement.aspx">Orders</a>
             <a href="Inventory.aspx">Inventory</a>
             <a href="SellerWasteTracker.aspx">Waste Tracker</a>
             <a href="SellerFeedback.aspx">Feedback</a>

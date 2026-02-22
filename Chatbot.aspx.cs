@@ -8,7 +8,7 @@ namespace Business_App_Dev
     public partial class Chatbot : System.Web.UI.Page
     {
         private string ConnStr =>
-            ConfigurationManager.ConnectionStrings["EcoEatsDB"].ConnectionString;
+            ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
 
         protected void Page_Load(object sender, EventArgs e)
         {
@@ -33,14 +33,20 @@ namespace Business_App_Dev
 
             litChat.Text += UserBubble(userMsg);
 
+            bool isEscalation = IsEscalationMessage(userMsg);
+
             string reply = GetBotReply(userMsg);
             litChat.Text += BotBubble(reply);
 
-            LogChat(userMsg, reply);
+            // Only log if NOT already logged inside EscalateToAdmin
+            if (!isEscalation)
+            {
+                LogChat(userMsg, reply);
+            }
+
+            AppendLatestAdminReplyIfAny();
 
             txtMsg.Text = "";
-
-            // Auto-scroll chat to bottom
             ClientScript.RegisterStartupScript(this.GetType(), "scrollChat", "scrollChatToBottom();", true);
         }
 
@@ -60,7 +66,7 @@ namespace Business_App_Dev
         // ================= INTENT LOGIC =================
         private string GetBotReply(string msg)
         {
-            string lower = msg.ToLower();
+            string lower = (msg ?? "").ToLower();
 
             if (lower.Contains("latest order"))
                 return ShowLatestOrder();
@@ -72,8 +78,8 @@ namespace Business_App_Dev
                 return ShowMyFeedback();
 
             if (lower.Contains("give feedback") || (lower.Contains("feedback") && lower.Contains("give")))
-                return "📝 <b>Want to leave feedback?</b><br/><br/>" + "<a href='Feedback.aspx' class='chatLinkBtn'>👉 Click here to leave feedback</a>";
-
+                return "📝 <b>Want to leave feedback?</b><br/><br/>" +
+                       "<a href='Feedback.aspx' class='chatLinkBtn'>👉 Click here to leave feedback</a>";
 
             if (lower.Contains("edit feedback") || lower.Contains("delete feedback"))
                 return "To edit or delete feedback, please visit: <a href='Feedback.aspx'>Manage Feedback</a>";
@@ -84,16 +90,16 @@ namespace Business_App_Dev
             if (lower.Contains("chat history"))
                 return ShowChatHistory();
 
+            // 🔥 ESCALATION TRIGGER
             if (lower.Contains("admin") || lower.Contains("support") || lower.Contains("enquir"))
-                return "💬 <b>Need help from Admin Support?</b><br/><br/>" +
-                       "<a href='#' class='chatLinkBtn'>👉 Chat with Admin Support</a>";
+            {
+                EscalateToAdmin(msg);
+                return "💬 <b>Ok!</b> I’ve sent your enquiry to Admin Support.<br/>" +
+                       "They will reply here once they respond ✅";
+            }
 
-
-            // fallback
             return "🤔 I'm not sure how to help with that.<br/><br/>" +
-        "Would you like to speak to Admin Support?<br/><br/>" +
-        "<a href='#' class='chatLinkBtn'>👉 Chat with Admin Support</a>";
-
+                   "If you need human help, type <b>admin support</b>.";
         }
 
         // ================= ORDERS =================
@@ -237,10 +243,10 @@ namespace Business_App_Dev
 
             using (SqlConnection conn = new SqlConnection(ConnStr))
             using (SqlCommand cmd = new SqlCommand(@"
-                SELECT TOP 5 UserMessage, BotReply, CreatedAt
-                FROM [dbo].[ChatbotLog]
-                WHERE UserId = @uid
-                ORDER BY CreatedAt DESC;", conn))
+        SELECT TOP 8 UserMessage, BotReply, AdminReply, Status, CreatedAt
+        FROM [dbo].[ChatbotLog]
+        WHERE UserId = @uid
+        ORDER BY CreatedAt DESC;", conn))
             {
                 cmd.Parameters.AddWithValue("@uid", userId);
                 conn.Open();
@@ -253,22 +259,31 @@ namespace Business_App_Dev
                     while (reader.Read())
                     {
                         sb.Append($"• You: {Server.HtmlEncode(reader["UserMessage"].ToString())}<br/>");
-                        sb.Append($"  Bot: {reader["BotReply"]}<br/><br/>");
+                        sb.Append($"  Bot: {reader["BotReply"]}<br/>");
+
+                        if (reader["AdminReply"] != DBNull.Value)
+                        {
+                            sb.Append($"  <b>Admin:</b> {Server.HtmlEncode(reader["AdminReply"].ToString())}<br/>");
+                        }
+
+                        sb.Append($"  <small>Status: {reader["Status"]} | {Convert.ToDateTime(reader["CreatedAt"]).ToShortDateString()}</small><br/><br/>");
                     }
                 }
             }
+
             return sb.ToString();
         }
 
         // ================= LOGGING =================
-        private void LogChat(string userMsg, string botReply)
+        private int LogChat(string userMsg, string botReply, bool isEscalated = false, string status = "BOT")
         {
             try
             {
                 using (SqlConnection conn = new SqlConnection(ConnStr))
                 using (SqlCommand cmd = new SqlCommand(@"
-                    INSERT INTO [dbo].[ChatbotLog] (UserId, UserMessage, BotReply)
-                    VALUES (@uid, @msg, @reply);", conn))
+            INSERT INTO [dbo].[ChatbotLog] (UserId, UserMessage, BotReply, IsEscalated, Status)
+            OUTPUT INSERTED.LogId
+            VALUES (@uid, @msg, @reply, @esc, @status);", conn))
                 {
                     object uid = DBNull.Value;
                     if (Session["UserID"] != null)
@@ -277,14 +292,18 @@ namespace Business_App_Dev
                     cmd.Parameters.AddWithValue("@uid", uid);
                     cmd.Parameters.AddWithValue("@msg", userMsg);
                     cmd.Parameters.AddWithValue("@reply", botReply);
+                    cmd.Parameters.AddWithValue("@esc", isEscalated);
+                    cmd.Parameters.AddWithValue("@status", status);
 
                     conn.Open();
-                    cmd.ExecuteNonQuery();
+                    int newId = Convert.ToInt32(cmd.ExecuteScalar());
+                    return newId;
                 }
             }
             catch
             {
-                // keep silent so chatbot still works even if logging fails
+                // chatbot still works even if logging fails
+                return 0;
             }
         }
 
@@ -297,6 +316,71 @@ namespace Business_App_Dev
         private string BotBubble(string msg)
         {
             return $"<div class='msg bot'>{msg}</div>";
+        }
+        private void EscalateToAdmin(string userMsg)
+        {
+            // must have user logged in
+            if (Session["UserID"] == null) return;
+
+            // 1) Log escalation and get the LogId
+            int logId = LogChat(
+                userMsg,
+                "Escalated to Admin Support.",
+                true,
+                "OPEN"
+            );
+
+            // 2) Add notification to Admin bell
+            // (Only if insert succeeded)
+            if (logId > 0)
+            {
+                string who = (Session["Name"] ?? Session["FullName"] ?? "Customer").ToString();
+                string shortMsg = userMsg ?? "";
+                if (shortMsg.Length > 80) shortMsg = shortMsg.Substring(0, 80) + "...";
+
+                NotificationHelper.Add(
+                    "Chat",
+                    "New Admin Enquiry",
+                    $"{who}: {shortMsg}",
+                    "chat",
+                    logId
+                );
+            }
+        }
+        private bool IsEscalationMessage(string msg)
+        {
+            string lower = (msg ?? "").ToLower();
+            return lower.Contains("admin") || lower.Contains("support") || lower.Contains("enquir");
+        }
+        private void AppendLatestAdminReplyIfAny()
+        {
+            if (Session["UserID"] == null) return;
+            string uid = Session["UserID"].ToString();
+
+            using (SqlConnection conn = new SqlConnection(ConnStr))
+            using (SqlCommand cmd = new SqlCommand(@"
+        SELECT TOP 1 AdminReply, CreatedAt
+        FROM dbo.ChatbotLog
+        WHERE UserId = @uid
+          AND IsEscalated = 1
+          AND AdminReply IS NOT NULL
+        ORDER BY CreatedAt DESC;", conn))
+            {
+                cmd.Parameters.AddWithValue("@uid", uid);
+                conn.Open();
+
+                using (var r = cmd.ExecuteReader())
+                {
+                    if (!r.Read()) return;
+
+                    string reply = r["AdminReply"].ToString();
+                    DateTime dt = Convert.ToDateTime(r["CreatedAt"]);
+
+                    litChat.Text += BotBubble(
+                        $"✅ <b>Admin Support replied</b> ({dt:dd MMM yyyy HH:mm}):<br/>{Server.HtmlEncode(reply)}"
+                    );
+                }
+            }
         }
     }
 }

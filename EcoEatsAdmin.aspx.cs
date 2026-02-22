@@ -359,14 +359,29 @@ EcoEats Team
 
         private void LoadChats()
         {
+            string filter = ddlChatStatus?.SelectedValue ?? "OPEN";
+
+            string where = "";
+            if (filter == "OPEN")
+                where = "WHERE c.IsEscalated = 1 AND c.Status = 'OPEN'";
+            else if (filter == "RESOLVED")
+                where = "WHERE c.IsEscalated = 1 AND c.Status = 'RESOLVED'";
+            else
+                where = "WHERE c.IsEscalated = 1";
+
             using (SqlConnection conn = new SqlConnection(_connStr))
-            using (SqlCommand cmd = new SqlCommand(@"
-                SELECT EscalationId, CustomerName, IssueTitle, Status, CreatedAt
-                FROM ChatEscalations
-                WHERE Status <> 'Resolved'
-                ORDER BY 
-                    CASE WHEN Status = 'Urgent' THEN 1 ELSE 2 END,
-                    CreatedAt DESC", conn))
+            using (SqlCommand cmd = new SqlCommand($@"
+        SELECT
+            c.LogId,
+            c.UserId,
+            ISNULL(u.FullName, 'User') AS CustomerName,
+            c.UserMessage AS IssueTitle,
+            c.CreatedAt,
+            c.Status
+        FROM ChatbotLog c
+        LEFT JOIN Users u ON u.UserID = TRY_CONVERT(int, c.UserId)
+        {where}
+        ORDER BY c.CreatedAt DESC;", conn))
             {
                 conn.Open();
                 DataTable dt = new DataTable();
@@ -435,11 +450,10 @@ EcoEats Team
         {
             using (SqlConnection conn = new SqlConnection(_connStr))
             using (SqlCommand cmd = new SqlCommand(@"
-                UPDATE ChatEscalations
-                SET AdminReply = @reply,
-                    RepliedAt = GETDATE(),
-                    Status = 'Resolved'
-                WHERE EscalationId = @id", conn))
+        UPDATE dbo.ChatbotLog
+        SET AdminReply = @reply,
+            Status = 'RESOLVED'
+        WHERE LogId = @id;", conn))
             {
                 cmd.Parameters.AddWithValue("@reply", reply);
                 cmd.Parameters.AddWithValue("@id", id);
@@ -448,11 +462,11 @@ EcoEats Team
                 cmd.ExecuteNonQuery();
             }
         }
-
-        private int? ActiveReplyId
+        public string GetInitial(object nameObj)
         {
-            get => ViewState["ActiveReplyId"] as int?;
-            set => ViewState["ActiveReplyId"] = value;
+            string s = Convert.ToString(nameObj) ?? "";
+            s = s.Trim();
+            return string.IsNullOrEmpty(s) ? "U" : s.Substring(0, 1).ToLower();
         }
 
         public bool IsReplying(object idObj)
@@ -461,6 +475,17 @@ EcoEats Team
             return Convert.ToInt32(idObj) == ActiveReplyId.Value;
         }
 
+        private int? ActiveReplyId
+        {
+            get => ViewState["ActiveReplyId"] as int?;
+            set => ViewState["ActiveReplyId"] = value;
+        }
+
+        protected void ddlChatStatus_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            ((HiddenField)Master.FindControl("hfActiveTab")).Value = "chat";
+            LoadChats();
+        }
         public bool HasTag(object tagObj)
         {
             return !string.IsNullOrWhiteSpace(Convert.ToString(tagObj));
