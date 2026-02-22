@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Configuration;
 using System.Data.SqlClient;
+using System.Security.Cryptography;
 using System.Web;
 using System.Web.Security;
 
@@ -38,7 +39,7 @@ namespace Business_App_Dev
                     conn.Open();
 
                     string sql = @"
-                        SELECT UserID, FullName, Email, IsPremium, MemberSince
+                        SELECT UserID, FullName, Email, Password, IsPremium, MemberSince
                         FROM Users
                         WHERE UserID = @UserID";
 
@@ -58,6 +59,11 @@ namespace Business_App_Dev
                             lblUserId.Text = reader["UserID"].ToString();
                             lblFullName.Text = reader["FullName"].ToString();
                             lblEmail.Text = reader["Email"].ToString();
+                            string storedHash = reader["Password"].ToString();
+                            if (!string.IsNullOrEmpty(storedHash) && storedHash.StartsWith("pbkdf2$"))
+                                lblPassword.Text = "•••••••• (secured)";
+                            else
+                                lblPassword.Text = "••••••••";
 
                             bool isPremium = reader["IsPremium"] != DBNull.Value &&
                                              Convert.ToBoolean(reader["IsPremium"]);
@@ -191,6 +197,109 @@ namespace Business_App_Dev
             }
 
             Response.Redirect("Login.aspx", true);
+        }
+        private string HashPasswordPbkdf2(string password)
+        {
+            const int iterations = 100000;
+            byte[] salt = new byte[16];
+
+            using (var rng = RandomNumberGenerator.Create())
+                rng.GetBytes(salt);
+
+            using (var pbkdf2 = new Rfc2898DeriveBytes(password, salt, iterations, HashAlgorithmName.SHA256))
+            {
+                byte[] hash = pbkdf2.GetBytes(32);
+                return $"pbkdf2${iterations}${Convert.ToBase64String(salt)}${Convert.ToBase64String(hash)}";
+            }
+        }
+
+        protected void btnUpdatePassword_Click(object sender, EventArgs e)
+        {
+            lblPwdMsg.Style["display"] = "none";
+            lblPwdMsg.Text = "";
+
+            if (Session["UserID"] == null)
+            {
+                Response.Redirect("Login.aspx");
+                return;
+            }
+
+            string pw = (txtPassword.Text ?? "").Trim();
+            string cf = (txtConfirm.Text ?? "").Trim();
+
+            bool hasLen = pw.Length >= 8;
+            bool hasLetter = System.Text.RegularExpressions.Regex.IsMatch(pw, "[A-Za-z]");
+            bool hasNum = System.Text.RegularExpressions.Regex.IsMatch(pw, "[0-9]");
+            bool hasSpecial = System.Text.RegularExpressions.Regex.IsMatch(pw, "[^A-Za-z0-9]");
+
+            if (!hasLen || !hasLetter || !hasNum || !hasSpecial)
+            {
+                lblPwdMsg.Style["display"] = "block";
+                lblPwdMsg.Style["background"] = "#FEF2F2";
+                lblPwdMsg.Style["border"] = "1px solid #FCA5A5";
+                lblPwdMsg.Style["color"] = "#991B1B";
+                lblPwdMsg.Text = "❌ Password does not meet the requirements.";
+                return;
+            }
+
+            if (pw != cf)
+            {
+                lblPwdMsg.Style["display"] = "block";
+                lblPwdMsg.Style["background"] = "#FEF2F2";
+                lblPwdMsg.Style["border"] = "1px solid #FCA5A5";
+                lblPwdMsg.Style["color"] = "#991B1B";
+                lblPwdMsg.Text = "❌ Confirm password does not match.";
+                return;
+            }
+
+            int userId = Convert.ToInt32(Session["UserID"]);
+
+            try
+            {
+                string newHash = HashPasswordPbkdf2(pw);
+
+                using (SqlConnection conn = new SqlConnection(_connStr))
+                {
+                    conn.Open();
+                    string sql = "UPDATE Users SET Password = @Password WHERE UserID = @UserID";
+
+                    using (SqlCommand cmd = new SqlCommand(sql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@Password", newHash);
+                        cmd.Parameters.AddWithValue("@UserID", userId);
+
+                        int rows = cmd.ExecuteNonQuery();
+                        if (rows == 0)
+                        {
+                            lblPwdMsg.Style["display"] = "block";
+                            lblPwdMsg.Style["background"] = "#FEF2F2";
+                            lblPwdMsg.Style["border"] = "1px solid #FCA5A5";
+                            lblPwdMsg.Style["color"] = "#991B1B";
+                            lblPwdMsg.Text = "❌ Update failed. User not found.";
+                            return;
+                        }
+                    }
+                }
+
+                lblPwdMsg.Style["display"] = "block";
+                lblPwdMsg.Style["background"] = "#ECFDF5";
+                lblPwdMsg.Style["border"] = "1px solid #86EFAC";
+                lblPwdMsg.Style["color"] = "#065F46";
+                lblPwdMsg.Text = "✅ Password changed successfully.";
+
+                txtPassword.Text = "";
+                txtConfirm.Text = "";
+
+                LoadProfile(); // refresh masked password label
+            }
+            catch (Exception ex)
+            {
+                lblPwdMsg.Style["display"] = "block";
+                lblPwdMsg.Style["background"] = "#FEF2F2";
+                lblPwdMsg.Style["border"] = "1px solid #FCA5A5";
+                lblPwdMsg.Style["color"] = "#991B1B";
+                lblPwdMsg.Text = "❌ Server error: " + ex.Message;
+            }
         }
     }
 }

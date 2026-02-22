@@ -21,11 +21,7 @@
             byId("eeDeleteModal").style.display = "flex";
             setTimeout(() => byId("eeDeleteInput").focus(), 0);
         }
-
-        function closeDeleteModal() {
-            byId("eeDeleteModal").style.display = "none";
-        }
-
+        function closeDeleteModal() { byId("eeDeleteModal").style.display = "none"; }
         function submitDeleteIfValid() {
             const v = (byId("eeDeleteInput").value || "").trim();
             if (v !== "DELETE") {
@@ -38,14 +34,8 @@
         }
 
         // ===== Logout modal =====
-        function openLogoutModal() {
-            byId("eeLogoutModal").style.display = "flex";
-        }
-
-        function closeLogoutModal() {
-            byId("eeLogoutModal").style.display = "none";
-        }
-
+        function openLogoutModal() { byId("eeLogoutModal").style.display = "flex"; }
+        function closeLogoutModal() { byId("eeLogoutModal").style.display = "none"; }
         function submitLogout() {
             closeLogoutModal();
             if (typeof __doPostBack !== "function") {
@@ -68,6 +58,39 @@
                 closeLogoutModal();
             }
         });
+
+        // ===== Password UI =====
+        function togglePw(which) {
+            var pwEl = document.getElementById("<%= txtPassword.ClientID %>");
+            var cfEl = document.getElementById("<%= txtConfirm.ClientID %>");
+            var target = (which === "pw") ? pwEl : cfEl;
+            if (!target) return;
+            target.type = (target.type === "password") ? "text" : "password";
+        }
+
+        function updatePasswordUI() {
+            const pwEl = document.getElementById("<%= txtPassword.ClientID %>");
+            if (!pwEl) return;
+
+            const pw = pwEl.value || "";
+
+            const hasLen = pw.length >= 8;
+            const hasLetter = /[A-Za-z]/.test(pw);
+            const hasNum = /[0-9]/.test(pw);
+            const hasSpecial = /[^A-Za-z0-9]/.test(pw);
+
+            const r1 = byId("ruleLen");
+            const r2 = byId("ruleLetter");
+            const r3 = byId("ruleNum");
+            const r4 = byId("ruleSpecial");
+
+            if (r1) r1.classList.toggle("ok", hasLen);
+            if (r2) r2.classList.toggle("ok", hasLetter);
+            if (r3) r3.classList.toggle("ok", hasNum);
+            if (r4) r4.classList.toggle("ok", hasSpecial);
+        }
+
+        window.addEventListener("load", updatePasswordUI);
     </script>
 
     <!-- ✅ ADDED: Surplus Rush banner styles (ONLY ADDITION) -->
@@ -170,6 +193,56 @@
             .sr-right { align-self: flex-end; }
             .sr-left h2 { font-size: 28px; }
         }
+        .pw-wrap { margin-top: 12px; }
+        .pw-field { position: relative; }
+        .pw-input {
+            width: 100%;
+            padding: 12px 44px 12px 14px;
+            border: 1px solid rgba(0,0,0,.12);
+            border-radius: 14px;
+            font-weight: 700;
+            outline: none;
+        }
+        .pw-eye {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 18px;
+            opacity: .75;
+        }
+        .pw-rules { margin-top: 10px; display: grid; gap: 6px; }
+        .pw-rule {
+            font-size: 13px;
+            color: #666;
+            padding-left: 18px;
+            position: relative;
+        }
+        .pw-rule::before {
+            content: "•";
+            position: absolute;
+            left: 6px;
+            top: 0;
+            opacity: .8;
+        }
+        .pw-rule.ok { color: #0f9d58; font-weight: 800; }
+        .pw-confirm-full {
+            width: 100%;
+            margin-top: 12px;
+            border-radius: 999px;
+            padding: 10px 16px;
+            font-weight: 800;
+        }
+        .pw-msg {
+            display: block;
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-weight: 700;
+        }
     </style>
 </head>
 <body>
@@ -222,7 +295,7 @@
         </section>
 
         <!-- ✅ ADDED: Surplus Rush banner (ONLY ADDITION) -->
-        <section class="ee-container" style="margin-top:-30px; margin-bottom:30px;">
+        <section class="ee-container" style="margin-top:16px; margin-bottom:20px;">
             <a href="Game.aspx" class="surplusRushCard" aria-label="Go to Surplus Rush game">
                 <div class="sr-content">
                     <div class="sr-left">
@@ -279,10 +352,56 @@
 
                 <div style="font-size:14px; color:#555; line-height:1.7;">
                     <p><strong>User ID:</strong> <asp:Label ID="lblUserId" runat="server" Text=""></asp:Label></p>
-
-                    <p style="margin-bottom:10px;">
-                        <strong>Password:</strong> •••••••• (hidden for security)
+                    <p style="margin-bottom:8px;">
+                        <strong>Password:</strong>
+                        <asp:Label ID="lblPassword" runat="server" Text="•••••••• (secured)"></asp:Label>
                     </p>
+
+                    <div class="pw-wrap">
+
+                        <!-- New Password -->
+                        <div class="pw-field">
+                            <asp:TextBox ID="txtPassword" runat="server"
+                                TextMode="Password"
+                                CssClass="pw-input"
+                                placeholder="New password"
+                                onkeyup="updatePasswordUI()"
+                                onchange="updatePasswordUI()" />
+                            <button type="button" class="pw-eye" onclick="togglePw('pw')">👁</button>
+                        </div>
+
+                        <!-- Confirm Password -->
+                        <div class="pw-field" style="margin-top:10px;">
+                            <asp:TextBox ID="txtConfirm" runat="server"
+                                TextMode="Password"
+                                CssClass="pw-input"
+                                placeholder="Confirm new password"
+                                onkeyup="updatePasswordUI()"
+                                onchange="updatePasswordUI()" />
+                            <button type="button" class="pw-eye" onclick="togglePw('cf')">👁</button>
+                        </div>
+
+                        <!-- Rules -->
+                        <div class="pw-rules">
+                            <div class="pw-rule" id="ruleLen">At least 8 characters</div>
+                            <div class="pw-rule" id="ruleLetter">Contains a letter (A–Z)</div>
+                            <div class="pw-rule" id="ruleNum">Contains a number (0–9)</div>
+                            <div class="pw-rule" id="ruleSpecial">Contains a special character (!@#...)</div>
+                        </div>
+
+                        <!-- Confirm Button -->
+                        <asp:Button ID="btnUpdatePassword" runat="server"
+                            Text="Confirm Password Change"
+                            OnClick="btnUpdatePassword_Click"
+                            CssClass="ee-btn-primary pw-confirm-full" />
+
+                        <!-- Message -->
+                        <asp:Label ID="lblPwdMsg" runat="server"
+                            CssClass="pw-msg"
+                            Style="display:none;"
+                            EnableViewState="false"></asp:Label>
+
+                    </div>
 
                     <!-- Buttons row: left = delete, right = logout -->
                     <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:6px;">
