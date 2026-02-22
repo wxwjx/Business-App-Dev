@@ -15,9 +15,9 @@
 
     <asp:ScriptManager ID="ScriptManager1" runat="server" />
 
-    <asp:HiddenField ID="hfLat" runat="server" />
-    <asp:HiddenField ID="hfLng" runat="server" />
-    <asp:HiddenField ID="hfHasLoc" runat="server" Value="0" />
+    <asp:HiddenField ID="hfLat" runat="server" ClientIDMode="Static" />
+    <asp:HiddenField ID="hfLng" runat="server" ClientIDMode="Static" />
+    <asp:HiddenField ID="hfHasLoc" runat="server" ClientIDMode="Static" Value="0" />
 
     <asp:HiddenField ID="hfMode" runat="server" Value="AI" />
     <asp:HiddenField ID="hfCategory" runat="server" Value="" />
@@ -106,7 +106,8 @@
                                         </div>
 
                                         <div class="ee-price-row">
-                                            <span class="ee-price-now">$<%# Eval("PriceNow","{0:0.00}") %></span><span class="ee-price-old">$<%# Eval("PriceOld","{0:0.00}") %></span></div>
+                                            <span class="ee-price-now">$<%# Eval("PriceNow","{0:0.00}") %></span><span class="ee-price-old">$<%# Eval("PriceOld","{0:0.00}") %></span>
+                                        </div>
                                     </div>
                                 </a>
                             </ItemTemplate>
@@ -135,7 +136,8 @@
                                         </div>
 
                                         <div class="ee-price-row">
-                                            <span class="ee-price-now">$<%# Eval("PriceNow","{0:0.00}") %></span><span class="ee-price-old">$<%# Eval("PriceOld","{0:0.00}") %></span></div>
+                                            <span class="ee-price-now">$<%# Eval("PriceNow","{0:0.00}") %></span><span class="ee-price-old">$<%# Eval("PriceOld","{0:0.00}") %></span>
+                                        </div>
                                     </div>
                                 </a>
                             </ItemTemplate>
@@ -163,29 +165,73 @@
 <asp:Content ID="ScriptsContent" ContentPlaceHolderID="ScriptsContent" runat="server">
     <script>
         (function () {
-            if (sessionStorage.getItem("ee_loc_refreshed") === "1") return;
-            if (!navigator.geolocation) return;
+            function setHidden(lat, lng) {
+                var latEl = document.getElementById("hfLat");
+                var lngEl = document.getElementById("hfLng");
+                var hasEl = document.getElementById("hfHasLoc");
+                if (!latEl || !lngEl || !hasEl) return false;
 
-            var hasLocEl = document.getElementById("<%= hfHasLoc.ClientID %>");
-            var latEl = document.getElementById("<%= hfLat.ClientID %>");
-            var lngEl = document.getElementById("<%= hfLng.ClientID %>");
-            var btn = document.getElementById("<%= btnRefreshByLoc.ClientID %>");
-            if (!hasLocEl || !latEl || !lngEl || !btn) return;
+                latEl.value = lat;
+                lngEl.value = lng;
 
-            navigator.geolocation.getCurrentPosition(
-                function (pos) {
-                    latEl.value = pos.coords.latitude;
-                    lngEl.value = pos.coords.longitude;
-                    hasLocEl.value = "1";
-                    sessionStorage.setItem("ee_loc_refreshed", "1");
-                    btn.click();
-                },
-                function () {
-                    sessionStorage.setItem("ee_loc_refreshed", "1");
-                    hasLocEl.value = "0";
-                },
-                { enableHighAccuracy: true, timeout: 8000, maximumAge: 600000 }
-            );
+                var latNum = parseFloat(lat);
+                var lngNum = parseFloat(lng);
+                var ok = !isNaN(latNum) && !isNaN(lngNum) && Math.abs(latNum) > 0.0001 && Math.abs(lngNum) > 0.0001;
+
+                hasEl.value = ok ? "1" : "0";
+                return ok;
+            }
+
+            function loadFromStorage() {
+                var lat = localStorage.getItem("ee_lat");
+                var lng = localStorage.getItem("ee_lng");
+                if (!lat || !lng) return false;
+                return setHidden(lat, lng);
+            }
+
+            function saveToStorage(lat, lng) {
+                localStorage.setItem("ee_lat", String(lat));
+                localStorage.setItem("ee_lng", String(lng));
+            }
+
+            function refreshOncePerSession() {
+                if (sessionStorage.getItem("ee_loc_refreshed") === "1") return false;
+                sessionStorage.setItem("ee_loc_refreshed", "1");
+                return true;
+            }
+
+            function detectAndRefresh() {
+                var btn = document.getElementById("<%= btnRefreshByLoc.ClientID %>");
+                if (!btn) return;
+
+                if (loadFromStorage()) {
+                    if (refreshOncePerSession()) btn.click();
+                    return;
+                }
+
+                if (!navigator.geolocation) return;
+
+                navigator.geolocation.getCurrentPosition(
+                    function (pos) {
+                        var lat = pos.coords.latitude.toFixed(6);
+                        var lng = pos.coords.longitude.toFixed(6);
+                        saveToStorage(lat, lng);
+                        if (setHidden(lat, lng)) {
+                            if (refreshOncePerSession()) btn.click();
+                        }
+                    },
+                    function () {
+                        setHidden("", "");
+                    },
+                    { enableHighAccuracy: true, timeout: 8000, maximumAge: 600000 }
+                );
+            }
+
+            if (window.Sys && Sys.Application && Sys.Application.add_load) {
+                Sys.Application.add_load(detectAndRefresh);
+            } else {
+                window.addEventListener("load", detectAndRefresh);
+            }
         })();
     </script>
 </asp:Content>
