@@ -17,7 +17,6 @@ namespace Business_App_Dev
         }
 
         protected void btnRefreshByLoc_Click(object sender, EventArgs e) => TryLoad();
-
         protected void txtSearch_TextChanged(object sender, EventArgs e) => TryLoad();
 
         protected void btnClearSearch_Click(object sender, EventArgs e)
@@ -85,20 +84,37 @@ namespace Business_App_Dev
             TryLoad();
         }
 
-        private string Keyword()
+        private string Keyword() => (txtSearch.Text ?? "").Trim();
+
+        private double Lat
         {
-            return (txtSearch.Text ?? "").Trim();
+            get
+            {
+                double.TryParse(hfLat.Value, out double v);
+                return v;
+            }
         }
 
-        private double Lat { get { double.TryParse(hfLat.Value, out double v); return v; } }
-        private double Lng { get { double.TryParse(hfLng.Value, out double v); return v; } }
+        private double Lng
+        {
+            get
+            {
+                double.TryParse(hfLng.Value, out double v);
+                return v;
+            }
+        }
 
         private bool HasLoc
         {
             get
             {
                 if (hfHasLoc.Value != "1") return false;
-                return double.TryParse(hfLat.Value, out _) && double.TryParse(hfLng.Value, out _);
+
+                double lat = Lat, lng = Lng;
+                if (double.IsNaN(lat) || double.IsNaN(lng)) return false;
+                if (Math.Abs(lat) <= 0.0001 || Math.Abs(lng) <= 0.0001) return false;
+
+                return true;
             }
         }
 
