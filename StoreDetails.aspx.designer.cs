@@ -15,15 +15,6 @@ namespace Business_App_Dev
     {
 
         /// <summary>
-        /// lblMsg control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblMsg;
-
-        /// <summary>
         /// hfEditMode control.
         /// </summary>
         /// <remarks>
@@ -31,51 +22,6 @@ namespace Business_App_Dev
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.HiddenField hfEditMode;
-
-        /// <summary>
-        /// hfOldEmail control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.HiddenField hfOldEmail;
-
-        /// <summary>
-        /// hfLat control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.HiddenField hfLat;
-
-        /// <summary>
-        /// hfLng control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.HiddenField hfLng;
-
-        /// <summary>
-        /// hfAddr control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.HiddenField hfAddr;
-
-        /// <summary>
-        /// hfShopName control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.HiddenField hfShopName;
 
         /// <summary>
         /// btnLogoutTrigger control.
@@ -121,6 +67,42 @@ namespace Business_App_Dev
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Label lblAddress;
+
+        /// <summary>
+        /// hfLat control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HiddenField hfLat;
+
+        /// <summary>
+        /// hfLng control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HiddenField hfLng;
+
+        /// <summary>
+        /// hfAddr control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HiddenField hfAddr;
+
+        /// <summary>
+        /// hfShopName control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HiddenField hfShopName;
 
         /// <summary>
         /// lblDescription control.
@@ -204,15 +186,6 @@ namespace Business_App_Dev
         protected global::System.Web.UI.WebControls.TextBox tbStoreName;
 
         /// <summary>
-        /// tbEmail control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox tbEmail;
-
-        /// <summary>
         /// tbPhone control.
         /// </summary>
         /// <remarks>
@@ -222,31 +195,22 @@ namespace Business_App_Dev
         protected global::System.Web.UI.WebControls.TextBox tbPhone;
 
         /// <summary>
-        /// tbPostal control.
+        /// tbEmail control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox tbPostal;
+        protected global::System.Web.UI.WebControls.TextBox tbEmail;
 
         /// <summary>
-        /// tbAddrLine control.
+        /// tbAddress control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox tbAddrLine;
-
-        /// <summary>
-        /// tbUnit control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox tbUnit;
+        protected global::System.Web.UI.WebControls.TextBox tbAddress;
 
         /// <summary>
         /// tbDescription control.
