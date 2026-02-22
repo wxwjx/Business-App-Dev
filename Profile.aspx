@@ -21,11 +21,7 @@
             byId("eeDeleteModal").style.display = "flex";
             setTimeout(() => byId("eeDeleteInput").focus(), 0);
         }
-
-        function closeDeleteModal() {
-            byId("eeDeleteModal").style.display = "none";
-        }
-
+        function closeDeleteModal() { byId("eeDeleteModal").style.display = "none"; }
         function submitDeleteIfValid() {
             const v = (byId("eeDeleteInput").value || "").trim();
             if (v !== "DELETE") {
@@ -38,14 +34,8 @@
         }
 
         // ===== Logout modal =====
-        function openLogoutModal() {
-            byId("eeLogoutModal").style.display = "flex";
-        }
-
-        function closeLogoutModal() {
-            byId("eeLogoutModal").style.display = "none";
-        }
-
+        function openLogoutModal() { byId("eeLogoutModal").style.display = "flex"; }
+        function closeLogoutModal() { byId("eeLogoutModal").style.display = "none"; }
         function submitLogout() {
             closeLogoutModal();
             if (typeof __doPostBack !== "function") {
@@ -68,45 +58,192 @@
                 closeLogoutModal();
             }
         });
-        function togglePw(serverId) {
-            // serverId is like 'txtPassword' (ASP control ID)
-            var el = document.getElementById("<%= txtPassword.ClientID %>");
-            var el2 = document.getElementById("<%= txtConfirm.ClientID %>");
 
-        // decide which one they clicked
-        var target = null;
-        if (serverId === "txtPassword") target = el;
-        if (serverId === "txtConfirm") target = el2;
-        if (!target) return;
+        // ===== Password UI =====
+        function togglePw(which) {
+            var pwEl = document.getElementById("<%= txtPassword.ClientID %>");
+            var cfEl = document.getElementById("<%= txtConfirm.ClientID %>");
+            var target = (which === "pw") ? pwEl : cfEl;
+            if (!target) return;
+            target.type = (target.type === "password") ? "text" : "password";
+        }
 
-        target.type = (target.type === "password") ? "text" : "password";
-    }
-
-    function updatePasswordUI() {
-        const pwEl = document.getElementById("<%= txtPassword.ClientID %>");
-            const cfEl = document.getElementById("<%= txtConfirm.ClientID %>");
-            if (!pwEl || !cfEl) return;
+        function updatePasswordUI() {
+            const pwEl = document.getElementById("<%= txtPassword.ClientID %>");
+            if (!pwEl) return;
 
             const pw = pwEl.value || "";
-            const confirm = cfEl.value || "";
 
             const hasLen = pw.length >= 8;
             const hasLetter = /[A-Za-z]/.test(pw);
             const hasNum = /[0-9]/.test(pw);
             const hasSpecial = /[^A-Za-z0-9]/.test(pw);
 
-            document.getElementById("ruleLen").classList.toggle("ok", hasLen);
-            document.getElementById("ruleLetter").classList.toggle("ok", hasLetter);
-            document.getElementById("ruleNum").classList.toggle("ok", hasNum);
-            document.getElementById("ruleSpecial").classList.toggle("ok", hasSpecial);
+            const r1 = byId("ruleLen");
+            const r2 = byId("ruleLetter");
+            const r3 = byId("ruleNum");
+            const r4 = byId("ruleSpecial");
 
-            // optional: confirm match highlight (if you want)
-            // you can add a "ruleMatch" too, but you didn't ask, so I leave it.
+            if (r1) r1.classList.toggle("ok", hasLen);
+            if (r2) r2.classList.toggle("ok", hasLetter);
+            if (r3) r3.classList.toggle("ok", hasNum);
+            if (r4) r4.classList.toggle("ok", hasSpecial);
         }
 
         window.addEventListener("load", updatePasswordUI);
     </script>
 
+    <!-- ✅ ADDED: Surplus Rush banner styles (ONLY ADDITION) -->
+    <style>
+        /* ========================= */
+        /* 🎮 SURPLUS RUSH BANNER     */
+        /* ========================= */
+        .surplusRushCard {
+            display: block;
+            text-decoration: none;
+            border-radius: 24px;
+            overflow: hidden;
+            position: relative;
+            transition: all .35s ease;
+            box-shadow: 0 20px 50px rgba(16, 114, 68, 0.18);
+        }
+
+        .sr-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 34px 36px;
+            background: linear-gradient(135deg,#16967f,#21a79e,#1b9145);
+            color: white;
+            position: relative;
+        }
+
+        .sr-left h2 {
+            font-size: 34px;
+            margin: 8px 0 8px;
+            font-weight: 800;
+        }
+
+        .sr-left p {
+            font-size: 15px;
+            opacity: .95;
+            max-width: 520px;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .sr-badge {
+            background: rgba(255,255,255,0.20);
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            display: inline-block;
+            font-weight: 700;
+        }
+
+        .sr-cta {
+            margin-top: 16px;
+            display: inline-block;
+            padding: 10px 22px;
+            background: white;
+            color: #16967f;
+            border-radius: 999px;
+            font-weight: 800;
+            transition: all .3s ease;
+        }
+
+        .sr-right {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .sr-icon {
+            font-size: 54px;
+            animation: srFloat 3s ease-in-out infinite;
+        }
+
+        .sr-icon.small {
+            font-size: 34px;
+            opacity: .85;
+        }
+
+        @keyframes srFloat {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* Hover */
+        .surplusRushCard:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 28px 60px rgba(16, 114, 68, 0.35);
+        }
+
+        .surplusRushCard:hover .sr-cta {
+            background: #0f9d58;
+            color: white;
+        }
+
+        /* Mobile */
+        @media (max-width: 700px) {
+            .sr-content { flex-direction: column; align-items: flex-start; gap: 14px; }
+            .sr-right { align-self: flex-end; }
+            .sr-left h2 { font-size: 28px; }
+        }
+        .pw-wrap { margin-top: 12px; }
+        .pw-field { position: relative; }
+        .pw-input {
+            width: 100%;
+            padding: 12px 44px 12px 14px;
+            border: 1px solid rgba(0,0,0,.12);
+            border-radius: 14px;
+            font-weight: 700;
+            outline: none;
+        }
+        .pw-eye {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 18px;
+            opacity: .75;
+        }
+        .pw-rules { margin-top: 10px; display: grid; gap: 6px; }
+        .pw-rule {
+            font-size: 13px;
+            color: #666;
+            padding-left: 18px;
+            position: relative;
+        }
+        .pw-rule::before {
+            content: "•";
+            position: absolute;
+            left: 6px;
+            top: 0;
+            opacity: .8;
+        }
+        .pw-rule.ok { color: #0f9d58; font-weight: 800; }
+        .pw-confirm-full {
+            width: 100%;
+            margin-top: 12px;
+            border-radius: 999px;
+            padding: 10px 16px;
+            font-weight: 800;
+        }
+        .pw-msg {
+            display: block;
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-weight: 700;
+        }
+    </style>
 </head>
 <body>
     <form id="form1" runat="server">
@@ -157,6 +294,28 @@
             </div>
         </section>
 
+        <!-- ✅ ADDED: Surplus Rush banner (ONLY ADDITION) -->
+        <section class="ee-container" style="margin-top:16px; margin-bottom:20px;">
+            <a href="Game.aspx" class="surplusRushCard" aria-label="Go to Surplus Rush game">
+                <div class="sr-content">
+                    <div class="sr-left">
+                        <div class="sr-badge">🎮 EcoEats Game</div>
+                        <h2>Surplus Rush</h2>
+                        <p>
+                            Rescue edible surplus and reduce food waste. Score <b>50+</b> points to unlock exclusive vouchers.
+                        </p>
+                        <div class="sr-cta">Play Now →</div>
+                    </div>
+
+                    <div class="sr-right" aria-hidden="true">
+                        <div class="sr-icon">🍱</div>
+                        <div class="sr-icon small">🥗</div>
+                        <div class="sr-icon small">🍕</div>
+                    </div>
+                </div>
+            </a>
+        </section>
+
         <!-- MAIN PROFILE LAYOUT -->
         <section class="ee-container" style="padding: 40px 0 70px; display:flex; flex-wrap:wrap; gap:32px;">
 
@@ -193,58 +352,56 @@
 
                 <div style="font-size:14px; color:#555; line-height:1.7;">
                     <p><strong>User ID:</strong> <asp:Label ID="lblUserId" runat="server" Text=""></asp:Label></p>
+                    <p style="margin-bottom:8px;">
+                        <strong>Password:</strong>
+                        <asp:Label ID="lblPassword" runat="server" Text="•••••••• (secured)"></asp:Label>
+                    </p>
 
-                        <p style="margin-bottom:8px;">
-                            <strong>Password:</strong>
-                            <asp:Label ID="lblPassword" runat="server" Text="•••••••• (secured)"></asp:Label>
-                        </p>
+                    <div class="pw-wrap">
 
-                        <div class="pw-wrap">
-
-                            <!-- New Password -->
-                            <div class="pw-field">
-                                <asp:TextBox ID="txtPassword" runat="server"
-                                    TextMode="Password"
-                                    CssClass="pw-input"
-                                    placeholder="New password"
-                                    onkeyup="updatePasswordUI()"
-                                    onchange="updatePasswordUI()" />
-                                <button type="button" class="pw-eye" onclick="togglePw('txtPassword')">👁</button>
-                            </div>
-
-                            <!-- Confirm Password -->
-                            <div class="pw-field" style="margin-top:10px;">
-                                <asp:TextBox ID="txtConfirm" runat="server"
-                                    TextMode="Password"
-                                    CssClass="pw-input"
-                                    placeholder="Confirm new password"
-                                    onkeyup="updatePasswordUI()"
-                                    onchange="updatePasswordUI()" />
-                                <button type="button" class="pw-eye" onclick="togglePw('txtConfirm')">👁</button>
-                            </div>
-
-                            <!-- Rules -->
-                            <div class="pw-rules">
-                                <div class="pw-rule" id="ruleLen">At least 8 characters</div>
-                                <div class="pw-rule" id="ruleLetter">Contains a letter (A–Z)</div>
-                                <div class="pw-rule" id="ruleNum">Contains a number (0–9)</div>
-                                <div class="pw-rule" id="ruleSpecial">Contains a special character (!@#...)</div>
-                            </div>
-
-                            <!-- Confirm Button -->
-                            <asp:Button ID="btnUpdatePassword" runat="server"
-                                Text="Confirm Password Change"
-                                OnClick="btnUpdatePassword_Click"
-                                CssClass="pw-confirm-full" />
-
-                            <!-- Message -->
-                            <asp:Label ID="lblPwdMsg" runat="server"
-                                CssClass="pw-msg"
-                                Style="display:none;"
-                                EnableViewState="false"></asp:Label>
-
+                        <!-- New Password -->
+                        <div class="pw-field">
+                            <asp:TextBox ID="txtPassword" runat="server"
+                                TextMode="Password"
+                                CssClass="pw-input"
+                                placeholder="New password"
+                                onkeyup="updatePasswordUI()"
+                                onchange="updatePasswordUI()" />
+                            <button type="button" class="pw-eye" onclick="togglePw('pw')">👁</button>
                         </div>
 
+                        <!-- Confirm Password -->
+                        <div class="pw-field" style="margin-top:10px;">
+                            <asp:TextBox ID="txtConfirm" runat="server"
+                                TextMode="Password"
+                                CssClass="pw-input"
+                                placeholder="Confirm new password"
+                                onkeyup="updatePasswordUI()"
+                                onchange="updatePasswordUI()" />
+                            <button type="button" class="pw-eye" onclick="togglePw('cf')">👁</button>
+                        </div>
+
+                        <!-- Rules -->
+                        <div class="pw-rules">
+                            <div class="pw-rule" id="ruleLen">At least 8 characters</div>
+                            <div class="pw-rule" id="ruleLetter">Contains a letter (A–Z)</div>
+                            <div class="pw-rule" id="ruleNum">Contains a number (0–9)</div>
+                            <div class="pw-rule" id="ruleSpecial">Contains a special character (!@#...)</div>
+                        </div>
+
+                        <!-- Confirm Button -->
+                        <asp:Button ID="btnUpdatePassword" runat="server"
+                            Text="Confirm Password Change"
+                            OnClick="btnUpdatePassword_Click"
+                            CssClass="ee-btn-primary pw-confirm-full" />
+
+                        <!-- Message -->
+                        <asp:Label ID="lblPwdMsg" runat="server"
+                            CssClass="pw-msg"
+                            Style="display:none;"
+                            EnableViewState="false"></asp:Label>
+
+                    </div>
 
                     <!-- Buttons row: left = delete, right = logout -->
                     <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:6px;">
@@ -342,53 +499,55 @@
             </div>
 
         </section>
-<!-- ===== Delete Account Modal ===== -->
-<div id="eeDeleteModal" class="ee-modal-overlay" style="display:none;">
-    <div class="ee-modal">
-        <div class="ee-modal-head">
-            <div class="ee-modal-title">Delete account</div>
-            <button type="button" class="ee-modal-x" onclick="closeDeleteModal()">✕</button>
-        </div>
 
-        <div class="ee-modal-body">
-            <p class="ee-modal-text">
-                This action is permanent. To confirm, please type <strong>DELETE</strong>.
-            </p>
+        <!-- ===== Delete Account Modal ===== -->
+        <div id="eeDeleteModal" class="ee-modal-overlay" style="display:none;">
+            <div class="ee-modal">
+                <div class="ee-modal-head">
+                    <div class="ee-modal-title">Delete account</div>
+                    <button type="button" class="ee-modal-x" onclick="closeDeleteModal()">✕</button>
+                </div>
 
-            <input id="eeDeleteInput" class="ee-input" type="text" placeholder="Type DELETE" />
+                <div class="ee-modal-body">
+                    <p class="ee-modal-text">
+                        This action is permanent. To confirm, please type <strong>DELETE</strong>.
+                    </p>
 
-            <div id="eeDeleteError" class="ee-error" style="display:none;">
-                You must type DELETE exactly.
+                    <input id="eeDeleteInput" class="ee-input" type="text" placeholder="Type DELETE" />
+
+                    <div id="eeDeleteError" class="ee-error" style="display:none;">
+                        You must type DELETE exactly.
+                    </div>
+                </div>
+
+                <div class="ee-modal-actions">
+                    <button type="button" class="ee-btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+
+                    <!-- IMPORTANT: use a normal HTML button to trigger the ASP.NET button click -->
+                    <button type="button" class="ee-btn-danger" onclick="submitDeleteIfValid()">Delete</button>
+                </div>
             </div>
         </div>
 
-        <div class="ee-modal-actions">
-            <button type="button" class="ee-btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+        <!-- ===== Logout Modal ===== -->
+        <div id="eeLogoutModal" class="ee-modal-overlay" style="display:none;">
+            <div class="ee-modal">
+                <div class="ee-modal-head">
+                    <div class="ee-modal-title">Log out</div>
+                    <button type="button" class="ee-modal-x" onclick="closeLogoutModal()">✕</button>
+                </div>
 
-            <!-- IMPORTANT: use a normal HTML button to trigger the ASP.NET button click -->
-            <button type="button" class="ee-btn-danger" onclick="submitDeleteIfValid()">Delete</button>
-        </div>
-    </div>
-</div>
+                <div class="ee-modal-body">
+                    <p class="ee-modal-text">Do you really want to log out?</p>
+                </div>
 
-<!-- ===== Logout Modal ===== -->
-<div id="eeLogoutModal" class="ee-modal-overlay" style="display:none;">
-    <div class="ee-modal">
-        <div class="ee-modal-head">
-            <div class="ee-modal-title">Log out</div>
-            <button type="button" class="ee-modal-x" onclick="closeLogoutModal()">✕</button>
-        </div>
-
-        <div class="ee-modal-body">
-            <p class="ee-modal-text">Do you really want to log out?</p>
+                <div class="ee-modal-actions">
+                    <button type="button" class="ee-btn-secondary" onclick="closeLogoutModal()">Cancel</button>
+                    <button type="button" class="ee-btn-primary" onclick="submitLogout()">Log out</button>
+                </div>
+            </div>
         </div>
 
-        <div class="ee-modal-actions">
-            <button type="button" class="ee-btn-secondary" onclick="closeLogoutModal()">Cancel</button>
-            <button type="button" class="ee-btn-primary" onclick="submitLogout()">Log out</button>
-        </div>
-    </div>
-</div>
     </form>
 </body>
 </html>

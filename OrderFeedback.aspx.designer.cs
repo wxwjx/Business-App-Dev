@@ -11,214 +11,169 @@ namespace Business_App_Dev
 {
 
 
-    public partial class Product
+    public partial class OrderFeedback
     {
 
         /// <summary>
-        /// ScriptManager1 control.
+        /// form1 control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.ScriptManager ScriptManager1;
+        protected global::System.Web.UI.HtmlControls.HtmlForm form1;
 
         /// <summary>
-        /// hfLat control.
+        /// lblOrderIdDisplay control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.HiddenField hfLat;
+        protected global::System.Web.UI.WebControls.Label lblOrderIdDisplay;
 
         /// <summary>
-        /// hfLng control.
+        /// hfReviewId control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.HiddenField hfLng;
+        protected global::System.Web.UI.WebControls.HiddenField hfReviewId;
 
         /// <summary>
-        /// hfHasLoc control.
+        /// hfOrderId control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.HiddenField hfHasLoc;
+        protected global::System.Web.UI.WebControls.HiddenField hfOrderId;
 
         /// <summary>
-        /// hfMode control.
+        /// star5 control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.HiddenField hfMode;
+        protected global::System.Web.UI.HtmlControls.HtmlInputRadioButton star5;
 
         /// <summary>
-        /// hfCategory control.
+        /// star4 control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.HiddenField hfCategory;
+        protected global::System.Web.UI.HtmlControls.HtmlInputRadioButton star4;
 
         /// <summary>
-        /// btnRefreshByLoc control.
+        /// star3 control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Button btnRefreshByLoc;
+        protected global::System.Web.UI.HtmlControls.HtmlInputRadioButton star3;
 
         /// <summary>
-        /// upProducts control.
+        /// star2 control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.UpdatePanel upProducts;
+        protected global::System.Web.UI.HtmlControls.HtmlInputRadioButton star2;
 
         /// <summary>
-        /// pnlError control.
+        /// star1 control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Panel pnlError;
+        protected global::System.Web.UI.HtmlControls.HtmlInputRadioButton star1;
 
         /// <summary>
-        /// lblError control.
+        /// ddlQuality control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblError;
+        protected global::System.Web.UI.WebControls.DropDownList ddlQuality;
 
         /// <summary>
-        /// txtSearch control.
+        /// ddlOnTime control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtSearch;
+        protected global::System.Web.UI.WebControls.DropDownList ddlOnTime;
 
         /// <summary>
-        /// btnClearSearch control.
+        /// ddlAgain control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.LinkButton btnClearSearch;
+        protected global::System.Web.UI.WebControls.DropDownList ddlAgain;
 
         /// <summary>
-        /// btnAI control.
+        /// txtComments control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.LinkButton btnAI;
+        protected global::System.Web.UI.WebControls.TextBox txtComments;
 
         /// <summary>
-        /// btnDeals control.
+        /// btnCreate control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.LinkButton btnDeals;
+        protected global::System.Web.UI.WebControls.Button btnCreate;
 
         /// <summary>
-        /// btnCats control.
+        /// btnUpdate control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.LinkButton btnCats;
+        protected global::System.Web.UI.WebControls.Button btnUpdate;
 
         /// <summary>
-        /// pnlCategories control.
+        /// btnClear control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Panel pnlCategories;
+        protected global::System.Web.UI.WebControls.Button btnClear;
 
         /// <summary>
-        /// rptCategories control.
+        /// lblMessage control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Repeater rptCategories;
+        protected global::System.Web.UI.WebControls.Label lblMessage;
 
         /// <summary>
-        /// btnClearCategory control.
+        /// gvReviews control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.LinkButton btnClearCategory;
-
-        /// <summary>
-        /// pnlSearchResults control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Panel pnlSearchResults;
-
-        /// <summary>
-        /// litSearchMeta control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Literal litSearchMeta;
-
-        /// <summary>
-        /// rptSearch control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Repeater rptSearch;
-
-        /// <summary>
-        /// pnlBrowse control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Panel pnlBrowse;
-
-        /// <summary>
-        /// ProductRepeater control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Repeater ProductRepeater;
+        protected global::System.Web.UI.WebControls.GridView gvReviews;
     }
 }

@@ -12,15 +12,6 @@ namespace Business_App_Dev
 
             if (!IsPostBack)
             {
-                string lang = Session["LANG"].ToString();
-                var item = ddlLanguage.Items.FindByValue(lang);
-                if (item != null)
-                {
-                    ddlLanguage.ClearSelection();
-                    item.Selected = true;
-                }
-
-                // Highlight active tab automatically
                 string path = (Request.Url.AbsolutePath ?? "").ToLowerInvariant();
 
                 if (path.EndsWith("/product") || path.EndsWith("/product.aspx"))
@@ -35,16 +26,6 @@ namespace Business_App_Dev
         protected void ddlLanguage_SelectedIndexChanged(object sender, EventArgs e)
         {
             Session["LANG"] = ddlLanguage.SelectedValue;
-            Response.Redirect(Request.RawUrl);
-        }
-
-        protected void btnSearch_Click(object sender, EventArgs e)
-        {
-            Response.Redirect(Request.RawUrl);
-        }
-
-        protected void txtSearch_TextChanged(object sender, EventArgs e)
-        {
             Response.Redirect(Request.RawUrl);
         }
     }

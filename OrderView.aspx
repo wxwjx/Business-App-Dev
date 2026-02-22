@@ -12,7 +12,6 @@
 
 <asp:Content ID="MainContent" ContentPlaceHolderID="MainContent" runat="server">
 
-    <!-- HERO -->
     <section class="ee-hero">
         <div class="ee-container">
             <h1>Order Details</h1>
@@ -22,21 +21,17 @@
 
     <div class="ee-container ov-wrap">
 
-        <!-- ERROR PANEL -->
         <asp:Panel ID="pnlError" runat="server" Visible="false" CssClass="ee-error">
             <asp:Label ID="lblError" runat="server" />
         </asp:Panel>
 
-        <!-- MAIN CONTENT -->
         <asp:Panel ID="pnlMain" runat="server" Visible="false">
 
-            <!-- ORDER SUMMARY -->
             <div class="ov-card">
 
                 <div class="ov-top">
 
                     <div>
-
                         <div class="ov-title">
                             Order #<asp:Label ID="lblOrderId" runat="server" />
                         </div>
@@ -54,7 +49,6 @@
                                 <asp:Label ID="lblOrderStatus" runat="server" />
                             </span>
                         </div>
-
                     </div>
 
                     <div class="ov-right">
@@ -69,7 +63,6 @@
 
                 </div>
 
-                <!-- BIG ACTION BUTTONS -->
                 <div class="ov-actions">
 
                     <asp:HyperLink ID="lnkChatSeller"
@@ -84,7 +77,6 @@
 
                 </div>
 
-                <!-- PAYMENT REFERENCE -->
                 <div class="ov-ref">
 
                     <span class="ov-ref-label">
@@ -109,7 +101,6 @@
 
             </div>
 
-            <!-- ORDER ITEMS -->
             <div class="ov-card">
 
                 <div class="ov-section-title">
@@ -163,7 +154,6 @@
 
     </div>
 
-    <!-- COPY SCRIPT -->
     <script>
         document.addEventListener("click", async function (e) {
 

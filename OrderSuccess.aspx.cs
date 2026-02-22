@@ -61,10 +61,8 @@ namespace Business_App_Dev
                 lblTotal.Text = total.ToString("0.00");
                 lblPayStatus.Text = T("PAID");
 
-                // Translate product names for UI + email
                 items = TranslatePurchasedItemsIfNeeded(items);
 
-                // Build seller groups for receipt UI
                 var groups = BuildSellerGroups(items);
                 if (groups.Count == 0)
                 {
@@ -74,21 +72,16 @@ namespace Business_App_Dev
 
                 int userId = GetUserIdOrThrow();
 
-                // Save order + items
                 int orderId = SaveOrderIfNotExists(sessionId, userId, total, items);
 
-                // Send email ONCE (DB flag)
                 TrySendOrderConfirmationEmail(orderId, userId, total, items);
 
-                // Remove purchased items from cart
                 RemovePurchasedItemsFromCart(items);
 
-                // Bind UI
                 rptSellerGroups.DataSource = groups;
                 rptSellerGroups.DataBind();
                 ApplyRepeaterTranslations(rptSellerGroups);
 
-                // Cleanup
                 Session.Remove("PENDING_ORDER_" + sessionId);
                 Session.Remove("PENDING_ORDER_TOTAL_" + sessionId);
             }
@@ -100,11 +93,8 @@ namespace Business_App_Dev
             {
                 ShowError(T("Database error while saving/loading your order. Please try again later."));
             }
-            catch (SmtpException ex)
+            catch (SmtpException)
             {
-                // Email failing should not break checkout success page
-                // Show user success; optionally log ex somewhere
-                // If you want, you can show a soft message or keep silent.
             }
             catch (Exception ex)
             {
@@ -112,9 +102,6 @@ namespace Business_App_Dev
             }
         }
 
-        // =========================
-        // TRANSLATION HELPERS
-        // =========================
         private string GetLang()
         {
             return (Session["LANG"] as string) ?? "en";
@@ -200,9 +187,6 @@ namespace Business_App_Dev
             return items;
         }
 
-        // =========================
-        // USER / SESSION
-        // =========================
         private int GetUserIdOrThrow()
         {
             if (Session["UserID"] == null)
@@ -219,9 +203,6 @@ namespace Business_App_Dev
             return ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
         }
 
-        // =========================
-        // SAVE ORDER (dbo.Orders + dbo.OrderItems)
-        // =========================
         private int SaveOrderIfNotExists(string stripeSessionId, int userId, decimal total, List<PurchasedItem> items)
         {
             int existing = GetOrderIdByStripeSession(stripeSessionId);
@@ -229,6 +210,15 @@ namespace Business_App_Dev
 
             var productIds = items.Select(i => i.ProductID).Distinct().ToList();
             var productSellerMap = LoadSellerInfoForProducts(productIds);
+
+            var sellerIds = items
+                .Select(i => productSellerMap.ContainsKey(i.ProductID) ? (int?)productSellerMap[i.ProductID].SellerID : null)
+                .Where(x => x.HasValue)
+                .Select(x => x.Value)
+                .Distinct()
+                .ToList();
+
+            int? orderSellerId = (sellerIds.Count == 1) ? (int?)sellerIds[0] : null;
 
             using (SqlConnection con = new SqlConnection(ConnStr()))
             {
@@ -240,7 +230,7 @@ namespace Business_App_Dev
                     string insertOrderSql = @"
 INSERT INTO dbo.Orders (UserID, StripeSessionId, TotalAmount, PayStatus, OrderStatus, SellerID)
 OUTPUT INSERTED.OrderID
-VALUES (@UserID, @StripeSessionId, @TotalAmount, @PayStatus, @OrderStatus, NULL);";
+VALUES (@UserID, @StripeSessionId, @TotalAmount, @PayStatus, @OrderStatus, @SellerID);";
 
                     int orderId;
                     using (SqlCommand cmd = new SqlCommand(insertOrderSql, con, tx))
@@ -250,6 +240,10 @@ VALUES (@UserID, @StripeSessionId, @TotalAmount, @PayStatus, @OrderStatus, NULL)
                         cmd.Parameters.AddWithValue("@TotalAmount", total);
                         cmd.Parameters.AddWithValue("@PayStatus", "PAID");
                         cmd.Parameters.AddWithValue("@OrderStatus", "Confirmed");
+
+                        if (orderSellerId.HasValue) cmd.Parameters.AddWithValue("@SellerID", orderSellerId.Value);
+                        else cmd.Parameters.AddWithValue("@SellerID", DBNull.Value);
+
                         orderId = Convert.ToInt32(cmd.ExecuteScalar());
                     }
 
@@ -305,9 +299,6 @@ VALUES
             }
         }
 
-        // =========================
-        // STRIPE VERIFY
-        // =========================
         private bool VerifyStripePaid(string sessionId, out string error)
         {
             error = "";
@@ -350,9 +341,6 @@ VALUES
             }
         }
 
-        // =========================
-        // CART CLEAR
-        // =========================
         private void RemovePurchasedItemsFromCart(List<PurchasedItem> purchasedItems)
         {
             if (purchasedItems == null || purchasedItems.Count == 0) return;
@@ -367,9 +355,6 @@ VALUES
             Session[CART_SELECTED_INIT_KEY] = false;
         }
 
-        // =========================
-        // EMAIL (DB FLAG) - requires Orders.EmailSent
-        // =========================
         private void TrySendOrderConfirmationEmail(int orderId, int userId, decimal total, List<PurchasedItem> items)
         {
             if (IsEmailAlreadySent(orderId)) return;
@@ -380,10 +365,8 @@ VALUES
             string subject = T($"EcoEats Order Confirmed — ORD-{orderId}");
             string html = BuildOrderConfirmationHtml(orderId, fullName, total, items);
 
-            // send
             SendEmailHtml(email, subject, html);
 
-            // mark as sent
             MarkEmailSent(orderId);
         }
 
@@ -437,19 +420,13 @@ VALUES
             }
         }
 
-        // =========================
-        // EMAIL SENDER (System.Net.Mail)
-        // Reads SMTP from <system.net><mailSettings> automatically
-        // =========================
         private void SendEmailHtml(string toEmail, string subject, string htmlBody)
         {
             string fromName = ConfigurationManager.AppSettings["EmailFromName"] ?? "EcoEats";
             string fromEmail = ConfigurationManager.AppSettings["EmailFromEmail"] ?? "";
 
-            // If you prefer, you can hard-use the <smtp from="..."> value by leaving fromEmail empty,
-            // but using your current appSettings is fine (no SMTP creds stored here).
             if (string.IsNullOrWhiteSpace(fromEmail))
-                fromEmail = "no-reply@ecoeats.local"; // fallback (won't work unless smtp allows it)
+                fromEmail = "no-reply@ecoeats.local";
 
             var msg = new MailMessage();
             msg.From = new MailAddress(fromEmail, fromName);
@@ -458,7 +435,6 @@ VALUES
             msg.Body = htmlBody ?? "";
             msg.IsBodyHtml = true;
 
-            // This uses Web.config <system.net><mailSettings>
             using (var smtp = new SmtpClient())
             {
                 smtp.Send(msg);
@@ -520,9 +496,6 @@ VALUES
 </div>";
         }
 
-        // =========================
-        // SELLER GROUPS (receipt UI)
-        // =========================
         private List<SellerGroupVM> BuildSellerGroups(List<PurchasedItem> items)
         {
             var productIds = items.Select(i => i.ProductID).Distinct().ToList();
@@ -638,7 +611,6 @@ WHERE p.ProductID IN ({inClause});";
             if (iframe != null)
                 iframe.Attributes["src"] = BuildMapEmbedSrc(group);
 
-            // translate per-group UI labels
             string lang = GetLang();
             if (!lang.Equals("en", StringComparison.OrdinalIgnoreCase))
             {
@@ -700,7 +672,6 @@ WHERE p.ProductID IN ({inClause});";
             lblError.Text = msg;
         }
 
-        // ===== View Models =====
         [Serializable]
         private class SellerGroupVM
         {

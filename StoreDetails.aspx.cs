@@ -4,19 +4,16 @@ using System.Configuration;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Web;
+using System.Web.Security;
 using System.Web.UI;
 using System.Web.UI.WebControls;
-using System.Web.Security;
 using System.Security.Cryptography;
-using System.Text.RegularExpressions;
 
 namespace Business_App_Dev
 {
     public partial class StoreDetails : System.Web.UI.Page
     {
-
         private int sellerId;
-
         private static string ConnStr => ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
 
         protected void Page_Load(object sender, EventArgs e)
@@ -29,22 +26,19 @@ namespace Business_App_Dev
 
             if (!IsPostBack)
             {
-                int sellerId = Convert.ToInt32(Session["SellerId"]);
+                sellerId = Convert.ToInt32(Session["SellerId"]);
                 LoadStore(sellerId);
             }
-
-
         }
 
         private void LoadStore(int sellerId)
         {
-
             var store = GetStoreDetails(sellerId);
             if (store == null) return;
 
             hfLat.Value = store.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
             hfLng.Value = store.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            hfAddr.Value = store.Address;        // used for geocode fallback
+            hfAddr.Value = store.Address;
             hfShopName.Value = store.ShopName;
 
             lblStoreName.Text = store.ShopName;
@@ -61,76 +55,19 @@ namespace Business_App_Dev
             tbDescription.Text = store.Description;
 
             ApplyPickupWindowToUI(store.PickupWindow);
+
+            hfOrigAddr.Value = (store.Address ?? "").Trim();
         }
 
-        private string FormatPickupWindowForDisplay(string pickupWindow)
-        {
-            if (string.IsNullOrWhiteSpace(pickupWindow))
-                return "";
-
-            // Old format: "11:00-20:00"
-            if (pickupWindow.IndexOf("Default=", StringComparison.OrdinalIgnoreCase) < 0
-            && pickupWindow.Contains("-"))
-                return $"Daily: {pickupWindow}";
-
-            // Parse new format: Default=.. | Mon=.. | Tue=.. ...
-            string defaultRange = "";
-            var dayMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-            var chunks = pickupWindow.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries)
-                                     .Select(x => x.Trim());
-
-            foreach (var c in chunks)
-            {
-                var kv = c.Split(new[] { '=' }, 2);
-                if (kv.Length != 2) continue;
-
-                var key = kv[0].Trim();
-                var val = kv[1].Trim();
-
-                if (key.Equals("Default", StringComparison.OrdinalIgnoreCase))
-                {
-                    defaultRange = val; // e.g. 09:00-21:00
-                    continue;
-                }
-
-                // val can be: Closed / Default / Custom:hh-hh / Custom
-                if (val.Equals("Closed", StringComparison.OrdinalIgnoreCase))
-                    dayMap[key] = "Closed";
-                else if (val.Equals("Default", StringComparison.OrdinalIgnoreCase))
-                    dayMap[key] = defaultRange; // show time instead of word Default
-                else if (val.StartsWith("Custom", StringComparison.OrdinalIgnoreCase))
-                {
-                    var idx = val.IndexOf(':');
-                    if (idx >= 0) dayMap[key] = val.Substring(idx + 1).Trim(); // hh-hh
-                    else dayMap[key] = "Custom";
-                }
-                else
-                {
-                    dayMap[key] = val;
-                }
-            }
-
-            string Get(string day) => dayMap.TryGetValue(day, out var v) ? v : (defaultRange != "" ? defaultRange : "");
-
-            // Nice readable display (minimal effort, no HTML changes)
-            return $"Mon: {Get("Mon")}<br/>" +
-            $"Tue: {Get("Tue")}<br/>" +
-            $"Wed: {Get("Wed")}<br/>" +
-            $"Thu: {Get("Thu")}<br/>" +
-            $"Fri: {Get("Fri")}<br/>" +
-            $"Sat: {Get("Sat")}<br/>" +
-            $"Sun: {Get("Sun")}";
-        }
         private StoreDetailsModel GetStoreDetails(int sellerId)
         {
             using (SqlConnection conn = new SqlConnection(ConnStr))
             using (SqlCommand cmd = new SqlCommand(@"
-                SELECT SellerID, ShopName, Address, PostalCode,
-                Latitude, Longitude, PickupWindow, Email, CreatedAt,
-                Phone, Description
-                FROM Seller
-                WHERE SellerID = @SellerID", conn))
+SELECT SellerID, ShopName, Address, PostalCode,
+       Latitude, Longitude, PickupWindow, Email, CreatedAt,
+       Phone, Description
+FROM Seller
+WHERE SellerID = @SellerID", conn))
             {
                 cmd.Parameters.AddWithValue("@SellerID", sellerId);
                 conn.Open();
@@ -159,108 +96,102 @@ namespace Business_App_Dev
 
         protected void btnSave_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(tbDefaultFrom.Text) ||
-                string.IsNullOrWhiteSpace(tbDefaultTo.Text))
+            if (string.IsNullOrWhiteSpace(tbDefaultFrom.Text) || string.IsNullOrWhiteSpace(tbDefaultTo.Text))
             {
-                // show error instead of silently failing
-                ScriptManager.RegisterStartupScript(this, GetType(),
-                    "err", "alert('Please set default operating hours.');", true);
+                ScriptManager.RegisterStartupScript(this, GetType(), "err",
+                    "alert('Please set default operating hours.');", true);
                 return;
             }
 
             int sellerId = Convert.ToInt32(Session["SellerId"]);
 
-            string shopName = tbStoreName.Text.Trim();
-            string address = tbAddress.Text.Trim();
-            string newEmail = tbEmail.Text.Trim();
-            string phone = tbPhone.Text.Trim();
-            string description = tbDescription.Text.Trim();
+            string shopName = (tbStoreName.Text ?? "").Trim();
+            string address = (tbAddress.Text ?? "").Trim();
+            string newEmail = (tbEmail.Text ?? "").Trim();
+            string phone = (tbPhone.Text ?? "").Trim();
+            string description = (tbDescription.Text ?? "").Trim();
             string pickupWindow = BuildPickupWindowText();
+
+            double lat = 0, lng = 0;
+            double.TryParse(hfLat.Value, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out lat);
+            double.TryParse(hfLng.Value, System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out lng);
 
             using (SqlConnection conn = new SqlConnection(ConnStr))
             {
                 conn.Open();
 
-                // 1️⃣ Get OLD email first
                 string oldEmail = "";
-                using (SqlCommand getCmd = new SqlCommand(
-                    "SELECT Email FROM Seller WHERE SellerID = @SellerID", conn))
+                using (SqlCommand getCmd = new SqlCommand("SELECT Email FROM Seller WHERE SellerID = @SellerID", conn))
                 {
                     getCmd.Parameters.AddWithValue("@SellerID", sellerId);
                     oldEmail = getCmd.ExecuteScalar()?.ToString() ?? "";
                 }
 
-                // 2️⃣ Update Seller table
                 using (SqlCommand cmd = new SqlCommand(@"
-            UPDATE Seller
-            SET ShopName = @ShopName,
-                Address = @Address,
-                PickupWindow = @PickupWindow,
-                Email = @Email,
-                Phone = @Phone,
-                Description = @Description
-            WHERE SellerID = @SellerID;", conn))
+UPDATE Seller
+SET ShopName = @ShopName,
+    Address = @Address,
+    Latitude = @Lat,
+    Longitude = @Lng,
+    PickupWindow = @PickupWindow,
+    Email = @Email,
+    Phone = @Phone,
+    Description = @Description
+WHERE SellerID = @SellerID;", conn))
                 {
                     cmd.Parameters.AddWithValue("@ShopName", shopName);
                     cmd.Parameters.AddWithValue("@Address", address);
+                    cmd.Parameters.AddWithValue("@Lat", lat);
+                    cmd.Parameters.AddWithValue("@Lng", lng);
                     cmd.Parameters.AddWithValue("@PickupWindow", pickupWindow);
                     cmd.Parameters.AddWithValue("@Email", newEmail);
                     cmd.Parameters.AddWithValue("@Phone", phone);
                     cmd.Parameters.AddWithValue("@Description", description);
                     cmd.Parameters.AddWithValue("@SellerID", sellerId);
-
                     cmd.ExecuteNonQuery();
                 }
 
-                // 3️⃣ Update SellerApplications table
                 using (SqlCommand cmd2 = new SqlCommand(@"
-            UPDATE SellerApplications
-            SET BusinessName = @BusinessName,
-                Address = @Address,
-                Email = @NewEmail,
-                PhoneNumber = @Phone
-            WHERE Email = @OldEmail;", conn))
+UPDATE SellerApplications
+SET BusinessName = @BusinessName,
+    Address = @Address,
+    Email = @NewEmail,
+    PhoneNumber = @Phone
+WHERE Email = @OldEmail;", conn))
                 {
                     cmd2.Parameters.AddWithValue("@BusinessName", shopName);
                     cmd2.Parameters.AddWithValue("@Address", address);
                     cmd2.Parameters.AddWithValue("@NewEmail", newEmail);
                     cmd2.Parameters.AddWithValue("@Phone", phone);
                     cmd2.Parameters.AddWithValue("@OldEmail", oldEmail);
-
                     cmd2.ExecuteNonQuery();
                 }
             }
 
-            // Reload page cleanly
             LoadStore(sellerId);
 
             ScriptManager.RegisterStartupScript(this, this.GetType(),
-                "backToView", "toggleEdit(false);", true);
+                "backToView",
+                "toggleEdit(false); setTimeout(function(){ try{ if(window.map && window.marker){ var lat=parseFloat(document.getElementById('hfLat').value||''); var lng=parseFloat(document.getElementById('hfLng').value||''); if(!isNaN(lat)&&!isNaN(lng)){ var p={lat:lat,lng:lng}; map.setCenter(p); map.setZoom(16); marker.setPosition(p); var t=document.getElementById('locText'); if(t){ t.innerHTML='Lat: '+lat.toFixed(6)+', Lng: '+lng.toFixed(6); } } } }catch(e){} }, 50);",
+                true);
         }
 
         protected void btnCancel_Click(object sender, EventArgs e)
         {
             int sellerId = Convert.ToInt32(Session["SellerId"]);
-
-            // Reload DB values (discard textbox changes)
             LoadStore(sellerId);
-            hfEditMode.Value = "0";
-            ScriptManager.RegisterStartupScript(this, this.GetType(), "backToView",
-                "toggleEdit(false);", true);
 
-            // Back to VIEW mode
             hfEditMode.Value = "0";
-
+            ScriptManager.RegisterStartupScript(this, this.GetType(),
+                "backToView", "toggleEdit(false);", true);
         }
-
 
         private string BuildPickupWindowText()
         {
             string defFrom = (tbDefaultFrom.Text ?? "").Trim();
             string defTo = (tbDefaultTo.Text ?? "").Trim();
-
-            if (string.IsNullOrEmpty(defFrom) || string.IsNullOrEmpty(defTo))
-                defFrom = defTo = ""; // allow blank, but you can enforce later
 
             string DayPart(string day, DropDownList mode, TextBox from, TextBox to)
             {
@@ -269,33 +200,31 @@ namespace Business_App_Dev
                 if (m == "Closed") return $"{day}=Closed";
                 if (m == "Default") return $"{day}=Default";
 
-                // Custom
                 string f = (from.Text ?? "").Trim();
                 string t = (to.Text ?? "").Trim();
                 if (string.IsNullOrEmpty(f) || string.IsNullOrEmpty(t))
-                    return $"{day}=Custom"; // fallback
+                    return $"{day}=Custom";
 
                 return $"{day}=Custom:{f}-{t}";
             }
 
             var parts = new List<string>
-    {
-        $"Default={defFrom}-{defTo}",
-        DayPart("Mon", ddlMonMode, tbMonFrom, tbMonTo),
-        DayPart("Tue", ddlTueMode, tbTueFrom, tbTueTo),
-        DayPart("Wed", ddlWedMode, tbWedFrom, tbWedTo),
-        DayPart("Thu", ddlThuMode, tbThuFrom, tbThuTo),
-        DayPart("Fri", ddlFriMode, tbFriFrom, tbFriTo),
-        DayPart("Sat", ddlSatMode, tbSatFrom, tbSatTo),
-        DayPart("Sun", ddlSunMode, tbSunFrom, tbSunTo),
-    };
+            {
+                $"Default={defFrom}-{defTo}",
+                DayPart("Mon", ddlMonMode, tbMonFrom, tbMonTo),
+                DayPart("Tue", ddlTueMode, tbTueFrom, tbTueTo),
+                DayPart("Wed", ddlWedMode, tbWedFrom, tbWedTo),
+                DayPart("Thu", ddlThuMode, tbThuFrom, tbThuTo),
+                DayPart("Fri", ddlFriMode, tbFriFrom, tbFriTo),
+                DayPart("Sat", ddlSatMode, tbSatFrom, tbSatTo),
+                DayPart("Sun", ddlSunMode, tbSunFrom, tbSunTo),
+            };
 
             return string.Join(" | ", parts);
         }
 
         private void ApplyPickupWindowToUI(string pickupWindow)
         {
-            // defaults
             tbDefaultFrom.Text = "";
             tbDefaultTo.Text = "";
 
@@ -305,7 +234,6 @@ namespace Business_App_Dev
                 else ddl.SelectedValue = "Default";
             }
 
-            // set all days to Default initially
             SetMode(ddlMonMode, "Default");
             SetMode(ddlTueMode, "Default");
             SetMode(ddlWedMode, "Default");
@@ -329,7 +257,6 @@ namespace Business_App_Dev
 
                 if (key.Equals("Default", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Default=10:00-18:00
                     var times = val.Split('-');
                     if (times.Length == 2)
                     {
@@ -339,7 +266,6 @@ namespace Business_App_Dev
                     continue;
                 }
 
-                // Day=Closed OR Day=Default OR Day=Custom:hh-hh
                 DropDownList ddl = null;
                 TextBox from = null, to = null;
 
@@ -367,8 +293,6 @@ namespace Business_App_Dev
                 else if (val.StartsWith("Custom", StringComparison.OrdinalIgnoreCase))
                 {
                     ddl.SelectedValue = "Custom";
-
-                    // Custom:10:00-18:00
                     var idx = val.IndexOf(':');
                     if (idx >= 0)
                     {
@@ -382,6 +306,59 @@ namespace Business_App_Dev
                 }
             }
         }
+
+        private string FormatPickupWindowForDisplay(string pickupWindow)
+        {
+            if (string.IsNullOrWhiteSpace(pickupWindow))
+                return "";
+
+            if (pickupWindow.IndexOf("Default=", StringComparison.OrdinalIgnoreCase) < 0 && pickupWindow.Contains("-"))
+                return $"Daily: {pickupWindow}";
+
+            string defaultRange = "";
+            var dayMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            var chunks = pickupWindow.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries)
+                                     .Select(x => x.Trim());
+
+            foreach (var c in chunks)
+            {
+                var kv = c.Split(new[] { '=' }, 2);
+                if (kv.Length != 2) continue;
+
+                var key = kv[0].Trim();
+                var val = kv[1].Trim();
+
+                if (key.Equals("Default", StringComparison.OrdinalIgnoreCase))
+                {
+                    defaultRange = val;
+                    continue;
+                }
+
+                if (val.Equals("Closed", StringComparison.OrdinalIgnoreCase))
+                    dayMap[key] = "Closed";
+                else if (val.Equals("Default", StringComparison.OrdinalIgnoreCase))
+                    dayMap[key] = defaultRange;
+                else if (val.StartsWith("Custom", StringComparison.OrdinalIgnoreCase))
+                {
+                    var idx = val.IndexOf(':');
+                    dayMap[key] = idx >= 0 ? val.Substring(idx + 1).Trim() : "Custom";
+                }
+                else
+                    dayMap[key] = val;
+            }
+
+            string Get(string day) => dayMap.TryGetValue(day, out var v) ? v : (defaultRange != "" ? defaultRange : "");
+
+            return $"Mon: {Get("Mon")}<br/>" +
+                   $"Tue: {Get("Tue")}<br/>" +
+                   $"Wed: {Get("Wed")}<br/>" +
+                   $"Thu: {Get("Thu")}<br/>" +
+                   $"Fri: {Get("Fri")}<br/>" +
+                   $"Sat: {Get("Sat")}<br/>" +
+                   $"Sun: {Get("Sun")}";
+        }
+
         public class StoreDetailsModel
         {
             public int SellerID { get; set; }
@@ -399,14 +376,11 @@ namespace Business_App_Dev
 
         protected void btnLogout_Click(object sender, EventArgs e)
         {
-            // Clear session
             Session.Clear();
             Session.Abandon();
 
-            // Sign out forms auth (if used)
             FormsAuthentication.SignOut();
 
-            // Expire auth cookie
             if (Request.Cookies[FormsAuthentication.FormsCookieName] != null)
             {
                 var auth = new HttpCookie(FormsAuthentication.FormsCookieName, "");
@@ -414,7 +388,6 @@ namespace Business_App_Dev
                 Response.Cookies.Add(auth);
             }
 
-            // Expire session cookie
             if (Request.Cookies["ASP.NET_SessionId"] != null)
             {
                 var s = new HttpCookie("ASP.NET_SessionId", "");
@@ -422,9 +395,9 @@ namespace Business_App_Dev
                 Response.Cookies.Add(s);
             }
 
-            // Redirect to seller login
             Response.Redirect("~/login.aspx?role=Seller", true);
         }
+
         private string HashPasswordPbkdf2(string password)
         {
             const int iterations = 100000;
@@ -439,16 +412,14 @@ namespace Business_App_Dev
                 return $"pbkdf2${iterations}${Convert.ToBase64String(salt)}${Convert.ToBase64String(hash)}";
             }
         }
+
         protected void btnUpdateStorePassword_Click(object sender, EventArgs e)
         {
             lblStorePwMsg.Style["display"] = "none";
             lblStorePwMsg.Text = "";
 
-            // You must have seller email somewhere.
-            // Option A: from Session (best)
             string sellerEmail = (Session["SellerEmail"] as string);
 
-            // Option B: fallback to the label already on StoreDetails (VIEW MODE)
             if (string.IsNullOrWhiteSpace(sellerEmail))
                 sellerEmail = (lblEmail.Text ?? "").Trim();
 
@@ -498,7 +469,6 @@ namespace Business_App_Dev
                 {
                     conn.Open();
 
-                    // ✅ update SellerApplications because password is from application table
                     string sql = @"
 UPDATE SellerApplications
 SET PasswordHash = @Pw
@@ -541,8 +511,5 @@ WHERE Email = @Email";
                 lblStorePwMsg.Text = "❌ Server error: " + ex.Message;
             }
         }
-
-
-
     }
 }

@@ -9,7 +9,6 @@ namespace Business_App_Dev
 {
     public class ProductModel
     {
-        // ====== Columns / Properties ======
         public int ProductID { get; set; }
         public string ProductName { get; set; } = "";
         public string Subtitle { get; set; } = "";
@@ -27,18 +26,23 @@ namespace Business_App_Dev
         public DateTime CreatedAt { get; set; }
         public int SellerID { get; set; }
 
-        // ====== AI fields ======
-        public double AIScore { get; set; }               // internal ranking score
-        public double LocalPopularity01 { get; set; }     // 0..1 popularity near user
+        public double AIScore { get; set; }
+        public double LocalPopularity01 { get; set; }
 
-        // ====== Connection String ======
         private static string ConnStr =>
             ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
 
-        // ====== Helper: Map SQL row → ProductModel ======
+        private static bool HasCol(SqlDataReader r, string col)
+        {
+            for (int i = 0; i < r.FieldCount; i++)
+                if (string.Equals(r.GetName(i), col, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            return false;
+        }
+
         private static ProductModel ReadProduct(SqlDataReader r)
         {
-            return new ProductModel
+            var p = new ProductModel
             {
                 ProductID = r["ProductID"] != DBNull.Value ? Convert.ToInt32(r["ProductID"]) : 0,
                 ProductName = r["ProductName"]?.ToString() ?? "",
@@ -51,8 +55,6 @@ namespace Business_App_Dev
                 Rating = r["Rating"] != DBNull.Value ? Convert.ToDouble(r["Rating"]) : 0,
                 Reviews = r["Reviews"] != DBNull.Value ? Convert.ToInt32(r["Reviews"]) : 0,
 
-                DistanceKm = r["DistanceKm"] != DBNull.Value ? Convert.ToDouble(r["DistanceKm"]) : 0,
-
                 ExpiryHours = r["ExpiryHours"] != DBNull.Value ? Convert.ToInt32(r["ExpiryHours"]) : 0,
                 CO2Saved = r["CO2Saved"] != DBNull.Value ? Convert.ToDouble(r["CO2Saved"]) : 0,
 
@@ -62,11 +64,15 @@ namespace Business_App_Dev
                 CreatedAt = r["CreatedAt"] != DBNull.Value ? Convert.ToDateTime(r["CreatedAt"]) : DateTime.Now,
                 SellerID = r["SellerID"] != DBNull.Value ? Convert.ToInt32(r["SellerID"]) : 0
             };
+
+            if (HasCol(r, "DistanceKm") && r["DistanceKm"] != DBNull.Value)
+                p.DistanceKm = Convert.ToDouble(r["DistanceKm"]);
+            else
+                p.DistanceKm = 0;
+
+            return p;
         }
 
-        // =========================================================
-        // BACKWARD COMPAT (so your other pages won't break)
-        // =========================================================
         public static List<ProductModel> GetProductBySeller(int SellerId)
         {
             var list = new List<ProductModel>();
@@ -107,19 +113,9 @@ namespace Business_App_Dev
             return list;
         }
 
-        public static List<ProductModel> GetAllProducts()
-        {
-            return GetProductsBySearch("");
-        }
+        public static List<ProductModel> GetAllProducts() => GetProductsBySearch("");
+        public static List<ProductModel> GetAllProductsWithDistance(double userLat, double userLng) => GetProductsWithDistanceAndSearch(userLat, userLng, "");
 
-        public static List<ProductModel> GetAllProductsWithDistance(double userLat, double userLng)
-        {
-            return GetProductsWithDistanceAndSearch(userLat, userLng, "");
-        }
-
-        // =========================================================
-        // AI MODE: Search (product/subtitle/category/shop) - no location
-        // =========================================================
         public static List<ProductModel> GetProductsBySearch(string keyword)
         {
             var list = new List<ProductModel>();
@@ -156,9 +152,6 @@ ORDER BY p.DiscountPercent DESC, p.CreatedAt DESC;", conn))
             return list;
         }
 
-        // =========================================================
-        // AI MODE: Search + Distance
-        // =========================================================
         public static List<ProductModel> GetProductsWithDistanceAndSearch(double userLat, double userLng, string keyword)
         {
             var list = new List<ProductModel>();
@@ -206,26 +199,17 @@ ORDER BY DistanceKm ASC, p.DiscountPercent DESC, p.CreatedAt DESC;", conn))
             return list;
         }
 
-        // =========================================================
-        // ✅ NEW: AI Recommended (Embeddings + Local Popularity + Deals + Distance)
-        // =========================================================
         public static List<ProductModel> GetAIRecommended(int userId, double userLat, double userLng, string keyword)
         {
-            // 1) Candidate pool: nearby + keyword (reuse existing)
             var candidates = GetProductsWithDistanceAndSearch(userLat, userLng, keyword);
             if (candidates == null) candidates = new List<ProductModel>();
-
-            // cap candidates to keep it fast
             if (candidates.Count > 200) candidates = candidates.Take(200).ToList();
 
-            // 2) Local popularity around user (last 30 days, within radius using seller location)
             var popMap = GetLocalPopularityMap(userLat, userLng, radiusKm: 3.0, days: 30);
 
-            // assign local popularity normalized 0..1
             foreach (var p in candidates)
                 p.LocalPopularity01 = popMap.TryGetValue(p.ProductID, out var pop01) ? pop01 : 0;
 
-            // 3) If not logged in or userId invalid -> fallback: rank by local popularity + deals + distance
             if (userId <= 0)
             {
                 foreach (var p in candidates)
@@ -245,10 +229,8 @@ ORDER BY DistanceKm ASC, p.DiscountPercent DESC, p.CreatedAt DESC;", conn))
                     .ToList();
             }
 
-            // 4) Past purchases (for user taste)
             var pastIds = GetUserPastPurchasedProductIds(userId, maxItems: 50);
 
-            // 5) Load embeddings for candidates + past
             var allIds = candidates.Select(p => p.ProductID)
                                    .Concat(pastIds)
                                    .Distinct()
@@ -256,14 +238,11 @@ ORDER BY DistanceKm ASC, p.DiscountPercent DESC, p.CreatedAt DESC;", conn))
 
             var emb = EmbeddingStore.GetProductEmbeddings(ConnStr, allIds);
 
-            // 6) Build user taste vector (average of purchased vectors)
             var userVecs = pastIds.Where(id => emb.ContainsKey(id)).Select(id => emb[id]).ToList();
             var userTaste = VectorMath.Average(userVecs);
 
-            // If no embeddings for user history -> fallback to local popularity + deals + distance
             bool hasUserTaste = userTaste != null && userTaste.Length > 0;
 
-            // 7) Score each candidate
             var alreadyBought = new HashSet<int>(pastIds);
 
             foreach (var p in candidates)
@@ -276,7 +255,6 @@ ORDER BY DistanceKm ASC, p.DiscountPercent DESC, p.CreatedAt DESC;", conn))
                 double deal01 = VectorMath.Clamp01((p.DiscountPercent) / 60.0);
                 double novelty = alreadyBought.Contains(p.ProductID) ? 0.0 : 1.0;
 
-                // Weighted hybrid
                 p.AIScore =
                     (hasUserTaste ? (0.55 * sim) : 0.0) +
                     (0.30 * p.LocalPopularity01) +
@@ -291,10 +269,6 @@ ORDER BY DistanceKm ASC, p.DiscountPercent DESC, p.CreatedAt DESC;", conn))
                 .ToList();
         }
 
-        // =========================================================
-        // ✅ Helper: Past purchased product IDs
-        // NOTE: adjust column names if yours differ (UserID vs UserId etc.)
-        // =========================================================
         public static List<int> GetUserPastPurchasedProductIds(int userId, int maxItems)
         {
             var list = new List<int>();
@@ -326,12 +300,6 @@ ORDER BY o.CreatedAt DESC;", conn))
             return list;
         }
 
-        // =========================================================
-        // ✅ Helper: Local popularity near the user
-        // - radiusKm around the user, based on Seller lat/lng (same as your distance query)
-        // - last X days, only PAID orders
-        // Returns normalized 0..1 map by productId
-        // =========================================================
         public static Dictionary<int, double> GetLocalPopularityMap(double userLat, double userLng, double radiusKm, int days)
         {
             var raw = new Dictionary<int, int>();
@@ -376,10 +344,8 @@ GROUP BY oi.ProductID;", conn))
                 }
             }
 
-            // normalize to 0..1 by max qty
             int maxQty = raw.Count == 0 ? 0 : raw.Values.Max();
             var norm = new Dictionary<int, double>();
-
             if (maxQty <= 0) return norm;
 
             foreach (var kv in raw)
@@ -388,9 +354,6 @@ GROUP BY oi.ProductID;", conn))
             return norm;
         }
 
-        // =========================================================
-        // DAILY BEST DEALS: Most bought today pinned + best discount/cheap
-        // =========================================================
         private static int? GetMostBoughtProductIdToday()
         {
             using (SqlConnection conn = new SqlConnection(ConnStr))
@@ -507,9 +470,6 @@ ORDER BY
             return list;
         }
 
-        // =========================================================
-        // CATEGORIES
-        // =========================================================
         public static List<string> GetCategories()
         {
             var list = new List<string>();
@@ -620,9 +580,16 @@ ORDER BY DistanceKm ASC, p.DiscountPercent DESC, p.CreatedAt DESC;", conn))
             return list;
         }
 
-        // =========================================================
-        // CRUD (KEEP - used by Inventory/AddNewProduct)
-        // =========================================================
+        public static List<ProductModel> SearchProducts(string keyword, string scope = "ALL")
+        {
+            return GetProductsBySearch(keyword);
+        }
+
+        public static List<ProductModel> SearchProductsWithDistance(double lat, double lng, string keyword, string scope = "ALL")
+        {
+            return GetProductsWithDistanceAndSearch(lat, lng, keyword);
+        }
+
         public static int DeleteProduct(int productID)
         {
             using (SqlConnection conn = new SqlConnection(ConnStr))

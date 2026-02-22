@@ -33,16 +33,27 @@ namespace Business_App_Dev
 
             litChat.Text += UserBubble(userMsg);
 
-            bool isEscalation = IsEscalationMessage(userMsg);
+            // ✅ If enquiry mode is ON, this message becomes the real enquiry
+            if (IsEnquiryMode)
+            {
+                EscalateToAdmin(userMsg);
 
+                litChat.Text += BotBubble(
+                    "✅ <b>Sent to Admin Support.</b><br/>They will reply here once they respond."
+                );
+
+                IsEnquiryMode = false;
+                txtMsg.Text = "";
+                ClientScript.RegisterStartupScript(this.GetType(), "scrollChat", "scrollChatToBottom();", true);
+                return;
+            }
+
+            // Normal bot flow
             string reply = GetBotReply(userMsg);
             litChat.Text += BotBubble(reply);
 
-            // Only log if NOT already logged inside EscalateToAdmin
-            if (!isEscalation)
-            {
-                LogChat(userMsg, reply);
-            }
+            // Log normal chats (not escalations)
+            LogChat(userMsg, reply);
 
             AppendLatestAdminReplyIfAny();
 
@@ -91,11 +102,21 @@ namespace Business_App_Dev
                 return ShowChatHistory();
 
             // 🔥 ESCALATION TRIGGER
+            // ✅ ADMIN SUPPORT BUTTON / MODE
+            if (lower.Contains("__admin_support__"))
+            {
+                IsEnquiryMode = true;
+                return "💬 <b>Admin Support mode activated.</b><br/>" +
+                       "Please type your enquiry now (example: <i>I did not receive my refund</i>).<br/>" +
+                       "Your next message will be sent to Admin ✅";
+            }
+
+            // OPTIONAL: if user types “admin support” manually
             if (lower.Contains("admin") || lower.Contains("support") || lower.Contains("enquir"))
             {
-                EscalateToAdmin(msg);
-                return "💬 <b>Ok!</b> I’ve sent your enquiry to Admin Support.<br/>" +
-                       "They will reply here once they respond ✅";
+                IsEnquiryMode = true;
+                return "💬 <b>Sure.</b> Please type your enquiry now.<br/>" +
+                       "Your next message will be sent to Admin ✅";
             }
 
             return "🤔 I'm not sure how to help with that.<br/><br/>" +
@@ -381,6 +402,11 @@ namespace Business_App_Dev
                     );
                 }
             }
+        }
+        private bool IsEnquiryMode
+        {
+            get => (ViewState["IsEnquiryMode"] as bool?) ?? false;
+            set => ViewState["IsEnquiryMode"] = value;
         }
     }
 }

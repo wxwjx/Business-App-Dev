@@ -46,9 +46,7 @@ namespace Business_App_Dev
 
         private string ConnStr()
         {
-            return ConfigurationManager
-                .ConnectionStrings["EcoEatsDb"]
-                .ConnectionString;
+            return ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
         }
 
         private void LoadOrderHeader(int userId, int orderId)
@@ -80,35 +78,68 @@ WHERE o.OrderID = @OrderID AND o.UserID = @UserID;";
 
                     pnlMain.Visible = true;
 
-                    // --- Read sellerId safely (Orders has SellerID) ---
-                    if (rdr["SellerID"] == null || rdr["SellerID"] == DBNull.Value)
-                        throw new Exception("Order has no seller associated.");
-
-                    int sellerId = Convert.ToInt32(rdr["SellerID"]);
-
                     lblOrderId.Text = rdr["OrderID"].ToString();
-                    lblCreatedAt.Text = Convert
-                        .ToDateTime(rdr["CreatedAt"])
-                        .ToString("dd MMM yyyy, hh:mm tt");
+                    lblCreatedAt.Text = Convert.ToDateTime(rdr["CreatedAt"]).ToString("dd MMM yyyy, hh:mm tt");
 
-                    lblTotal.Text = Convert
-                        .ToDecimal(rdr["TotalAmount"])
-                        .ToString("0.00");
+                    lblTotal.Text = Convert.ToDecimal(rdr["TotalAmount"]).ToString("0.00");
 
                     lblPayStatus.Text = rdr["PayStatus"]?.ToString();
                     lblOrderStatus.Text = rdr["OrderStatus"]?.ToString();
                     lblStripeSessionId.Text = rdr["StripeSessionId"]?.ToString();
 
                     refPill.Attributes["data-ref"] = lblStripeSessionId.Text;
+                }
+            }
 
-                    // ✅ FIX: Your Messages.aspx opens by ?cid= (conversationId), not sellerId
-                    int conversationId = GetOrCreateConversationId(userId, sellerId);
+            var sellerInfo = GetSellerInfoFromOrderItems(orderId, userId);
 
-                    // Go to customer messaging page
-                    lnkChatSeller.NavigateUrl = $"Messages.aspx?cid={conversationId}";
+            if (sellerInfo.SellerCount == 1)
+            {
+                int sid = sellerInfo.SingleSellerId;
 
-                    // Keep rating link as-is (you’ll implement later)
-                    lnkRateOrder.NavigateUrl = $"RateOrder.aspx?orderId={orderId}";
+                int conversationId = GetOrCreateConversationId(userId, sid);
+                lnkChatSeller.NavigateUrl = $"Messages.aspx?cid={conversationId}";
+                lnkChatSeller.Visible = true;
+
+                pnlError.Visible = false;
+            }
+            else
+            {
+                lnkChatSeller.Visible = false;
+
+                pnlError.Visible = true;
+                lblError.Text = sellerInfo.SellerCount == 0
+                    ? "This order has no seller linked in OrderItems. Check OrderItems.SellerID and Products.SellerID."
+                    : "This order contains items from multiple sellers. Please message sellers from the Order Success receipt groups (or implement seller grouping on this page).";
+            }
+
+            lnkRateOrder.NavigateUrl = $"RateOrder.aspx?orderId={orderId}";
+        }
+
+        private (int SellerCount, int SingleSellerId) GetSellerInfoFromOrderItems(int orderId, int userId)
+        {
+            string sql = @"
+SELECT COUNT(DISTINCT oi.SellerID) AS Cnt,
+       MAX(oi.SellerID) AS AnySeller
+FROM dbo.OrderItems oi
+JOIN dbo.Orders o ON o.OrderID = oi.OrderID
+WHERE oi.OrderID = @OrderID AND o.UserID = @UserID AND oi.SellerID IS NOT NULL;";
+
+            using (SqlConnection con = new SqlConnection(ConnStr()))
+            using (SqlCommand cmd = new SqlCommand(sql, con))
+            {
+                cmd.Parameters.AddWithValue("@OrderID", orderId);
+                cmd.Parameters.AddWithValue("@UserID", userId);
+
+                con.Open();
+                using (SqlDataReader r = cmd.ExecuteReader())
+                {
+                    if (!r.Read()) return (0, 0);
+
+                    int cnt = Convert.ToInt32(r["Cnt"]);
+                    int anySeller = (r["AnySeller"] == DBNull.Value) ? 0 : Convert.ToInt32(r["AnySeller"]);
+
+                    return (cnt, anySeller);
                 }
             }
         }
@@ -148,15 +179,12 @@ WHERE oi.OrderID = @OrderID AND o.UserID = @UserID;";
             }
         }
 
-        // ✅ Finds existing conversation for (UserID, SellerID), else creates it.
-        // Uses your UX_Conversations_User_Seller unique index for safety.
         private int GetOrCreateConversationId(int userId, int sellerId)
         {
             using (SqlConnection con = new SqlConnection(ConnStr()))
             {
                 con.Open();
 
-                // 1) Find existing
                 using (SqlCommand find = new SqlCommand(@"
 SELECT ConversationID
 FROM dbo.Conversations
@@ -170,14 +198,12 @@ WHERE UserID = @UID AND SellerID = @SID;", con))
                         return Convert.ToInt32(existing);
                 }
 
-                // 2) Create new (handles duplicate insert race via TRY/CATCH)
                 using (SqlCommand create = new SqlCommand(@"
 BEGIN TRY
     INSERT INTO dbo.Conversations (UserID, SellerID)
     VALUES (@UID, @SID);
 END TRY
 BEGIN CATCH
-    -- If another request created it first, ignore duplicate key errors
     IF ERROR_NUMBER() NOT IN (2601, 2627) THROW;
 END CATCH;
 

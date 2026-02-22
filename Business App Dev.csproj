@@ -266,8 +266,10 @@
     <Content Include="Inventory.aspx" />
     <Content Include="Landing.aspx" />
     <Content Include="Content\OrderHistory.css" />
+    <Content Include="OrderFeedback.aspx" />
     <Content Include="OrderManagement.aspx" />
     <Content Include="OrderView.aspx" />
+    <Content Include="PremiumSuccess.aspx" />
     <Content Include="RateOrder.aspx" />
     <Content Include="RegisterCustomer.aspx" />
     <Content Include="Content\LoginSite.css" />
@@ -459,6 +461,13 @@
     <Compile Include="Landing.aspx.designer.cs">
       <DependentUpon>Landing.aspx</DependentUpon>
     </Compile>
+    <Compile Include="OrderFeedback.aspx.cs">
+      <DependentUpon>OrderFeedback.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="OrderFeedback.aspx.designer.cs">
+      <DependentUpon>OrderFeedback.aspx</DependentUpon>
+    </Compile>
     <Compile Include="OrderManagement.aspx.cs">
       <DependentUpon>OrderManagement.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -472,6 +481,13 @@
     </Compile>
     <Compile Include="OrderView.aspx.designer.cs">
       <DependentUpon>OrderView.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="PremiumSuccess.aspx.cs">
+      <DependentUpon>PremiumSuccess.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PremiumSuccess.aspx.designer.cs">
+      <DependentUpon>PremiumSuccess.aspx</DependentUpon>
     </Compile>
     <Compile Include="RateOrder.aspx.cs">
       <DependentUpon>RateOrder.aspx</DependentUpon>
