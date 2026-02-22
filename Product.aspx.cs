@@ -88,20 +88,12 @@ namespace Business_App_Dev
 
         private double Lat
         {
-            get
-            {
-                double.TryParse(hfLat.Value, out double v);
-                return v;
-            }
+            get { double.TryParse(hfLat.Value, out double v); return v; }
         }
 
         private double Lng
         {
-            get
-            {
-                double.TryParse(hfLng.Value, out double v);
-                return v;
-            }
+            get { double.TryParse(hfLng.Value, out double v); return v; }
         }
 
         private bool HasLoc
@@ -118,12 +110,20 @@ namespace Business_App_Dev
             }
         }
 
+        // ✅ FIXED: supports multiple session keys so UserId is not accidentally 0
         private int UserId
         {
             get
             {
-                if (Session["UserID"] == null) return 0;
-                int.TryParse(Session["UserID"].ToString(), out int id);
+                object v =
+                    Session["UserID"] ??
+                    Session["UserId"] ??
+                    Session["MemberID"] ??
+                    Session["MemberId"] ??
+                    Session["UID"];
+
+                if (v == null) return 0;
+                int.TryParse(v.ToString(), out int id);
                 return id;
             }
         }
@@ -214,7 +214,7 @@ namespace Business_App_Dev
 
             var ai = HasLoc
                 ? ProductModel.GetAIRecommended(UserId, Lat, Lng, "")
-                : ProductModel.GetProductsBySearch("");
+                : ProductModel.GetAIRecommended(UserId, 0, 0, "");
 
             ProductRepeater.DataSource = ai;
             ProductRepeater.DataBind();

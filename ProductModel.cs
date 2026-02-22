@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data.SqlClient;
 using System.Linq;
-using Business_App_Dev.Services;
 
 namespace Business_App_Dev
 {
@@ -31,6 +30,13 @@ namespace Business_App_Dev
 
         private static string ConnStr =>
             ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
+
+        private static double Clamp01(double v)
+        {
+            if (v < 0) return 0;
+            if (v > 1) return 1;
+            return v;
+        }
 
         private static bool HasCol(SqlDataReader r, string col)
         {
@@ -68,46 +74,24 @@ namespace Business_App_Dev
             if (HasCol(r, "DistanceKm") && r["DistanceKm"] != DBNull.Value)
                 p.DistanceKm = Convert.ToDouble(r["DistanceKm"]);
             else
-                p.DistanceKm = 0;
+                p.DistanceKm = 9999;
 
             return p;
         }
 
-        public static List<ProductModel> GetProductBySeller(int SellerId)
+        public static List<ProductModel> GetProductBySeller(int sellerId)
         {
             var list = new List<ProductModel>();
 
             using (SqlConnection conn = new SqlConnection(ConnStr))
-            using (SqlCommand cmd = new SqlCommand(@"SELECT * FROM Products WHERE SellerID = @SellerID", conn))
+            using (SqlCommand cmd = new SqlCommand(@"SELECT * FROM Products WHERE SellerID = @SellerID ORDER BY CreatedAt DESC", conn))
             {
-                cmd.Parameters.AddWithValue("@SellerID", SellerId);
+                cmd.Parameters.AddWithValue("@SellerID", sellerId);
                 conn.Open();
 
-                using (SqlDataReader reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        list.Add(new ProductModel
-                        {
-                            ProductID = (int)reader["ProductID"],
-                            ProductName = reader["ProductName"].ToString(),
-                            Subtitle = reader["Subtitle"] != DBNull.Value ? reader["Subtitle"].ToString() : "",
-                            ImageUrl = reader["ImageUrl"] != DBNull.Value ? reader["ImageUrl"].ToString() : "",
-                            PriceNow = reader["Price"] != DBNull.Value ? Convert.ToDecimal(reader["Price"]) : 0m,
-                            PriceOld = reader["PriceOld"] != DBNull.Value ? Convert.ToDecimal(reader["PriceOld"]) : 0m,
-                            Rating = reader["Rating"] != DBNull.Value ? Convert.ToDouble(reader["Rating"]) : 0.0,
-                            Reviews = reader["Reviews"] != DBNull.Value ? Convert.ToInt32(reader["Reviews"]) : 0,
-                            DistanceKm = reader["DistanceKm"] != DBNull.Value ? Convert.ToDouble(reader["DistanceKm"]) : 0,
-                            ExpiryHours = reader["ExpiryHours"] != DBNull.Value ? Convert.ToInt32(reader["ExpiryHours"]) : 0,
-                            CO2Saved = reader["CO2Saved"] != DBNull.Value ? Convert.ToDouble(reader["CO2Saved"]) : 0.0,
-                            DiscountPercent = reader["DiscountPercent"] != DBNull.Value ? Convert.ToInt32(reader["DiscountPercent"]) : 0,
-                            Quantity = reader["Quantity"] != DBNull.Value ? Convert.ToInt32(reader["Quantity"]) : 0,
-                            Category = reader["Category"] != DBNull.Value ? reader["Category"].ToString() : "",
-                            CreatedAt = reader["CreatedAt"] != DBNull.Value ? Convert.ToDateTime(reader["CreatedAt"]) : DateTime.Now,
-                            SellerID = reader["SellerID"] != DBNull.Value ? Convert.ToInt32(reader["SellerID"]) : 0
-                        });
-                    }
-                }
+                using (SqlDataReader r = cmd.ExecuteReader())
+                    while (r.Read())
+                        list.Add(ReadProduct(r));
             }
 
             return list;
@@ -143,10 +127,8 @@ ORDER BY p.DiscountPercent DESC, p.CreatedAt DESC;", conn))
                 conn.Open();
 
                 using (SqlDataReader r = cmd.ExecuteReader())
-                {
                     while (r.Read())
                         list.Add(ReadProduct(r));
-                }
             }
 
             return list;
@@ -164,19 +146,19 @@ SELECT
     p.Price, p.PriceOld, p.Rating, p.Reviews,
     p.ExpiryHours, p.CO2Saved, p.DiscountPercent, p.Quantity,
     p.Category, p.CreatedAt, p.SellerID,
-
-    (6371 * ACOS(
+    CASE
+      WHEN s.Latitude IS NULL OR s.Longitude IS NULL THEN 9999
+      ELSE (6371 * ACOS(
         COS(RADIANS(@lat)) *
         COS(RADIANS(s.Latitude)) *
         COS(RADIANS(s.Longitude) - RADIANS(@lng)) +
         SIN(RADIANS(@lat)) *
         SIN(RADIANS(s.Latitude))
-    )) AS DistanceKm
+      ))
+    END AS DistanceKm
 FROM dbo.Products p
 INNER JOIN dbo.Seller s ON s.SellerID = p.SellerID
 WHERE
-    s.Latitude IS NOT NULL AND s.Longitude IS NOT NULL
-    AND
     (@kw = '' OR
      p.ProductName LIKE '%' + @kw + '%' OR
      p.Subtitle    LIKE '%' + @kw + '%' OR
@@ -190,10 +172,8 @@ ORDER BY DistanceKm ASC, p.DiscountPercent DESC, p.CreatedAt DESC;", conn))
 
                 conn.Open();
                 using (SqlDataReader r = cmd.ExecuteReader())
-                {
                     while (r.Read())
                         list.Add(ReadProduct(r));
-                }
             }
 
             return list;
@@ -201,103 +181,220 @@ ORDER BY DistanceKm ASC, p.DiscountPercent DESC, p.CreatedAt DESC;", conn))
 
         public static List<ProductModel> GetAIRecommended(int userId, double userLat, double userLng, string keyword)
         {
-            var candidates = GetProductsWithDistanceAndSearch(userLat, userLng, keyword);
-            if (candidates == null) candidates = new List<ProductModel>();
-            if (candidates.Count > 200) candidates = candidates.Take(200).ToList();
+            var candidates = (userLat != 0 && userLng != 0)
+                ? (GetProductsWithDistanceAndSearch(userLat, userLng, keyword) ?? new List<ProductModel>())
+                : (GetProductsBySearch(keyword) ?? new List<ProductModel>());
 
-            var popMap = GetLocalPopularityMap(userLat, userLng, radiusKm: 3.0, days: 30);
+            if (candidates.Count > 250) candidates = candidates.Take(250).ToList();
+
+            var popMap = (userLat != 0 && userLng != 0)
+                ? GetLocalPopularityMap(userLat, userLng, radiusKm: 3.0, days: 30)
+                : new Dictionary<int, double>();
 
             foreach (var p in candidates)
                 p.LocalPopularity01 = popMap.TryGetValue(p.ProductID, out var pop01) ? pop01 : 0;
 
+            // Guest: trending + deals + distance
             if (userId <= 0)
             {
                 foreach (var p in candidates)
                 {
-                    double dist01 = VectorMath.Clamp01((p.DistanceKm <= 0 ? 5 : p.DistanceKm) / 5.0);
-                    double deal01 = VectorMath.Clamp01((p.DiscountPercent) / 60.0);
+                    double dist01 = (userLat != 0 && userLng != 0)
+                        ? Clamp01((p.DistanceKm <= 0 ? 5 : p.DistanceKm) / 5.0)
+                        : 0;
+
+                    double deal01 = Clamp01(p.DiscountPercent / 60.0);
 
                     p.AIScore =
-                        (0.65 * p.LocalPopularity01) +
-                        (0.25 * deal01) -
+                        (0.70 * p.LocalPopularity01) +
+                        (0.30 * deal01) -
                         (0.20 * dist01);
                 }
 
                 return candidates
                     .OrderByDescending(x => x.AIScore)
+                    .ThenBy(x => x.DistanceKm)
                     .Take(24)
                     .ToList();
             }
 
-            var pastIds = GetUserPastPurchasedProductIds(userId, maxItems: 50);
+            // Logged in: personal signals
+            var userSignals = GetUserSignals(userId);
+            var coBuyBoost = GetCoBuyBoostMap(userId, lookbackOrders: 20);
 
-            var allIds = candidates.Select(p => p.ProductID)
-                                   .Concat(pastIds)
-                                   .Distinct()
-                                   .ToList();
-
-            var emb = EmbeddingStore.GetProductEmbeddings(ConnStr, allIds);
-
-            var userVecs = pastIds.Where(id => emb.ContainsKey(id)).Select(id => emb[id]).ToList();
-            var userTaste = VectorMath.Average(userVecs);
-
-            bool hasUserTaste = userTaste != null && userTaste.Length > 0;
-
-            var alreadyBought = new HashSet<int>(pastIds);
+            var alreadyBought = new HashSet<int>(userSignals.PastProductIds);
 
             foreach (var p in candidates)
             {
-                double sim = 0;
-                if (hasUserTaste && emb.TryGetValue(p.ProductID, out var pv))
-                    sim = VectorMath.Cosine(userTaste, pv);
+                double dist01 = (userLat != 0 && userLng != 0)
+                    ? Clamp01((p.DistanceKm <= 0 ? 5 : p.DistanceKm) / 5.0)
+                    : 0;
 
-                double dist01 = VectorMath.Clamp01((p.DistanceKm <= 0 ? 5 : p.DistanceKm) / 5.0);
-                double deal01 = VectorMath.Clamp01((p.DiscountPercent) / 60.0);
-                double novelty = alreadyBought.Contains(p.ProductID) ? 0.0 : 1.0;
+                double deal01 = Clamp01(p.DiscountPercent / 60.0);
+
+                double catBoost01 = userSignals.TopCategories.Contains(p.Category ?? "") ? 1.0 : 0.0;
+                double sellerBoost01 = userSignals.TopSellers.Contains(p.SellerID) ? 1.0 : 0.0;
+
+                double cobuy01 = coBuyBoost.TryGetValue(p.ProductID, out var cb) ? cb : 0.0;
+
+                double novelty = alreadyBought.Contains(p.ProductID) ? 0.15 : 1.0;
 
                 p.AIScore =
-                    (hasUserTaste ? (0.55 * sim) : 0.0) +
-                    (0.30 * p.LocalPopularity01) +
-                    (0.15 * deal01) +
-                    (0.05 * novelty) -
+                    (0.35 * p.LocalPopularity01) +
+                    (0.18 * deal01) +
+                    (0.18 * catBoost01) +
+                    (0.15 * sellerBoost01) +
+                    (0.25 * cobuy01) +
+                    (0.08 * novelty) -
                     (0.20 * dist01);
             }
 
             return candidates
                 .OrderByDescending(x => x.AIScore)
+                .ThenBy(x => x.DistanceKm)
                 .Take(24)
                 .ToList();
         }
 
-        public static List<int> GetUserPastPurchasedProductIds(int userId, int maxItems)
+        private class UserSignals
         {
-            var list = new List<int>();
-            if (userId <= 0) return list;
+            public List<int> PastProductIds = new List<int>();
+            public HashSet<string> TopCategories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            public HashSet<int> TopSellers = new HashSet<int>();
+        }
+
+        private static UserSignals GetUserSignals(int userId)
+        {
+            var s = new UserSignals();
 
             using (SqlConnection conn = new SqlConnection(ConnStr))
             using (SqlCommand cmd = new SqlCommand(@"
-SELECT TOP (@maxItems) oi.ProductID
-FROM dbo.Orders o
-INNER JOIN dbo.OrderItems oi ON o.OrderID = oi.OrderID
-WHERE o.UserId = @uid
-  AND o.PayStatus = 'PAID'
-ORDER BY o.CreatedAt DESC;", conn))
+;WITH Past AS (
+    SELECT TOP (80)
+        oi.ProductID,
+        p.Category,
+        p.SellerID,
+        o.CreatedAt
+    FROM dbo.Orders o
+    INNER JOIN dbo.OrderItems oi ON oi.OrderID = o.OrderID
+    INNER JOIN dbo.Products p ON p.ProductID = oi.ProductID
+    WHERE o.UserID = @uid AND o.PayStatus = 'PAID'
+    ORDER BY o.CreatedAt DESC
+)
+SELECT ProductID FROM Past;
+
+;WITH CatAgg AS (
+    SELECT TOP (3) Category, COUNT(*) cnt
+    FROM (
+        SELECT TOP (80) p.Category
+        FROM dbo.Orders o
+        INNER JOIN dbo.OrderItems oi ON oi.OrderID = o.OrderID
+        INNER JOIN dbo.Products p ON p.ProductID = oi.ProductID
+        WHERE o.UserID = @uid AND o.PayStatus = 'PAID'
+        ORDER BY o.CreatedAt DESC
+    ) x
+    WHERE Category IS NOT NULL AND LTRIM(RTRIM(Category)) <> ''
+    GROUP BY Category
+    ORDER BY cnt DESC
+)
+SELECT Category FROM CatAgg;
+
+;WITH SellerAgg AS (
+    SELECT TOP (3) SellerID, COUNT(*) cnt
+    FROM (
+        SELECT TOP (80) p.SellerID
+        FROM dbo.Orders o
+        INNER JOIN dbo.OrderItems oi ON oi.OrderID = o.OrderID
+        INNER JOIN dbo.Products p ON p.ProductID = oi.ProductID
+        WHERE o.UserID = @uid AND o.PayStatus = 'PAID'
+        ORDER BY o.CreatedAt DESC
+    ) x
+    WHERE SellerID IS NOT NULL
+    GROUP BY SellerID
+    ORDER BY cnt DESC
+)
+SELECT SellerID FROM SellerAgg;
+", conn))
             {
                 cmd.Parameters.AddWithValue("@uid", userId);
-                cmd.Parameters.AddWithValue("@maxItems", maxItems);
+                conn.Open();
+
+                using (var r = cmd.ExecuteReader())
+                {
+                    while (r.Read())
+                        if (r[0] != DBNull.Value) s.PastProductIds.Add(Convert.ToInt32(r[0]));
+
+                    if (r.NextResult())
+                        while (r.Read())
+                            if (r[0] != DBNull.Value) s.TopCategories.Add(r[0].ToString());
+
+                    if (r.NextResult())
+                        while (r.Read())
+                            if (r[0] != DBNull.Value) s.TopSellers.Add(Convert.ToInt32(r[0]));
+                }
+            }
+
+            return s;
+        }
+
+        private static Dictionary<int, double> GetCoBuyBoostMap(int userId, int lookbackOrders)
+        {
+            var raw = new Dictionary<int, int>();
+
+            using (SqlConnection conn = new SqlConnection(ConnStr))
+            using (SqlCommand cmd = new SqlCommand(@"
+;WITH RecentOrders AS (
+    SELECT TOP (@n) o.OrderID
+    FROM dbo.Orders o
+    WHERE o.UserID = @uid AND o.PayStatus = 'PAID'
+    ORDER BY o.CreatedAt DESC
+),
+SeedProducts AS (
+    SELECT DISTINCT oi.ProductID
+    FROM dbo.OrderItems oi
+    INNER JOIN RecentOrders ro ON ro.OrderID = oi.OrderID
+),
+Co AS (
+    SELECT oi2.ProductID, COUNT(*) cnt
+    FROM dbo.OrderItems oi2
+    INNER JOIN dbo.Orders o2 ON o2.OrderID = oi2.OrderID
+    WHERE o2.PayStatus = 'PAID'
+      AND EXISTS (
+          SELECT 1
+          FROM dbo.OrderItems oi1
+          WHERE oi1.OrderID = oi2.OrderID
+            AND oi1.ProductID IN (SELECT ProductID FROM SeedProducts)
+      )
+    GROUP BY oi2.ProductID
+)
+SELECT TOP 40 ProductID, cnt
+FROM Co
+ORDER BY cnt DESC;
+", conn))
+            {
+                cmd.Parameters.AddWithValue("@uid", userId);
+                cmd.Parameters.AddWithValue("@n", lookbackOrders);
 
                 conn.Open();
-                using (SqlDataReader r = cmd.ExecuteReader())
+                using (var r = cmd.ExecuteReader())
                 {
                     while (r.Read())
                     {
-                        if (r["ProductID"] != DBNull.Value)
-                            list.Add(Convert.ToInt32(r["ProductID"]));
+                        int pid = r[0] != DBNull.Value ? Convert.ToInt32(r[0]) : 0;
+                        int cnt = r[1] != DBNull.Value ? Convert.ToInt32(r[1]) : 0;
+                        if (pid > 0) raw[pid] = cnt;
                     }
                 }
             }
 
-            return list;
+            int max = raw.Count == 0 ? 0 : raw.Values.Max();
+            var norm = new Dictionary<int, double>();
+            if (max <= 0) return norm;
+
+            foreach (var kv in raw)
+                norm[kv.Key] = (double)kv.Value / max;
+
+            return norm;
         }
 
         public static Dictionary<int, double> GetLocalPopularityMap(double userLat, double userLng, double radiusKm, int days)
@@ -406,10 +503,8 @@ ORDER BY
 
                 conn.Open();
                 using (SqlDataReader r = cmd.ExecuteReader())
-                {
                     while (r.Read())
                         list.Add(ReadProduct(r));
-                }
             }
 
             if (list.Count > 24) list = list.GetRange(0, 24);
@@ -429,19 +524,19 @@ SELECT
     p.Price, p.PriceOld, p.Rating, p.Reviews,
     p.ExpiryHours, p.CO2Saved, p.DiscountPercent, p.Quantity,
     p.Category, p.CreatedAt, p.SellerID,
-
-    (6371 * ACOS(
+    CASE
+      WHEN s.Latitude IS NULL OR s.Longitude IS NULL THEN 9999
+      ELSE (6371 * ACOS(
         COS(RADIANS(@lat)) *
         COS(RADIANS(s.Latitude)) *
         COS(RADIANS(s.Longitude) - RADIANS(@lng)) +
         SIN(RADIANS(@lat)) *
         SIN(RADIANS(s.Latitude))
-    )) AS DistanceKm
+      ))
+    END AS DistanceKm
 FROM dbo.Products p
 INNER JOIN dbo.Seller s ON s.SellerID = p.SellerID
 WHERE
-    s.Latitude IS NOT NULL AND s.Longitude IS NOT NULL
-    AND
     (@kw = '' OR
      p.ProductName LIKE '%' + @kw + '%' OR
      p.Subtitle    LIKE '%' + @kw + '%' OR
@@ -460,10 +555,8 @@ ORDER BY
 
                 conn.Open();
                 using (SqlDataReader r = cmd.ExecuteReader())
-                {
                     while (r.Read())
                         list.Add(ReadProduct(r));
-                }
             }
 
             if (list.Count > 24) list = list.GetRange(0, 24);
@@ -483,10 +576,8 @@ ORDER BY Category ASC;", conn))
             {
                 conn.Open();
                 using (SqlDataReader r = cmd.ExecuteReader())
-                {
                     while (r.Read())
                         list.Add(r["Category"].ToString());
-                }
             }
 
             return list;
@@ -522,10 +613,8 @@ ORDER BY p.DiscountPercent DESC, p.CreatedAt DESC;", conn))
 
                 conn.Open();
                 using (SqlDataReader r = cmd.ExecuteReader())
-                {
                     while (r.Read())
                         list.Add(ReadProduct(r));
-                }
             }
 
             return list;
@@ -544,19 +633,20 @@ SELECT
     p.Price, p.PriceOld, p.Rating, p.Reviews,
     p.ExpiryHours, p.CO2Saved, p.DiscountPercent, p.Quantity,
     p.Category, p.CreatedAt, p.SellerID,
-
-    (6371 * ACOS(
+    CASE
+      WHEN s.Latitude IS NULL OR s.Longitude IS NULL THEN 9999
+      ELSE (6371 * ACOS(
         COS(RADIANS(@lat)) *
         COS(RADIANS(s.Latitude)) *
         COS(RADIANS(s.Longitude) - RADIANS(@lng)) +
         SIN(RADIANS(@lat)) *
         SIN(RADIANS(s.Latitude))
-    )) AS DistanceKm
+      ))
+    END AS DistanceKm
 FROM dbo.Products p
 INNER JOIN dbo.Seller s ON s.SellerID = p.SellerID
 WHERE
-    s.Latitude IS NOT NULL AND s.Longitude IS NOT NULL
-    AND (@cat = '' OR p.Category = @cat)
+    (@cat = '' OR p.Category = @cat)
     AND
     (@kw = '' OR
      p.ProductName LIKE '%' + @kw + '%' OR
@@ -571,10 +661,8 @@ ORDER BY DistanceKm ASC, p.DiscountPercent DESC, p.CreatedAt DESC;", conn))
 
                 conn.Open();
                 using (SqlDataReader r = cmd.ExecuteReader())
-                {
                     while (r.Read())
                         list.Add(ReadProduct(r));
-                }
             }
 
             return list;

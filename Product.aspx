@@ -106,7 +106,8 @@
                                         </div>
 
                                         <div class="ee-price-row">
-                                            <span class="ee-price-now">$<%# Eval("PriceNow","{0:0.00}") %></span><span class="ee-price-old">$<%# Eval("PriceOld","{0:0.00}") %></span>
+                                            <span class="ee-price-now">$<%# Eval("PriceNow","{0:0.00}") %></span>
+                                            <span class="ee-price-old">$<%# Eval("PriceOld","{0:0.00}") %></span>
                                         </div>
                                     </div>
                                 </a>
@@ -136,7 +137,8 @@
                                         </div>
 
                                         <div class="ee-price-row">
-                                            <span class="ee-price-now">$<%# Eval("PriceNow","{0:0.00}") %></span><span class="ee-price-old">$<%# Eval("PriceOld","{0:0.00}") %></span>
+                                            <span class="ee-price-now">$<%# Eval("PriceNow","{0:0.00}") %></span>
+                                            <span class="ee-price-old">$<%# Eval("PriceOld","{0:0.00}") %></span>
                                         </div>
                                     </div>
                                 </a>
@@ -163,75 +165,65 @@
 </asp:Content>
 
 <asp:Content ID="ScriptsContent" ContentPlaceHolderID="ScriptsContent" runat="server">
-    <script>
-        (function () {
-            function setHidden(lat, lng) {
-                var latEl = document.getElementById("hfLat");
-                var lngEl = document.getElementById("hfLng");
-                var hasEl = document.getElementById("hfHasLoc");
-                if (!latEl || !lngEl || !hasEl) return false;
+<script>
+(function () {
 
-                latEl.value = lat;
-                lngEl.value = lng;
+    function byId(id) { return document.getElementById(id); }
 
-                var latNum = parseFloat(lat);
-                var lngNum = parseFloat(lng);
-                var ok = !isNaN(latNum) && !isNaN(lngNum) && Math.abs(latNum) > 0.0001 && Math.abs(lngNum) > 0.0001;
+    function setHidden(lat, lng) {
+        var latEl = byId("hfLat");
+        var lngEl = byId("hfLng");
+        var hasEl = byId("hfHasLoc");
 
-                hasEl.value = ok ? "1" : "0";
-                return ok;
+        if (!latEl || !lngEl || !hasEl) return;
+
+        latEl.value = lat;
+        lngEl.value = lng;
+
+        var latNum = parseFloat(lat);
+        var lngNum = parseFloat(lng);
+
+        var ok = !isNaN(latNum) && !isNaN(lngNum) &&
+                 Math.abs(latNum) > 0.0001 &&
+                 Math.abs(lngNum) > 0.0001;
+
+        hasEl.value = ok ? "1" : "0";
+
+        if (ok) {
+            __doPostBack("<%= btnRefreshByLoc.UniqueID %>", "");
             }
+        }
 
-            function loadFromStorage() {
-                var lat = localStorage.getItem("ee_lat");
-                var lng = localStorage.getItem("ee_lng");
-                if (!lat || !lng) return false;
-                return setHidden(lat, lng);
-            }
+        function requestLocation() {
+            if (!navigator.geolocation) return;
 
-            function saveToStorage(lat, lng) {
-                localStorage.setItem("ee_lat", String(lat));
-                localStorage.setItem("ee_lng", String(lng));
-            }
-
-            function refreshOncePerSession() {
-                if (sessionStorage.getItem("ee_loc_refreshed") === "1") return false;
-                sessionStorage.setItem("ee_loc_refreshed", "1");
-                return true;
-            }
-
-            function detectAndRefresh() {
-                var btn = document.getElementById("<%= btnRefreshByLoc.ClientID %>");
-                if (!btn) return;
-
-                if (loadFromStorage()) {
-                    if (refreshOncePerSession()) btn.click();
-                    return;
+            navigator.geolocation.getCurrentPosition(
+                function (pos) {
+                    var lat = pos.coords.latitude.toFixed(6);
+                    var lng = pos.coords.longitude.toFixed(6);
+                    setHidden(lat, lng);
+                },
+                function () {
+                    setHidden("", "");
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
                 }
+            );
+        }
 
-                if (!navigator.geolocation) return;
+        function run() {
+            requestLocation();
+        }
 
-                navigator.geolocation.getCurrentPosition(
-                    function (pos) {
-                        var lat = pos.coords.latitude.toFixed(6);
-                        var lng = pos.coords.longitude.toFixed(6);
-                        saveToStorage(lat, lng);
-                        if (setHidden(lat, lng)) {
-                            if (refreshOncePerSession()) btn.click();
-                        }
-                    },
-                    function () {
-                        setHidden("", "");
-                    },
-                    { enableHighAccuracy: true, timeout: 8000, maximumAge: 600000 }
-                );
-            }
+        if (window.Sys && Sys.Application && Sys.Application.add_load) {
+            Sys.Application.add_load(run);
+        } else {
+            window.addEventListener("load", run);
+        }
 
-            if (window.Sys && Sys.Application && Sys.Application.add_load) {
-                Sys.Application.add_load(detectAndRefresh);
-            } else {
-                window.addEventListener("load", detectAndRefresh);
-            }
-        })();
-    </script>
+    })();
+</script>
 </asp:Content>
