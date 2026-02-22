@@ -36,10 +36,10 @@
 
             <nav class="ee-nav">
                 <a href="Product.aspx">Home</a>
-                <a href="Order.aspx">Orders</a>
+                <a href="OrderHistory.aspx">Orders</a>
                 <a href="Profile.aspx">Profile</a>
                 <a class="active" href="About.aspx">About Us</a>
-                <a href="#">Help</a>
+                <a href="Chatbot">Help</a>
                 <a href="Feedback.aspx">Feedback</a>
                 <a href="#">Rate Sellers</a>
             </nav>
