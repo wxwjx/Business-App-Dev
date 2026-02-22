@@ -36,7 +36,7 @@
                 <a href="Product.aspx" id="navHome" runat="server">Home</a>
                 <a href="OrderHistory.aspx" id="navOrders" runat="server">Orders</a>
                 <a href="About.aspx" id="navAbout" runat="server">About Us</a>
-                <a href="Product.aspx?openHelp=1" id="navHelp" runat="server">Help</a>
+                <a href="Chatbot.aspx" id="navHelp" runat="server">Help</a>
                 <a href="Feedback.aspx" id="navFeedback" runat="server">Feedback</a>
             </nav>
 
@@ -105,160 +105,77 @@
       const lang = "<%= (Session["LANG"] ?? "en").ToString() %>".toLowerCase();
       if (!lang || lang === "en") return;
 
-      const ENDPOINT = "<%= ResolveUrl("~/TranslateHandler.ashx") %>";
-            const SKIP_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "IFRAME", "TEXTAREA", "CODE", "PRE"]);
-            const CACHE_KEY = "ee_trans_cache_" + lang;
+      const SKIP_TAGS = new Set(["SCRIPT","STYLE","NOSCRIPT","IFRAME","TEXTAREA","CODE","PRE"]);
+      const norm = s => (s||"").replace(/\s+/g," ").trim();
 
-            const norm = (s) => (s == null ? "" : String(s)).replace(/\s+/g, " ").trim();
-            const cache = (() => {
-                try { return JSON.parse(sessionStorage.getItem(CACHE_KEY) || "{}"); } catch { return {}; }
-            })();
-            const saveCache = () => {
-                try { sessionStorage.setItem(CACHE_KEY, JSON.stringify(cache)); } catch { }
-            };
+      function skip(el){
+        if(!el||el.nodeType!==1) return true;
+        if(SKIP_TAGS.has(el.tagName)) return true;
+        if(el.closest&&el.closest("[data-notranslate='1']")) return true;
+        return false;
+      }
 
-            function shouldSkipElement(el) {
-                if (!el || el.nodeType !== 1) return true;
-                if (SKIP_TAGS.has(el.tagName)) return true;
-                if (el.closest && el.closest("[data-notranslate='1']")) return true;
-                return false;
-            }
+      const textNodes=[];
+      const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{
+        acceptNode(n){
+          const t=norm(n.nodeValue);
+          if(!t) return NodeFilter.FILTER_REJECT;
+          const p=n.parentElement;
+          if(!p||skip(p)) return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      });
+      while(walker.nextNode()) textNodes.push(walker.currentNode);
 
-            function collectTargets(root) {
-                const textNodes = [];
-                const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-                    acceptNode(n) {
-                        const raw = n.nodeValue;
-                        if (!raw) return NodeFilter.FILTER_REJECT;
-                        const t = norm(raw);
-                        if (!t) return NodeFilter.FILTER_REJECT;
-                        const p = n.parentElement;
-                        if (!p || shouldSkipElement(p)) return NodeFilter.FILTER_REJECT;
-                        return NodeFilter.FILTER_ACCEPT;
-                    }
-                });
-                while (walker.nextNode()) textNodes.push(walker.currentNode);
+      const attrTargets=[];
+      document.querySelectorAll("input,button,a,[title],[placeholder]").forEach(el=>{
+        if(skip(el)) return;
+        const ph=el.getAttribute&&el.getAttribute("placeholder");
+        if(ph&&norm(ph)) attrTargets.push({el,attr:"placeholder",text:norm(ph)});
+        const tt=el.getAttribute&&el.getAttribute("title");
+        if(tt&&norm(tt)) attrTargets.push({el,attr:"title",text:norm(tt)});
+        if(el.tagName==="INPUT"){
+          const type=(el.getAttribute("type")||"").toLowerCase();
+          if(type==="button"||type==="submit"){
+            const v=norm(el.value);
+            if(v) attrTargets.push({el,attr:"value",text:v});
+          }
+        }
+      });
 
-                const attrTargets = [];
-                const els = root.querySelectorAll ? root.querySelectorAll("input,button,a,[title],[placeholder]") : [];
-                els.forEach(el => {
-                    if (shouldSkipElement(el)) return;
+      const all=[];
+      textNodes.forEach(n=>all.push(norm(n.nodeValue)));
+      attrTargets.forEach(a=>all.push(a.text));
 
-                    const ph = el.getAttribute && el.getAttribute("placeholder");
-                    if (ph && norm(ph)) attrTargets.push({ el, attr: "placeholder", text: norm(ph) });
+      const uniq=[];
+      const seen=new Set();
+      all.forEach(t=>{if(!seen.has(t)){seen.add(t);uniq.push(t);}});
 
-                    const tt = el.getAttribute && el.getAttribute("title");
-                    if (tt && norm(tt)) attrTargets.push({ el, attr: "title", text: norm(tt) });
+      fetch("<%= ResolveUrl("~/TranslateHandler.ashx") %>", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ targetLang: lang, texts: uniq })
+            })
+                .then(r => r.json())
+                .then(data => {
+                    const dst = data.translations || [];
+                    const map = new Map();
+                    for (let i = 0; i < uniq.length; i++) map.set(uniq[i], norm(dst[i] || uniq[i]));
 
-                    if (el.tagName === "INPUT") {
-                        const type = (el.getAttribute("type") || "").toLowerCase();
-                        if (type === "button" || type === "submit") {
-                            const v = norm(el.value);
-                            if (v) attrTargets.push({ el, attr: "value", text: v });
+                    textNodes.forEach(n => {
+                        const o = norm(n.nodeValue);
+                        const t = map.get(o) || o;
+                        if (t !== o) n.nodeValue = n.nodeValue.replace(o, t);
+                    });
+
+                    attrTargets.forEach(a => {
+                        const t = map.get(a.text) || a.text;
+                        if (t !== a.text) {
+                            if (a.attr === "value") a.el.value = t;
+                            else a.el.setAttribute(a.attr, t);
                         }
-                    }
+                    });
                 });
-
-                return { textNodes, attrTargets };
-            }
-
-            function applyTextNode(n, translated) {
-                const raw = n.nodeValue || "";
-                const leading = raw.match(/^\s*/)?.[0] || "";
-                const trailing = raw.match(/\s*$/)?.[0] || "";
-                n.nodeValue = leading + translated + trailing;
-            }
-
-            let inFlight = null;
-            async function translateBatch(textNodes, attrTargets) {
-                const need = [];
-                const seen = new Set();
-
-                for (const n of textNodes) {
-                    const key = norm(n.nodeValue);
-                    if (!key) continue;
-                    if (cache[key]) continue;
-                    if (!seen.has(key)) { seen.add(key); need.push(key); }
-                }
-
-                for (const a of attrTargets) {
-                    const key = a.text;
-                    if (!key) continue;
-                    if (cache[key]) continue;
-                    if (!seen.has(key)) { seen.add(key); need.push(key); }
-                }
-
-                if (need.length) {
-                    if (!inFlight) {
-                        inFlight = fetch(ENDPOINT, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ targetLang: lang, texts: need })
-                        })
-                            .then(r => r.ok ? r.json() : Promise.reject(new Error("HTTP " + r.status)))
-                            .then(data => {
-                                const dst = data && data.translations ? data.translations : [];
-                                for (let i = 0; i < need.length; i++) {
-                                    const src = need[i];
-                                    const tr = norm(dst[i] || src);
-                                    cache[src] = tr || src;
-                                }
-                                saveCache();
-                            })
-                            .finally(() => { inFlight = null; });
-                    }
-                    await inFlight;
-                }
-
-                for (const n of textNodes) {
-                    const key = norm(n.nodeValue);
-                    if (!key) continue;
-                    const tr = cache[key];
-                    if (tr && tr !== key) applyTextNode(n, tr);
-                }
-
-                for (const a of attrTargets) {
-                    const tr = cache[a.text];
-                    if (tr && tr !== a.text) {
-                        if (a.attr === "value") a.el.value = tr;
-                        else a.el.setAttribute(a.attr, tr);
-                    }
-                }
-            }
-
-            let scheduled = false;
-            function scheduleTranslate(root) {
-                if (scheduled) return;
-                scheduled = true;
-                setTimeout(async () => {
-                    scheduled = false;
-                    try {
-                        const { textNodes, attrTargets } = collectTargets(root || document.body);
-                        await translateBatch(textNodes, attrTargets);
-                    } catch (e) { }
-                }, 60);
-            }
-
-            if (document.readyState === "loading") {
-                document.addEventListener("DOMContentLoaded", () => scheduleTranslate(document.body), { once: true });
-            } else {
-                scheduleTranslate(document.body);
-            }
-
-            const mo = new MutationObserver((mutations) => {
-                for (const m of mutations) {
-                    for (const node of m.addedNodes || []) {
-                        if (!node) continue;
-                        if (node.nodeType === 3) {
-                            const p = node.parentElement;
-                            if (p && !shouldSkipElement(p)) scheduleTranslate(p);
-                        } else if (node.nodeType === 1) {
-                            if (!shouldSkipElement(node)) scheduleTranslate(node);
-                        }
-                    }
-                }
-            });
-            mo.observe(document.body, { childList: true, subtree: true });
         })();
     </script>
 

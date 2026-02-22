@@ -16,9 +16,8 @@ namespace Business_App_Dev.Pages
                 if (ViewState["tab"] == null) ViewState["tab"] = "recommended";
                 if (ViewState["cat"] == null) ViewState["cat"] = "";
                 BindCategories();
+                BindProducts();
             }
-
-            BindProducts();
         }
 
         private void BindCategories()
@@ -43,12 +42,12 @@ namespace Business_App_Dev.Pages
 
             if (tab == "deals")
             {
+                pnlCategories.Visible = false;
+
                 if (lat.HasValue && lng.HasValue && lat.Value != 0 && lng.Value != 0)
                     rows = ProductModel.GetDailyBestDealsWithDistance(lat.Value, lng.Value, keyword);
                 else
                     rows = ProductModel.GetDailyBestDeals(keyword);
-
-                pnlCategories.Visible = false;
             }
             else if (tab == "categories")
             {
