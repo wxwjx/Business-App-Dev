@@ -119,11 +119,11 @@ namespace Business_App_Dev
             Session.Remove("OtpPhone");
             Session.Remove("OtpLastSent");
 
-            // ✅ OneMap geocode
+            // ✅ Google Geocode
             double lat, lng;
             string postal, geoErr;
 
-            if (!TryGeocodeOneMap(address, out lat, out lng, out postal, out geoErr))
+            if (!TryGeocodeGoogleSg(address, out lat, out lng, out postal, out geoErr))
             {
                 lblError.Text = "Address not found. Please enter a more specific SG address. (" + geoErr + ")";
                 return;
@@ -380,12 +380,12 @@ SELECT
         }
 
         // =====================
-        // OneMap Geocoding
+        // GOOGLE GEOCODING (SG)
         // =====================
-        private string SanitizeSgAddressForOneMap(string input)
+        private string SanitizeSgAddressForGoogle(string input)
         {
             string s = (input ?? "").Trim();
-            s = Regex.Replace(s, @"#\s*\d+\s*[-]\s*\d+", "", RegexOptions.IgnoreCase);
+            s = Regex.Replace(s, @"#\s*\d+\s*[-]\s*\d+", "", RegexOptions.IgnoreCase); // remove unit like #02-11
             s = s.Replace(",", " ");
             s = Regex.Replace(s, @"\s{2,}", " ").Trim();
 
@@ -395,28 +395,60 @@ SELECT
             return s.Trim();
         }
 
-        private class OneMapSearchResponse { public System.Collections.Generic.List<OneMapResult> results { get; set; } }
-        private class OneMapResult
+        private class GoogleGeoResponse
         {
-            public string LATITUDE { get; set; }
-            public string LONGITUDE { get; set; }
-            public string POSTAL { get; set; }
+            public string status { get; set; }
+            public GoogleGeoResult[] results { get; set; }
+            public string error_message { get; set; }
         }
 
-        private bool TryGeocodeOneMap(string address, out double lat, out double lng, out string postal, out string err)
+        private class GoogleGeoResult
+        {
+            public GoogleGeometry geometry { get; set; }
+            public GoogleAddressComponent[] address_components { get; set; }
+            public string formatted_address { get; set; }
+        }
+
+        private class GoogleGeometry
+        {
+            public GoogleLocation location { get; set; }
+        }
+
+        private class GoogleLocation
+        {
+            public double lat { get; set; }
+            public double lng { get; set; }
+        }
+
+        private class GoogleAddressComponent
+        {
+            public string long_name { get; set; }
+            public string short_name { get; set; }
+            public string[] types { get; set; }
+        }
+
+        private bool TryGeocodeGoogleSg(string address, out double lat, out double lng, out string postal, out string err)
         {
             lat = 0; lng = 0; postal = ""; err = "";
 
-            string q = SanitizeSgAddressForOneMap(address);
+            string apiKey = (ConfigurationManager.AppSettings["GoogleMapsApiKey"] ?? "").Trim();
+            if (string.IsNullOrWhiteSpace(apiKey))
+            {
+                err = "GoogleMapsApiKey missing in Web.config appSettings";
+                return false;
+            }
+
+            string q = SanitizeSgAddressForGoogle(address);
             if (string.IsNullOrWhiteSpace(q))
             {
                 err = "Empty address";
                 return false;
             }
 
-            string url = "https://developers.onemap.sg/commonapi/search?searchVal=" +
+            // region=sg biases results; components=country:SG restricts country
+            string url = "https://maps.googleapis.com/maps/api/geocode/json?address=" +
                          Uri.EscapeDataString(q) +
-                         "&returnGeom=Y&getAddrDetails=Y&pageNum=1";
+                         "&region=sg&components=country:SG&key=" + Uri.EscapeDataString(apiKey);
 
             try
             {
@@ -430,28 +462,66 @@ SELECT
                 {
                     string json = sr.ReadToEnd();
                     var js = new JavaScriptSerializer();
-                    var data = js.Deserialize<OneMapSearchResponse>(json);
+                    var data = js.Deserialize<GoogleGeoResponse>(json);
 
-                    if (data?.results == null || data.results.Count == 0)
+                    if (data == null)
+                    {
+                        err = "No response";
+                        return false;
+                    }
+
+                    if (!string.Equals(data.status, "OK", StringComparison.OrdinalIgnoreCase))
+                    {
+                        err = (data.status ?? "Unknown") + (string.IsNullOrWhiteSpace(data.error_message) ? "" : (": " + data.error_message));
+                        return false;
+                    }
+
+                    if (data.results == null || data.results.Length == 0)
                     {
                         err = "No results";
                         return false;
                     }
 
                     var top = data.results[0];
+                    if (top?.geometry?.location == null)
+                    {
+                        err = "No geometry";
+                        return false;
+                    }
 
-                    if (!double.TryParse(top.LATITUDE, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out lat))
-                    { err = "Bad LATITUDE"; return false; }
+                    lat = top.geometry.location.lat;
+                    lng = top.geometry.location.lng;
 
-                    if (!double.TryParse(top.LONGITUDE, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out lng))
-                    { err = "Bad LONGITUDE"; return false; }
+                    // Extract postal code from address_components
+                    postal = "";
+                    if (top.address_components != null)
+                    {
+                        foreach (var c in top.address_components)
+                        {
+                            if (c?.types == null) continue;
+                            if (c.types.Any(t => string.Equals(t, "postal_code", StringComparison.OrdinalIgnoreCase)))
+                            {
+                                postal = (c.long_name ?? c.short_name ?? "").Trim();
+                                break;
+                            }
+                        }
+                    }
 
-                    postal = (top.POSTAL ?? "").Trim();
-                    if (postal.Length == 0)
-                    { err = "Postal not returned"; return false; }
+                    // Singapore postal codes are 6 digits
+                    if (string.IsNullOrWhiteSpace(postal) || !Regex.IsMatch(postal, @"^\d{6}$"))
+                    {
+                        // Not fatal if you want, but your DB insert expects postal. We'll treat as error.
+                        err = "Postal code not returned";
+                        return false;
+                    }
 
                     return true;
                 }
+            }
+            catch (WebException wex)
+            {
+                err = wex.Message;
+                return false;
             }
             catch (Exception ex)
             {
