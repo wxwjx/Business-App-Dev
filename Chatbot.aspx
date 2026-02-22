@@ -271,7 +271,7 @@
                         <asp:Button ID="qSupport" runat="server" CssClass="quickBtn"
                             Text="Admin Support 💬"
                             OnClick="Quick_Click"
-                            CommandArgument="chat with admin support"
+                            CommandArgument="__ADMIN_SUPPORT__"
                             CausesValidation="false"
                             UseSubmitBehavior="false" />
 
