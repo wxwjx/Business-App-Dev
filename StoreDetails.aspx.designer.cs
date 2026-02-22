@@ -228,7 +228,22 @@ namespace Business_App_Dev
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
+
+        protected global::System.Web.UI.WebControls.TextBox tbAddrLine;
+
+
+
+        /// <summary>
+        /// tbUnit control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox tbUnit;
+
         protected global::System.Web.UI.WebControls.TextBox tbAddress;
+
 
         /// <summary>
         /// tbDescription control.
