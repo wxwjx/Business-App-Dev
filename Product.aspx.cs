@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Web.UI;
+using System.Web.UI.WebControls;
 
 namespace Business_App_Dev.Pages
 {
@@ -13,15 +14,25 @@ namespace Business_App_Dev.Pages
             if (!IsPostBack)
             {
                 if (ViewState["tab"] == null) ViewState["tab"] = "recommended";
+                if (ViewState["cat"] == null) ViewState["cat"] = "";
+                BindCategories();
             }
 
             BindProducts();
+        }
+
+        private void BindCategories()
+        {
+            var cats = ProductModel.GetCategories() ?? new List<string>();
+            rptCategories.DataSource = cats;
+            rptCategories.DataBind();
         }
 
         private void BindProducts()
         {
             string tab = (ViewState["tab"] as string) ?? "recommended";
             string keyword = (txtSearch.Text ?? "").Trim();
+            string selectedCat = (ViewState["cat"] as string) ?? "";
 
             double? lat = TryParseDouble(hfLat.Value);
             double? lng = TryParseDouble(hfLng.Value);
@@ -36,23 +47,28 @@ namespace Business_App_Dev.Pages
                     rows = ProductModel.GetDailyBestDealsWithDistance(lat.Value, lng.Value, keyword);
                 else
                     rows = ProductModel.GetDailyBestDeals(keyword);
+
+                pnlCategories.Visible = false;
             }
             else if (tab == "categories")
             {
+                pnlCategories.Visible = true;
+
                 if (lat.HasValue && lng.HasValue && lat.Value != 0 && lng.Value != 0)
-                    rows = ProductModel.GetProductsWithDistanceAndSearch(lat.Value, lng.Value, keyword);
+                    rows = ProductModel.GetProductsByCategoryWithDistance(lat.Value, lng.Value, selectedCat, keyword);
                 else
-                    rows = ProductModel.GetProductsBySearch(keyword);
+                    rows = ProductModel.GetProductsByCategory(selectedCat, keyword);
 
                 rows = rows
-                    .OrderBy(x => x.Category ?? "")
+                    .OrderBy(x => x.DistanceKm)
                     .ThenByDescending(x => x.DiscountPercent)
-                    .ThenBy(x => x.DistanceKm)
                     .ThenByDescending(x => x.CreatedAt)
                     .ToList();
             }
             else
             {
+                pnlCategories.Visible = false;
+
                 if (lat.HasValue && lng.HasValue && lat.Value != 0 && lng.Value != 0)
                     rows = ProductModel.GetAIRecommended(userId, lat.Value, lng.Value, keyword);
                 else
@@ -68,50 +84,36 @@ namespace Business_App_Dev.Pages
                 Subtitle = p.Subtitle ?? "",
                 ImageUrl = string.IsNullOrWhiteSpace(p.ImageUrl) ? "Content/img/placeholder.jpg" : p.ImageUrl,
                 PriceNow = p.PriceNow,
-                PriceOld = p.PriceOld,
                 Rating = p.Rating,
                 Reviews = p.Reviews,
                 DistanceKm = (p.DistanceKm >= 9999) ? (double?)null : p.DistanceKm,
-                ExpiryHours = p.ExpiryHours,
-                CO2Saved = p.CO2Saved,
                 DiscountPercent = p.DiscountPercent,
-                Quantity = p.Quantity,
                 Category = p.Category ?? "",
-                CreatedAt = p.CreatedAt,
-                SellerID = p.SellerID,
-
-                StoreName = GetShopNameFallback(p)
+                StoreName = GetShopNameFromSeller(p.SellerID)
             }).ToList();
 
             rptProducts.DataSource = vm;
             rptProducts.DataBind();
+
+            MarkActiveCategoryChip(selectedCat);
         }
 
-        private static string GetShopNameFallback(ProductModel p)
+        private void MarkActiveCategoryChip(string selectedCat)
         {
-            var prop = p.GetType().GetProperty("ShopName");
-            if (prop != null)
-            {
-                var v = prop.GetValue(p, null);
-                var s = v == null ? "" : v.ToString();
-                if (!string.IsNullOrWhiteSpace(s)) return s;
-            }
+            btnCatAll.CssClass = "cat-chip" + (string.IsNullOrWhiteSpace(selectedCat) ? " active" : "");
 
-            var prop2 = p.GetType().GetProperty("StoreName");
-            if (prop2 != null)
+            foreach (RepeaterItem it in rptCategories.Items)
             {
-                var v = prop2.GetValue(p, null);
-                var s = v == null ? "" : v.ToString();
-                if (!string.IsNullOrWhiteSpace(s)) return s;
-            }
+                var lb = it.Controls.OfType<LinkButton>().FirstOrDefault();
+                if (lb == null) continue;
 
-            return "EcoEats";
+                string cat = lb.CommandArgument ?? "";
+                bool active = string.Equals(cat, selectedCat, StringComparison.OrdinalIgnoreCase);
+                lb.CssClass = "cat-chip" + (active ? " active" : "");
+            }
         }
 
-        protected void btnSearch_Click(object sender, EventArgs e)
-        {
-            BindProducts();
-        }
+        protected void btnSearch_Click(object sender, EventArgs e) => BindProducts();
 
         protected void btnClear_Click(object sender, EventArgs e)
         {
@@ -134,33 +136,34 @@ namespace Business_App_Dev.Pages
         protected void btnTabCategories_Click(object sender, EventArgs e)
         {
             ViewState["tab"] = "categories";
+            BindCategories();
             BindProducts();
         }
 
-        protected void btnGeoRefresh_Click(object sender, EventArgs e)
+        protected void btnGeoRefresh_Click(object sender, EventArgs e) => BindProducts();
+
+        protected void btnCatAll_Click(object sender, EventArgs e)
         {
+            ViewState["cat"] = "";
             BindProducts();
+        }
+
+        protected void rptCategories_ItemCommand(object source, RepeaterCommandEventArgs e)
+        {
+            if (e.CommandName == "pick")
+            {
+                ViewState["cat"] = (e.CommandArgument ?? "").ToString();
+                BindProducts();
+            }
         }
 
         private int GetUserId()
         {
             try
             {
-                if (Session["UserID"] != null)
-                {
-                    int id;
-                    if (int.TryParse(Session["UserID"].ToString(), out id)) return id;
-                }
-                if (Session["UserId"] != null)
-                {
-                    int id;
-                    if (int.TryParse(Session["UserId"].ToString(), out id)) return id;
-                }
-                if (Session["MemberID"] != null)
-                {
-                    int id;
-                    if (int.TryParse(Session["MemberID"].ToString(), out id)) return id;
-                }
+                if (Session["UserID"] != null && int.TryParse(Session["UserID"].ToString(), out var id)) return id;
+                if (Session["UserId"] != null && int.TryParse(Session["UserId"].ToString(), out id)) return id;
+                if (Session["MemberID"] != null && int.TryParse(Session["MemberID"].ToString(), out id)) return id;
             }
             catch { }
             return 0;
@@ -169,10 +172,28 @@ namespace Business_App_Dev.Pages
         private static double? TryParseDouble(string s)
         {
             if (string.IsNullOrWhiteSpace(s)) return null;
-            double v;
-            if (double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out v)) return v;
+            if (double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var v)) return v;
             if (double.TryParse(s, NumberStyles.Any, CultureInfo.CurrentCulture, out v)) return v;
             return null;
+        }
+
+        private static string GetShopNameFromSeller(int sellerId)
+        {
+            try
+            {
+                var cs = System.Configuration.ConfigurationManager.ConnectionStrings["EcoEatsDb"].ConnectionString;
+                using (var conn = new System.Data.SqlClient.SqlConnection(cs))
+                using (var cmd = new System.Data.SqlClient.SqlCommand("SELECT TOP 1 ShopName FROM dbo.Seller WHERE SellerID=@id", conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", sellerId);
+                    conn.Open();
+                    var v = cmd.ExecuteScalar();
+                    var s = v == null || v == DBNull.Value ? "" : v.ToString();
+                    return string.IsNullOrWhiteSpace(s) ? "EcoEats" : s;
+                }
+            }
+            catch { }
+            return "EcoEats";
         }
 
         public class ProductCardVm
@@ -182,18 +203,11 @@ namespace Business_App_Dev.Pages
             public string Subtitle { get; set; }
             public string ImageUrl { get; set; }
             public decimal PriceNow { get; set; }
-            public decimal PriceOld { get; set; }
             public double Rating { get; set; }
             public int Reviews { get; set; }
             public double? DistanceKm { get; set; }
-            public int ExpiryHours { get; set; }
-            public double CO2Saved { get; set; }
             public int DiscountPercent { get; set; }
-            public int Quantity { get; set; }
             public string Category { get; set; }
-            public DateTime CreatedAt { get; set; }
-            public int SellerID { get; set; }
-
             public string StoreName { get; set; }
         }
     }

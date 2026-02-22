@@ -32,6 +32,11 @@
         .p-btnlink{background:transparent;border:0;color:#111827;cursor:pointer;font-weight:800;}
         .p-tabs{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 16px;}
         .p-tab{border:1px solid #e5e7eb;background:#f9fafb;padding:8px 10px;border-radius:10px;font-weight:800;cursor:pointer;}
+
+        .cat-wrap{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 16px;}
+        .cat-chip{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;border:1px solid #e5e7eb;background:#fff;font-weight:800;color:#111827;cursor:pointer;}
+        .cat-chip.active{background:#16a34a;color:#fff;border-color:#16a34a;}
+
         .p-grid{display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;}
         @media (max-width:980px){.p-grid{grid-template-columns:repeat(2, 1fr);}}
         @media (max-width:640px){.p-grid{grid-template-columns:1fr;}}
@@ -68,6 +73,22 @@
             <asp:LinkButton ID="btnTabDeals" runat="server" CssClass="p-tab" OnClick="btnTabDeals_Click">🔥 Daily Best Deals</asp:LinkButton>
             <asp:LinkButton ID="btnTabCategories" runat="server" CssClass="p-tab" OnClick="btnTabCategories_Click">🧭 Explore Categories</asp:LinkButton>
         </div>
+
+        <asp:Panel ID="pnlCategories" runat="server" Visible="false">
+            <div class="cat-wrap">
+                <asp:LinkButton ID="btnCatAll" runat="server" CssClass="cat-chip" OnClick="btnCatAll_Click">All</asp:LinkButton>
+
+                <asp:Repeater ID="rptCategories" runat="server" OnItemCommand="rptCategories_ItemCommand">
+                    <ItemTemplate>
+                        <asp:LinkButton ID="lbCat" runat="server"
+                            CommandName="pick"
+                            CommandArgument="<%# Container.DataItem.ToString() %>"
+                            CssClass="cat-chip"
+                            Text="<%# Container.DataItem.ToString() %>" />
+                    </ItemTemplate>
+                </asp:Repeater>
+            </div>
+        </asp:Panel>
 
         <asp:Repeater ID="rptProducts" runat="server">
             <HeaderTemplate><div class="p-grid" id="productGrid"></HeaderTemplate>
@@ -210,10 +231,8 @@
                         (pos) => {
                             if (latEl) latEl.value = pos.coords.latitude;
                             if (lngEl) lngEl.value = pos.coords.longitude;
-
                             if (doneEl) doneEl.value = "1";
                             sessionStorage.setItem("ee_geo_done", "1");
-
                             __doPostBack("<%= btnGeoRefresh.UniqueID %>", "");
                         },
                         () => { },
@@ -223,5 +242,4 @@
             } catch (_) { }
         })();
     </script>
-
 </asp:Content>

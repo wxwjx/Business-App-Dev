@@ -7,8 +7,7 @@ namespace Business_App_Dev
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-            if (Session["LANG"] == null)
-                Session["LANG"] = "en";
+            if (Session["LANG"] == null) Session["LANG"] = "en";
 
             string lang = (Session["LANG"] as string ?? "en").ToLowerInvariant();
 
