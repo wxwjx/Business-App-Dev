@@ -446,6 +446,6 @@ namespace Business_App_Dev
         /// </remarks>
         protected global::System.Web.UI.WebControls.Button btnCancel;
 
-        protected global::System.Web.UI.WebControls.TextBox tbAddress;
+
     }
 }
